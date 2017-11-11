@@ -1,3 +1,3 @@
-# radartools
+# readgssi.m
 
-A suite of tools to aid processing of GSSI GPR data. Development ongoing, email ian.nesbitt@maine.edu for info
+A tool intended to read binary GSSI ground-penetrating radar (GPR) data in matlab. Developed by Gabe Lewis at Dartmouth College 

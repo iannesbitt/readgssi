@@ -1,3 +1,5 @@
+// developed by gabe lewis, dartmouth college geophysics
+
 function data=readgssi(name)
 
 
