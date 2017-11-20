@@ -10,5 +10,6 @@ A tool intended to read binary GSSI ground-penetrating radar (GPR) data. Origina
 - GPS implementation (read from associated DZX file)
 - supplementing -c and format (HDF5, SEGY, etc.) will convert to the specified format
 
-- irlib integration
-- usage of basic obspy filters (FIR)
+- stacking of data
+- [irlib](https://github.com/njwilson23/irlib) integration (iir, timezero)
+- usage of basic [obspy](https://github.com/obspy/obspy) filters
