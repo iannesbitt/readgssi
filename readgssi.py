@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 ## readgssi.py
 ## intended to translate radar data from DZT to ASCII.
 ## DZT is a file format maintained by Geophysical Survey Systems Incorporated (GSSI).
@@ -17,6 +15,7 @@
 # a copy of the license upon obtaining this software, please visit
 # (https://opensource.org/licenses/MIT) to obtain a copy.
 
+import sys, getopt
 import struct, bitstruct
 import numpy as np
 from datetime import datetime
@@ -72,7 +71,7 @@ def readtime(bits):
         except:
             return datetime(1980,1,1,0,0,0,0,tzinfo=pytz.UTC)
 
-def readgssi(name=None,*args,**kwargs):
+def readgssi(argv=None):
     # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s'
     # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2)
     # dztstruct = Struct(headerstruct)
@@ -80,9 +79,23 @@ def readgssi(name=None,*args,**kwargs):
     # packed_size = 0
     # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
     # print('Calculated header size: '+str(packed_size)+'\n')
+    infile = ''
+    #outfile = ''
+    try:
+        opts, args = getopt.getopt(argv,"hi:",["input=","output="])
+    except getopt.GetoptError:
+        print 'readgssi.py -i <input file>'#' -o <output file>'
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print 'readgssi.py -i <input file>'# -o <output file>'
+            sys.exit()
+        elif opt in ("-i", "--input"):
+            infile = arg
+        #elif opt in ("-o", "--output"):
+            #outfile = arg
 
-
-    with open(name, 'rb') as f:
+    with open(infile, 'rb') as f:
         rh_tag = struct.unpack('<h', f.read(2))[0]
         rh_data = struct.unpack('<h', f.read(2))[0]
         rh_nsamp = struct.unpack('<h', f.read(2))[0]
@@ -112,7 +125,7 @@ def readgssi(name=None,*args,**kwargs):
         rh_system = readbit(vsbyte, 3, 7)
         del vsbyte
 
-        print('file:               ' + name)
+        print('input file:         ' + infile)
         print('system:             ' + UNIT[rh_system])
         print('gps-enabled file:   ' + GPS[rh_version])
         print('number of channels: ' + str(rh_nchan))
@@ -135,3 +148,8 @@ def readgssi(name=None,*args,**kwargs):
 
         print('traces:             ' + str(data.shape[1]))
         print('seconds:            ' + str(data.shape[1]/rhf_sps))
+
+        #print('output file:        ' + outfile)
+
+if __name__ == "__main__":
+    readgssi(argv=sys.argv[1:])
