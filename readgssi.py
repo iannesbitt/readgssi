@@ -81,75 +81,117 @@ def readgssi(argv=None):
     # print('Calculated header size: '+str(packed_size)+'\n')
     infile = ''
     #outfile = ''
+    help_text = 'readgssi.py -i <input file> -o <output file> -f <format: csv>'
     try:
-        opts, args = getopt.getopt(argv,"hi:",["input=","output="])
+        opts, args = getopt.getopt(argv,'hi:o:f:',['input=','output=','format='])
     except getopt.GetoptError:
-        print 'readgssi.py -i <input file>'#' -o <output file>'
+        print(help_text)
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'readgssi.py -i <input file>'# -o <output file>'
+            print(help_text)
             sys.exit()
-        elif opt in ("-i", "--input"):
+        elif opt in ('-i', '--input'):
+            if arg == '':
+                print('no file was given. please try again.')
+                print(help_text)
             infile = arg
-        #elif opt in ("-o", "--output"):
-            #outfile = arg
+        elif opt in ('-o', '--output'):
+            outfile = arg
+        elif opt in ('-f', '--format'):
+            if arg == ('csv', 'CSV'):
+                frmt = 'csv'
+            if arg == ('sgy', 'segy', 'seg-y' 'SGY', 'SEGY', 'SEG-Y'):
+                frmt = 'segy'
+            if arg == ('h5', 'hdf5', 'H5', 'HDF5'):
+                frmt = 'h5'
+            else:
+                print(help_text)
+                sys.exit(2)
+    try:
+        with open(infile, 'rb') as f:
+            rh_tag = struct.unpack('<h', f.read(2))[0]
+            rh_data = struct.unpack('<h', f.read(2))[0]
+            rh_nsamp = struct.unpack('<h', f.read(2))[0]
+            rh_bits = struct.unpack('<h', f.read(2))[0]
+            rh_zero = struct.unpack('<h', f.read(2))[0]
+            rhf_sps = struct.unpack('<f', f.read(4))[0]
+            rhf_spm = struct.unpack('<f', f.read(4))[0]
+            rhf_mpm = struct.unpack('<f', f.read(4))[0]
+            rhf_position = struct.unpack('<f', f.read(4))[0]
+            rhf_range = struct.unpack('<f', f.read(4))[0]
+            rh_npass = struct.unpack('<h', f.read(2))[0]
+            rhb_cdt = readtime(f.read(4))
+            rhb_mdt = readtime(f.read(4))
+            f.seek(44)
+            rh_text = struct.unpack('<h', f.read(2))[0]
+            rh_ntext = struct.unpack('<h', f.read(2))[0]
+            rh_proc = struct.unpack('<h', f.read(2))[0]
+            rh_nproc = struct.unpack('<h', f.read(2))[0]
+            rh_nchan = struct.unpack('<h', f.read(2))[0]
+            rhf_epsr = struct.unpack('<f', f.read(4))[0]
+            rhf_top = struct.unpack('<f', f.read(4))[0]
+            rhf_depth = struct.unpack('<f', f.read(4))[0]
+            #rhf_coordx = struct.unpack('<ff', f.read(8))[0]
+            f.seek(113)
+            vsbyte = f.read(1)
+            rh_version = readbit(vsbyte, 0, 2)
+            rh_system = readbit(vsbyte, 3, 7)
+            del vsbyte
 
-    with open(infile, 'rb') as f:
-        rh_tag = struct.unpack('<h', f.read(2))[0]
-        rh_data = struct.unpack('<h', f.read(2))[0]
-        rh_nsamp = struct.unpack('<h', f.read(2))[0]
-        rh_bits = struct.unpack('<h', f.read(2))[0]
-        rh_zero = struct.unpack('<h', f.read(2))[0]
-        rhf_sps = struct.unpack('<f', f.read(4))[0]
-        rhf_spm = struct.unpack('<f', f.read(4))[0]
-        rhf_mpm = struct.unpack('<f', f.read(4))[0]
-        rhf_position = struct.unpack('<f', f.read(4))[0]
-        rhf_range = struct.unpack('<f', f.read(4))[0]
-        rh_npass = struct.unpack('<h', f.read(2))[0]
-        rhb_cdt = readtime(f.read(4))
-        rhb_mdt = readtime(f.read(4))
-        f.seek(44)
-        rh_text = struct.unpack('<h', f.read(2))[0]
-        rh_ntext = struct.unpack('<h', f.read(2))[0]
-        rh_proc = struct.unpack('<h', f.read(2))[0]
-        rh_nproc = struct.unpack('<h', f.read(2))[0]
-        rh_nchan = struct.unpack('<h', f.read(2))[0]
-        rhf_epsr = struct.unpack('<f', f.read(4))[0]
-        rhf_top = struct.unpack('<f', f.read(4))[0]
-        rhf_depth = struct.unpack('<f', f.read(4))[0]
-        #rhf_coordx = struct.unpack('<ff', f.read(8))[0]
-        f.seek(113)
-        vsbyte = f.read(1)
-        rh_version = readbit(vsbyte, 0, 2)
-        rh_system = readbit(vsbyte, 3, 7)
-        del vsbyte
 
-        print('input file:         ' + infile)
-        print('system:             ' + UNIT[rh_system])
-        print('gps-enabled file:   ' + GPS[rh_version])
-        print('number of channels: ' + str(rh_nchan))
-        print('samples per trace:  ' + str(rh_nsamp))
-        print('bits per sample:    ' + BPS[rh_bits])
-        print('traces per second:  ' + str(rhf_sps))
-        print('traces per meter:   ' + str(rhf_spm))
-        print('dilectric:          ' + str(rhf_epsr))
+            if rh_data < MINHEADSIZE:
+                f.seek(MINHEADSIZE * rh_data)
+            else:
+                f.seek(MINHEADSIZE * rh_nchan)
+            if rh_bits == 8:
+                data = np.fromfile(f, np.uint8).reshape(-1,rh_nsamp).T
+            elif rh_bits == 16:
+                data = np.fromfile(f, np.uint16).reshape(-1,rh_nsamp).T
+            else:
+                data = np.fromfile(f, np.int32).reshape(-1,rh_nsamp).T
 
-        if rh_data < MINHEADSIZE:
-            f.seek(MINHEADSIZE * rh_data)
-        else:
-            f.seek(MINHEADSIZE * rh_nchan)
-        if rh_bits == 8:
-            data = np.fromfile(f, np.uint8).reshape(-1,rh_nsamp).T
-        elif rh_bits == 16:
-            data = np.fromfile(f, np.uint16).reshape(-1,rh_nsamp).T
-        else:
-            data = np.fromfile(f, np.int32).reshape(-1,rh_nsamp).T
 
-        print('traces:             ' + str(data.shape[1]))
-        print('seconds:            ' + str(data.shape[1]/rhf_sps))
+            returns = {
+                'infile': infile,
+                'rh_system': rh_system,
+                'rh_version': rh_version,
+                'rh_nchan': rh_nchan,
+                'rh_nsamp': rh_nsamp,
+                'rh_bits': rh_bits,
+                'rhf_sps': rhf_sps,
+                'rhf_spm': rhf_spm,
+                'rhf_epsr': rhf_epsr,
+            }
 
-        #print('output file:        ' + outfile)
+            return returns, data
+    except IOError as e:
+        print('i/o error')
+        print("DZT file is inaccessable or does not exist, perhaps your spelling isn't what it used to be")
+        print('detail: ' + str(e))
 
 if __name__ == "__main__":
-    readgssi(argv=sys.argv[1:])
+    try:
+        r = readgssi(argv=sys.argv[1:])
+        rhf_sps = r[0]['rhf_sps']
+        rhf_spm = r[0]['rhf_spm']
+        print('input file:         ' + r[0]['infile'])
+        print('system:             ' + UNIT[r[0]['rh_system']])
+        print('gps-enabled file:   ' + GPS[r[0]['rh_version']])
+        print('number of channels: ' + str(r[0]['rh_nchan']))
+        print('samples per trace:  ' + str(r[0]['rh_nsamp']))
+        print('bits per sample:    ' + BPS[r[0]['rh_bits']])
+        print('traces per second:  ' + str(rhf_sps))
+        print('traces per meter:   ' + str(rhf_spm))
+        print('dilectric:          ' + str(r[0]['rhf_epsr']))
+        print('traces:             ' + str(r[1].shape[1]))
+        if rhf_spm == 0:
+            print('seconds:            ' + str(r[1].shape[1]/rhf_sps))
+        else:
+            print('meters:             ' + str(r[1].shape[1]/rhf_spm))
+        #print('output file:        ' + outfile)
+    except TypeError as e:
+        print('')
+        print('additionally, the console returned this typeerror: ' + str(e))
+        print('')
+        sys.exit(2)
