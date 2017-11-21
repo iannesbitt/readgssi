@@ -1,9 +1,9 @@
 ## readgssi.py
-## intended to translate radar data from DZT to ASCII.
+## intended to translate radar data from DZT to other more workable formats.
 ## DZT is a file format maintained by Geophysical Survey Systems Incorporated (GSSI).
 ## specifically, this script is intended for use with radar data recorded
-## with GSSI SIR 4000 field units. Other field unit models may record DZT slightly
-## differently, in which case this script will need to be modified.
+## with GSSI SIR 3000 and 4000 field units. Other field unit models may record DZT slightly
+## differently, in which case this script may need to be modified.
 
 # readgssi was originally written as matlab code by
 # Gabe Lewis, Dartmouth College Department of Earth Sciences.
@@ -67,7 +67,9 @@ def readbit(bits, start, end):
 
 def readtime(bits):
     '''
-    function to read dates bitwise (this is a really stupid way of storing dates, and thus I don't know if I'm unpacking them correctly)
+    function to read dates bitwise.
+    this is a colossally stupid way of storing dates. I have no idea if I'm unpacking them correctly.
+    (and every indication that I'm not.)
     '''
     if bits == '\x00\x00\x00\x00':
         return datetime(1980,1,1,0,0,0,0,tzinfo=pytz.UTC) # if there is no date information, return arbitrary datetime
@@ -85,12 +87,12 @@ def readgssi(argv=None):
     function to unpack and return things we need from the header, and the data itself
 
     currently unused but potentially useful lines:
-    # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s'
-    # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2)
-    # print('Calculated header structure size: '+str(calcsize(headerstruct)))
+    # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s' # the structure of the bytewise header and "gps data" as I understand it - 1024 bytes
+    # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2) # the variable size of bytes in the header (most of the time) - 128 bytes
+    # print('total header structure size: '+str(calcsize(headerstruct)))
     # packed_size = 0
     # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
-    # print('Calculated header size: '+str(packed_size)+'\n')
+    # print('fixed header size: '+str(packed_size)+'\n')
     '''
     infile = ''
     outfile = ''
@@ -99,6 +101,7 @@ def readgssi(argv=None):
     # parse passed command line arguments. this will probably move somewhere else.
     try:
         opts, args = getopt.getopt(argv,'hi:o:f:',['input=','output=','format='])
+    # the 'no option supplied' error
     except getopt.GetoptError:
         print(help_text)
         sys.exit(2)
@@ -108,20 +111,24 @@ def readgssi(argv=None):
             sys.exit()
         elif opt in ('-i', '--input'): # the input file
             if arg == '':
+                # this case probably won't happen but we'll catch it anyway
                 print('no file was given. please try again.')
                 print(help_text)
-            infile = arg
+                sys.exit(2)
+            else:
+                infile = arg
         elif opt in ('-o', '--output'): # the output file
             outfile = arg
         elif opt in ('-f', '--format'): # the format string
             # check whether the string is a supported format
             if arg == ('csv', 'CSV'):
                 frmt = 'csv'
-            if arg == ('sgy', 'segy', 'seg-y' 'SGY', 'SEGY', 'SEG-Y'):
+            elif arg == ('sgy', 'segy', 'seg-y' 'SGY', 'SEGY', 'SEG-Y'):
                 frmt = 'segy'
-            if arg == ('h5', 'hdf5', 'H5', 'HDF5'):
+            elif arg == ('h5', 'hdf5', 'H5', 'HDF5'):
                 frmt = 'h5'
             else:
+            	# else the user has given an invalid format
                 print(help_text)
                 sys.exit(2)
     try:
