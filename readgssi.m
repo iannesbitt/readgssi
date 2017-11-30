@@ -1,4 +1,4 @@
-// developed by gabe lewis, dartmouth college geophysics
+% developed by gabe lewis, dartmouth college geophysics
 
 function data=readgssi(name)
 
@@ -57,10 +57,13 @@ rh.Gainpoints=fread(fid,rh.Gain,'float');
 rh.comments=setstr(fread(fid,rh.ntext,'char'));
 rh.proccessing=fread(fid,rh.nproc,'char');
 
-fseek(fid,0,'bof');
-fseek(fid,1024,'bof');
+if rh.data < 1024
+    fseek(fid,1024*rh.data,'bof');
+else
+    fseek(fid,1024*rh.nchan,'bof');
+end
 
-d=fread(fid,[rh.nsamp inf],'ushort');
+d=fread(fid,[rh.nsamp inf],'int32');
 d(1,:)=d(3,:);
 d(2,:)=d(3,:);
 d=d+rh.zero;

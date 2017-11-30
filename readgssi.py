@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 import pytz
+import h5py
 
 NAME = 'readgssi'
 VERSION = '0.0.3-dev'
@@ -32,7 +33,8 @@ PAREASIZE = 128 # fixed info header size
 
 # the GSSI field unit used
 UNIT = {
-    0: 'could not read system type',
+    0: 'unknown system type',
+    1: 'unknown system type',
     2: 'SIR 2000',
     3: 'SIR 3000',
     4: 'TerraVision',
@@ -40,6 +42,8 @@ UNIT = {
     7: 'StructureScan Mini',
     8: 'SIR 4000',
     9: 'SIR 30',
+    10: 'unknown system type',
+    11: 'unknown system type',
     12: 'UtilityScan DF',
     13: 'HS',
     14: 'StructureScan Mini XT',
@@ -161,7 +165,9 @@ def readgssi(argv=None, call=None):
                 rhf_position = struct.unpack('<f', f.read(4))[0] # position (ns)
                 rhf_range = struct.unpack('<f', f.read(4))[0] # range (ns)
                 rh_npass = struct.unpack('<h', f.read(2))[0] # number of passes for 2-D files
+                f.seek(32) # ensure correct read position for rfdatebyte
                 rhb_cdt = readtime(f.read(4)) # creation date and time in bits, structured as little endian u5u6u5u5u4u7
+                f.seek(36)
                 rhb_mdt = readtime(f.read(4)) # modification date and time in bits, structured as little endian u5u6u5u5u4u7
                 f.seek(44) # skip across some proprietary BS
                 rh_text = struct.unpack('<h', f.read(2))[0] # offset to text
@@ -216,7 +222,7 @@ def readgssi(argv=None, call=None):
 
 if __name__ == "__main__":
     '''
-    this is the command line use case
+    this is the direct command line call use case
     '''
     print(NAME + ' ' + VERSION)
     try:
@@ -241,21 +247,36 @@ if __name__ == "__main__":
         if r[0]['frmt']:
             print('outputting to ' + r[0]['frmt'] + " . . .")
             data = pd.DataFrame(r[1]) # using pandas to output csv
+
+            # is there an output filepath given?
+            if r[0]['outfile']: # if output is given
+                of = os.path.abspath(r[0]['outfile']) # set output to given location
+            else: # if no output is given
+                # set output to the same dir as input file
+                of = os.path.abspath(os.path.splitext(r[0]['infile'])[0] + '.' + r[0]['frmt'])
+
+            # what is the output format
             if r[0]['frmt'] in 'csv':
-                if r[0]['outfile']: # if output is given
-                    of = os.path.abspath(r[0]['outfile']) # set output to given location
-                else: # if no output is given
-                    # set output to the same dir as input file
-                    of = os.path.abspath(os.path.splitext(r[0]['infile'])[0] + '.' + r[0]['frmt'])
                 print('writing file to:    ' + of)
                 data.to_csv(of) 
             elif r[0]['frmt'] in 'h5':
-                print('hdf5 is not yet supported, please choose another format.')
+                f = h5py.File(of, 'w')
+                li = f.create_group('line_0')
+                lo = li.create_group('location_0')
+                dc = lo.create_group('datacapture_0')
+                eg = dc.create_dataset('echogram_0')
+
             elif r[0]['frmt'] in 'segy':
                 print('SEG-Y is not yet supported, please choose another format.')
             print('done.')
         
 
     except TypeError as e: # shows up when the user selects an input file that doesn't exist
-        print('')
+        print(e)
         sys.exit(2)
+
+else:
+    '''
+    this is the module/import use case
+    '''
+    pass
