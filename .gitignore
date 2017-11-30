@@ -1,3 +1,2 @@
-.env
-env/
-venv/
+testfiles/
+.DS_Store
