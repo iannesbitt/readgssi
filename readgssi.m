@@ -63,7 +63,15 @@ else
     fseek(fid,1024*rh.nchan,'bof');
 end
 
-d=fread(fid,[rh.nsamp inf],'int32');
+
+if rh.bits == 8
+    d=fread(fid,[rh.nsamp inf],'uint8');
+elseif rh.bits == 16
+    d=fread(fid,[rh.nsamp inf],'uint16');
+else
+    d=fread(fid,[rh.nsamp inf],'int32');
+end
+
 d(1,:)=d(3,:);
 d(2,:)=d(3,:);
 d=d+rh.zero;
