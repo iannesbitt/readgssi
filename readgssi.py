@@ -22,6 +22,7 @@ import pandas as pd
 from datetime import datetime
 import pytz
 import h5py
+import pynmea2
 
 NAME = 'readgssi'
 VERSION = '0.0.3-dev'
@@ -30,6 +31,8 @@ AFFIL = 'School of Earth and Climate Sciences, University of Maine'
 
 MINHEADSIZE = 1024 # absolute minimum total header size
 PAREASIZE = 128 # fixed info header size
+
+TZ = pytz.timezone('UTC')
 
 # the GSSI field unit used
 UNIT = {
@@ -78,8 +81,8 @@ def readbit(bits, start, end):
 def readtime(bits):
     '''
     function to read dates bitwise.
-    this is a colossally stupid way of storing dates. I have no idea if I'm unpacking them correctly.
-    (and every indication that I'm not.)
+    this is a colossally stupid way of storing dates.
+    I have no idea if I'm unpacking them correctly, and every indication that I'm not
     '''
     if bits == '\x00\x00\x00\x00':
         return datetime(1980,1,1,0,0,0,0,tzinfo=pytz.UTC) # if there is no date information, return arbitrary datetime
@@ -91,6 +94,42 @@ def readtime(bits):
             return datetime(yr+1980, mo, day, hr, mins, sec2*2, 0, tzinfo=pytz.UTC)
         except:
             return datetime(1980,1,1,0,0,0,0,tzinfo=pytz.UTC) # most of the time the info returned is garbage, so we return arbitrary datetime again
+
+def readdzg(fi, frmt, sps):
+    '''
+    a parser to extract gps data from DZG file format
+    DZG contains raw NMEA sentences, which should include RMC and GGA
+    '''
+    samps = 0
+    row = 0
+    rows = 0
+    prevtime = False
+    with open(fi, 'r') as gf:
+        if frmt == 'dzg':
+            for ln in gf:
+                if ln.startswith('$GPGGA'):
+                    rows += 1
+            dt = [('samp', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('ts', 'datetime64[us]')]
+            array = np.zeros(rows, dt)
+            gf.seek(0)
+            for ln in gf:
+                if ln.startswith('$GPRMC'):
+                    msg = pynmea2.parse(ln.rstrip())
+                    timestamp = TZ.localize(datetime.datetime.combine(msg.datestamp, msg.timestamp))
+                    if prevtime:
+                        elapsed = (timestamp - prevtime).total_seconds()
+                        samp = elapsed * sps
+                        samps += samp
+                    prevtime = timestamp
+                if ln.startswith('$GPGGA'):
+                    msg = pynmea2.parse(ln.rstrip())
+                    tup = (samps, msg.latitude, msg.longitude, timestamp)
+                    array[row] = tup
+                    row += 1
+        elif frmt == 'csv':
+            array = ''
+
+    return array
 
 def readgssi(argv=None, call=None):
     '''
@@ -181,7 +220,7 @@ def readgssi(argv=None, call=None):
                 #rhf_coordx = struct.unpack('<ff', f.read(8))[0] # this is definitely useless
                 f.seek(113) # skip to something that matters
                 vsbyte = f.read(1) # byte containing versioning bits
-                rh_version = readbit(vsbyte, 0, 2) # whether or not the system is GPS-capable (probably does not mean GPS is in file)
+                rh_version = readbit(vsbyte, 0, 2) # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
                 rh_system = readbit(vsbyte, 3, 7) # the system type (values in UNIT={...} dictionary above)
                 del vsbyte
 
@@ -198,7 +237,7 @@ def readgssi(argv=None, call=None):
                 else:
                     data = np.fromfile(f, np.int32).reshape(-1,rh_nsamp).T # 32-bit
 
-                # create returns dictionary
+                # create return dictionary
                 returns = {
                     'infile': infile,
                     'outfile': outfile,
@@ -214,7 +253,7 @@ def readgssi(argv=None, call=None):
                 }
 
                 return returns, data
-        except IOError as e: # when the user selects an inaccessible or nonexistent file
+        except IOError as e: # the user has selected an inaccessible or nonexistent file
             print("i/o error: DZT file is inaccessable or does not exist")
             print('detail: ' + str(e) + '\n')
             print(help_text)
@@ -246,26 +285,81 @@ if __name__ == "__main__":
             print('meters:             ' + str(r[1].shape[1]/rhf_spm))
         if r[0]['frmt']:
             print('outputting to ' + r[0]['frmt'] + " . . .")
-            data = pd.DataFrame(r[1]) # using pandas to output csv
 
+            fnoext = os.path.splitext(r[0]['infile'])[0]
             # is there an output filepath given?
             if r[0]['outfile']: # if output is given
                 of = os.path.abspath(r[0]['outfile']) # set output to given location
             else: # if no output is given
                 # set output to the same dir as input file
-                of = os.path.abspath(os.path.splitext(r[0]['infile'])[0] + '.' + r[0]['frmt'])
+                of = os.path.abspath(fnoext + '.' + r[0]['frmt'])
 
             # what is the output format
             if r[0]['frmt'] in 'csv':
+                data = pd.DataFrame(r[1]) # using pandas to output csv
                 print('writing file to:    ' + of)
-                data.to_csv(of) 
+                data.to_csv(of) # write
+                del data
             elif r[0]['frmt'] in 'h5':
-                f = h5py.File(of, 'w')
-                li = f.create_group('line_0')
-                lo = li.create_group('location_0')
-                dc = lo.create_group('datacapture_0')
-                eg = dc.create_dataset('echogram_0')
+                '''
+                Now we gather gps data.
+                Full GPS data are in .DZG files of same name if they exist (see below).
+                If .DZG does not exist, then locations are determined from correlating
+                waypoint marks with scan numbers (end of .DZX files).
+                In this case we must have some way of relating location to mark or
+                directly to scan number so best option may be .csv with:
+                mark name, lat, lon
+                CSV file is then read to np array and matched with mark nums in .DZX
+                and number of scans between marks calculated. Then we can
+                interpolate lat and lon in np array for all scans between marks
+                with gps. Problems will arise in cases where marks on GPS and SIR
+                do not total the same number, so care must be taken to cull or add
+                points where necessary.
+                Assumptions:
+                - constant velocity between marks (may be possible to add a check)
+                - marks are made at same time on GPS and SIR
+                - gps and gpr are in same location when mark is made
+                - good quality horizontal solution
 
+                Reading DZG
+                We need to relate gpstime to scan number then interpolate for each scan
+                between gps measurements.
+                NMEA GGA string format:
+                $GPGGA,UTC hhmmss.s,lat DDmm.sss,lon DDDmm.sss,fix qual,numsats,hdop,mamsl,wgs84 geoid ht,fix age,dgps sta.,checksum *xx
+                if we want the date, we have to read RMC as well:
+                $GPRMC,UTC hhmmss,status,lat DDmm.sss,lon DDDmm.sss,SOG,COG,date ddmmyy,checksum *xx
+                RMC strings may also be useful for SOG and COG,
+                ...but let's keep it simple for now.
+                '''
+                if os.path.exists(fnoext + '.DZG'):
+                    gps = readdzg(fnoext + '.DZG', 'dzg', rhf_sps)
+                else:
+                    pass
+
+                # make data structure
+                n = 0 # line number, iteratively increased
+                f = h5py.File(of, 'a') # open or create a file
+                # single-channel IceRadar h5 structure is /line_x/location_n/datacapture_0/echogram_0 (/group/group/group/dataset)
+                # each dataset has an 'attributes' item attached, containing a four-item list. items are sort of formatted in dictionary style:
+                # [('PCSavetimestamp', str), ('GPS Cluster- MetaData_xml', str), ('Digitizer-MetaData_xml', str), ('GPS Cluster_UTM-MetaData_xml', str)]
+                # PCSavetimestamp formatting: m/d/yyyy_h:m:ss PM
+
+                svts = 'PCSavetimestamp'
+                gpsx = 'GPS Cluster- MetaData_xml'
+                dimx = 'Digitizer-MetaData_xml'
+                gutx = 'GPS Cluster_UTM-MetaData_xml'
+
+                li = f.create_group('line_0')
+                for column in r[1].T:
+                    lo = li.create_group('location_' + str(n))
+                    dc = lo.create_group('datacapture_0')
+                    eg = dc.create_dataset('echogram_0', (r[1].shape[0],), data=column)
+                    eg.attrs.create(svts, )
+                    eg.attrs.create(gpsx, )
+                    eg.attrs.create(dimx, )
+                    eg.attrs.create(gutx, )
+                    n += 1
+                f.close()
             elif r[0]['frmt'] in 'segy':
                 print('SEG-Y is not yet supported, please choose another format.')
             print('done.')
