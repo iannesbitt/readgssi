@@ -18,7 +18,8 @@
 import sys, getopt, os
 import struct, bitstruct
 import numpy as np
-import pandas as pd
+#import pandas as pd
+import math
 from datetime import datetime
 import pytz
 import h5py
@@ -45,7 +46,7 @@ UNIT = {
     7: 'StructureScan Mini',
     8: 'SIR 4000',
     9: 'SIR 30',
-    10: 'unknown system type',
+    10: 'SIR 30', # 10 is undefined in documentation but SIR 30 according to Lynn's DZX
     11: 'unknown system type',
     12: 'UtilityScan DF',
     13: 'HS',
@@ -84,8 +85,9 @@ def readtime(bits):
     this is a colossally stupid way of storing dates.
     I have no idea if I'm unpacking them correctly, and every indication that I'm not
     '''
+    garbagedate = datetime(1980,1,1,0,0,0,0,tzinfo=pytz.UTC)
     if bits == '\x00\x00\x00\x00':
-        return datetime(1980,1,1,0,0,0,0,tzinfo=pytz.UTC) # if there is no date information, return arbitrary datetime
+        return garbagedate # if there is no date information, return arbitrary datetime
     else:
         try:
             sec2, mins, hr, day, mo, yr = bitstruct.unpack('<u5u6u5u5u4u7', bits) # if there is date info, try to unpack
@@ -93,43 +95,116 @@ def readtime(bits):
             # sec2 * 2 should equal real seconds
             return datetime(yr+1980, mo, day, hr, mins, sec2*2, 0, tzinfo=pytz.UTC)
         except:
-            return datetime(1980,1,1,0,0,0,0,tzinfo=pytz.UTC) # most of the time the info returned is garbage, so we return arbitrary datetime again
+            return garbagedate # most of the time the info returned is garbage, so we return arbitrary datetime again
 
-def readdzg(fi, frmt, sps):
+def readdzg(fi, frmt, spu, traces):
     '''
     a parser to extract gps data from DZG file format
     DZG contains raw NMEA sentences, which should include RMC and GGA
-    '''
-    samps = 0
-    row = 0
-    rows = 0
-    prevtime = False
-    with open(fi, 'r') as gf:
-        if frmt == 'dzg':
-            for ln in gf:
-                if ln.startswith('$GPGGA'):
-                    rows += 1
-            dt = [('samp', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('ts', 'datetime64[us]')]
-            array = np.zeros(rows, dt)
-            gf.seek(0)
-            for ln in gf:
-                if ln.startswith('$GPRMC'):
-                    msg = pynmea2.parse(ln.rstrip())
-                    timestamp = TZ.localize(datetime.datetime.combine(msg.datestamp, msg.timestamp))
-                    if prevtime:
-                        elapsed = (timestamp - prevtime).total_seconds()
-                        samp = elapsed * sps
-                        samps += samp
-                    prevtime = timestamp
-                if ln.startswith('$GPGGA'):
-                    msg = pynmea2.parse(ln.rstrip())
-                    tup = (samps, msg.latitude, msg.longitude, timestamp)
-                    array[row] = tup
-                    row += 1
-        elif frmt == 'csv':
-            array = ''
+    fi = file containing gps information
+    frmt = format ('dzg' = DZG file containing gps sentence strings (see below); 'csv' = comma separated file with)
+    spu = samples per unit (second or meter)
+    traces = the number of traces in the file
 
-    return array
+    Reading DZG
+    We need to relate gpstime to scan number then interpolate for each scan
+    between gps measurements.
+    NMEA GGA sentence string format:
+    $GPGGA,UTC hhmmss.s,lat DDmm.sss,lon DDDmm.sss,fix qual,numsats,hdop,mamsl,wgs84 geoid ht,fix age,dgps sta.,checksum *xx
+    if we want the date, we have to read RMC sentences as well:
+    $GPRMC,UTC hhmmss,status,lat DDmm.sss,lon DDDmm.sss,SOG,COG,date ddmmyy,checksum *xx
+    RMC strings may also be useful for SOG and COG,
+    ...but let's keep it simple for now.
+    '''
+    trace = 0 # the elapsed number of traces iterated through
+    tracenum = 0 # the increase in trace number
+    rownp = 0 # row number iterated through (numpy array)
+    rowrmc = 0 # row number iterated through (gps file)
+    rowgga = 0
+    timestamp = False
+    prevtime = False
+    td = False
+    prevtrace = False
+    rmc = False
+    x0, x1, y0, y1, z0, z1 = False, False, False, False, False, False # coordinates
+    with open(fi, 'r') as gf:
+        if frmt == 'dzg': # if we're working with DZG format
+            for ln in gf: # loop through the first few sentences, check for RMC
+                if ln.startswith('$GPRMC'): # check to see if RMC sentence (should occur before GGA)
+                    rmc = True
+                    if rowrmc == 10: # we'll assume that 10 samples is a safe distance into the file to measure frequency
+                        msg = pynmea2.parse(ln.rstrip()) # convert gps sentence to pynmea2 named tuple
+                        ts0 = datetime.combine(msg.datestamp, msg.timestamp) # row 0's timestamp
+                    if rowrmc == 11:
+                        msg = pynmea2.parse(ln.rstrip())
+                        ts1 = datetime.combine(msg.datestamp, msg.timestamp) # row 1's timestamp
+                        td = ts1 - ts0 # timedelta = datetime1 - datetime0
+                    rowrmc += 1
+                if ln.startswith('$GPGGA'):
+                    if rowgga == 10:
+                        msg = pynmea2.parse(ln.rstrip()) # convert gps sentence to pynmea2 named tuple
+                        ts0 = datetime.combine(datetime(1980, 1, 1), msg.timestamp) # row 0's timestamp (not ideal)
+                    if rowgga == 11:
+                        msg = pynmea2.parse(ln.rstrip())
+                        ts1 = datetime.combine(datetime(1980, 1, 1), msg.timestamp) # row 1's timestamp (not ideal)
+                        td = ts1 - ts0 # timedelta = datetime1 - datetime0
+                    rowgga += 1
+            if rowgga != rowrmc:
+                print("WARNING: GGA and RMC sentences are not recorded at the same rate! This could cause unforseen problems!")
+                print('rmc records: ' + rowrmc)
+                print('gga records: ' + rowgga)
+            gpssps = 1 / td.total_seconds() # GPS samples per second
+            print('found ' + str(rowrmc) + ' GPS epochs at rate of ' + str(gpssps) + 'Hz')
+            shift = (rowrmc/gpssps - traces/spu) / 2 # number of GPS samples to cut from each end of file
+            print('cutting ' + str(shift) + ' records from the beginning and end of the file')
+            dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('alt', 'float32'), ('ts', 'datetime64[us]')] # array columns
+            arr = np.zeros(traces+100, dt) # numpy array with num rows = num gpr traces, and columns defined above
+            print('creating array of ' + str(traces) + ' interpolated locations...')
+            gf.seek(0) # back to beginning of file
+            for ln in gf: # loop over file line by line
+                if rmc == True: # if there is RMC, we can use the full datestamp
+                    if ln.startswith('$GPRMC'):
+                        msg = pynmea2.parse(ln.rstrip())
+                        timestamp = TZ.localize(datetime.combine(msg.datestamp, msg.timestamp)) # set t1 for this loop
+                else: # if no RMC, we best hope there is no UTC 0:00:00 in the file.........
+                    if ln.startswith('$GPGGA'):
+                        msg = pynmea2.parse(ln.rstrip())
+                        timestamp = TZ.localize(msg.timestamp) # set t1 for this loop
+                if ln.startswith('$GPGGA'):
+                    msg = pynmea2.parse(ln.rstrip())
+                    x1, y1, z1 = msg.longitude, msg.latitude, msg.altitude
+                    if prevtime: # if this is our second or more GPS epoch, calculate delta trace and current trace
+                        elapsedelta = timestamp - prevtime # t1 - t0 in timedelta format
+                        elapsed = float((elapsedelta).total_seconds()) # seconds elapsed
+                        if elapsed > 3600.0:
+                            print("WARNING: Time jumps by more than an hour in this GPS dataset and there are no RMC sentences to anchor the datestamp!")
+                            print("This dataset may cross over the UTC midnight dateline!\nprevious timestamp: " + prevtime + "\ncurrent timestamp:  " + timestamp)
+                            print("trace number:       " + trace)
+                        tracenum = round(elapsed * spu, 5) # calculate the increase in trace number, rounded to 5 decimals to eliminate machine error
+                        trace += tracenum # increment to reflect current trace
+                        resamp = numpy.arange(math.ceil(prevtrace), math.ceil(trace), 1) # make an array of integer values between t0 and t1
+                        for t in resamp:
+                            x = (x1 - x0) / (elapsed) * (t - prevtrace) + x0 # interpolate latitude
+                            y = (y1 - y0) / (elapsed) * (t - prevtrace) + y0 # interpolate longitude
+                            z = (z1 - z0) / (elapsed) * (t - prevtrace) + z0 # interpolate altitude
+                            tracetime = prevtime + timedelta(seconds=elapsedelta.total_seconds() * (t - prevtrace))
+                            tup = (t, x, y, z, tracetime)
+                            arr[rownp] = tup
+                            rownp += 1
+                    else: # we're on the very first row
+                        pass # we don't do anything here :)
+                    x0, y0, z0 = x1, y1, z1 # set xyz0 for next loop
+                    prevtime = timestamp # set t0 for next loop
+                    prevtrace = trace
+            print('processed ' + str(rownp) + ' rows')
+            # if there's no need to use pandas, we shouldn't (library load speed mostly):
+            #array = pd.DataFrame({ 'ts' : arr['ts'], 'lat' : arr['lat'], 'lon' : arr['lon'] }, index=arr['tracenum'])
+        elif frmt == 'csv':
+            arr = ''
+    return arr
+
+readdzg(fi, frmt, spu, traces)
+
 
 def readgssi(argv=None, call=None):
     '''
@@ -146,11 +221,12 @@ def readgssi(argv=None, call=None):
     infile = ''
     outfile = ''
     frmt = ''
-    help_text = 'usage:\nreadgssi.py -i <input file> -o <output file> -f <format: (csv|h5|segy)>\n' # help text string
+    dmi = False
+    help_text = 'usage:\nreadgssi.py -i <input file> -o <output file> -f <format: (csv|h5|segy)>\n'#optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
 
     # parse passed command line arguments. this may get moved somewhere else, but for now:
     try:
-        opts, args = getopt.getopt(argv,'hi:o:f:',['help','input=','output=','format='])
+        opts, args = getopt.getopt(argv,'hdi:o:f:',['help','dmi','input=','output=','format='])
     # the 'no option supplied' error
     except getopt.GetoptError:
         print('invalid argument(s) supplied')
@@ -188,6 +264,9 @@ def readgssi(argv=None, call=None):
             else:
                 print(help_text)
                 sys.exit(2)
+        if opt in ('-d', '--dmi'):
+            #dmi = True
+            pass # not doing anything with this at the moment
 
     if infile:
         try:
@@ -250,6 +329,8 @@ def readgssi(argv=None, call=None):
                     'rhf_sps': rhf_sps,
                     'rhf_spm': rhf_spm,
                     'rhf_epsr': rhf_epsr,
+                    'rhb_cdt': rhb_cdt,
+                    'rhb_mdt': rhb_mdt,
                 }
 
                 return returns, data
@@ -268,9 +349,12 @@ if __name__ == "__main__":
         r = readgssi(argv=sys.argv[1:])
         rhf_sps = r[0]['rhf_sps']
         rhf_spm = r[0]['rhf_spm']
+        line_dur = r[1].shape[1]/rhf_sps
         # print some useful things to command line users from returned dictionary
         print('input file:         ' + r[0]['infile'])
         print('system:             ' + UNIT[r[0]['rh_system']])
+        print('date created:       ' + str(r[0]['rhb_cdt']))
+        print('date modified:      ' + str(r[0]['rhb_mdt']))
         print('gps-enabled file:   ' + GPS[r[0]['rh_version']])
         print('number of channels: ' + str(r[0]['rh_nchan']))
         print('samples per trace:  ' + str(r[0]['rh_nsamp']))
@@ -280,7 +364,7 @@ if __name__ == "__main__":
         print('dilectric:          ' + str(r[0]['rhf_epsr']))
         print('traces:             ' + str(r[1].shape[1]))
         if rhf_spm == 0:
-            print('seconds:            ' + str(r[1].shape[1]/rhf_sps))
+            print('seconds:            ' + str(line_dur))
         else:
             print('meters:             ' + str(r[1].shape[1]/rhf_spm))
         if r[0]['frmt']:
@@ -320,19 +404,9 @@ if __name__ == "__main__":
                 - marks are made at same time on GPS and SIR
                 - gps and gpr are in same location when mark is made
                 - good quality horizontal solution
-
-                Reading DZG
-                We need to relate gpstime to scan number then interpolate for each scan
-                between gps measurements.
-                NMEA GGA string format:
-                $GPGGA,UTC hhmmss.s,lat DDmm.sss,lon DDDmm.sss,fix qual,numsats,hdop,mamsl,wgs84 geoid ht,fix age,dgps sta.,checksum *xx
-                if we want the date, we have to read RMC as well:
-                $GPRMC,UTC hhmmss,status,lat DDmm.sss,lon DDDmm.sss,SOG,COG,date ddmmyy,checksum *xx
-                RMC strings may also be useful for SOG and COG,
-                ...but let's keep it simple for now.
                 '''
                 if os.path.exists(fnoext + '.DZG'):
-                    gps = readdzg(fnoext + '.DZG', 'dzg', rhf_sps)
+                    gps = readdzg(fnoext + '.DZG', 'dzg', rhf_sps, r[1].shape[1])
                 else:
                     pass
 
