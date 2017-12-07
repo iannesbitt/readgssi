@@ -8,8 +8,8 @@ A tool intended to read binary GSSI ground-penetrating radar (GPR) data. Origina
 
 ## future
 - calls to readgssi.readgssi(filename) from script or python shell will return np array and critical file statistics
-- GPS transcription (read from associated DZX file)
-- supplementing a geophysical format (HDF5, SEGY, etc.) will write to that format
+- GPS transcription (read from associated DZG file or CSV with mark name, lon, lat, elev, time)
+- supplementing a flag indicating geophysical format (HDF5, SEGY, etc.) will write to that format
 
 ## possible other tools
 - stacking of data
