@@ -203,8 +203,6 @@ def readdzg(fi, frmt, spu, traces):
             arr = ''
     return arr
 
-readdzg(fi, frmt, spu, traces)
-
 
 def readgssi(argv=None, call=None):
     '''
