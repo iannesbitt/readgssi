@@ -159,7 +159,7 @@ def readdzg(fi, frmt, spu, traces):
             print('found ' + str(rowrmc) + ' GPS epochs at rate of ' + str(gpssps) + 'Hz')
             shift = (rowrmc/gpssps - traces/spu) / 2 # number of GPS samples to cut from each end of file
             print('cutting ' + str(shift) + ' records from the beginning and end of the file')
-            dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('alt', 'float32'), ('ts', 'datetime64[us]')] # array columns
+            dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('altitude', 'float32'), ('geoid_ht', 'float32'), ('qual', 'uint8'), ('num_sats', 'uint8'), ('hdop', 'float32'), ('timestamp', 'datetime64[us]')] # array columns
             arr = np.zeros(traces+100, dt) # numpy array with num rows = num gpr traces, and columns defined above
             print('creating array of ' + str(traces) + ' interpolated locations...')
             gf.seek(0) # back to beginning of file
@@ -174,7 +174,11 @@ def readdzg(fi, frmt, spu, traces):
                         timestamp = TZ.localize(msg.timestamp) # set t1 for this loop
                 if ln.startswith('$GPGGA'):
                     msg = pynmea2.parse(ln.rstrip())
-                    x1, y1, z1 = msg.longitude, msg.latitude, msg.altitude
+                    x1, y1, z1, gh, q, sats, dil = float(msg.lon), float(msg.lat), float(msg.altitude), float(msg.geo_sep), int(msg.gps_qual), int(msg.num_sats), float(msg.horizontal_dil)
+                    if msg.lon_dir in 'W':
+                        x1 = -x1
+                    if msg.lat_dir in 'S':
+                        y1 = -y1
                     if prevtime: # if this is our second or more GPS epoch, calculate delta trace and current trace
                         elapsedelta = timestamp - prevtime # t1 - t0 in timedelta format
                         elapsed = float((elapsedelta).total_seconds()) # seconds elapsed
@@ -190,7 +194,7 @@ def readdzg(fi, frmt, spu, traces):
                             y = (y1 - y0) / (elapsed) * (t - prevtrace) + y0 # interpolate longitude
                             z = (z1 - z0) / (elapsed) * (t - prevtrace) + z0 # interpolate altitude
                             tracetime = prevtime + timedelta(seconds=elapsedelta.total_seconds() * (t - prevtrace))
-                            tup = (t, x, y, z, tracetime)
+                            tup = (t, x, y, z, gh, q, sats, dil, tracetime)
                             arr[rownp] = tup
                             rownp += 1
                     else: # we're on the very first row
@@ -199,7 +203,7 @@ def readdzg(fi, frmt, spu, traces):
                     prevtime = timestamp # set t0 for next loop
                     prevtrace = trace
             print('processed ' + str(rownp) + ' rows')
-            # if there's no need to use pandas, we shouldn't (library load speed mostly):
+            # if there's no need to use pandas, we shouldn't (library load speed mostly, also this line is old):
             #array = pd.DataFrame({ 'ts' : arr['ts'], 'lat' : arr['lat'], 'lon' : arr['lon'] }, index=arr['tracenum'])
         elif frmt == 'csv':
             arr = ''
