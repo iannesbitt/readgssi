@@ -18,6 +18,8 @@
 import sys, getopt, os
 import struct, bitstruct
 import numpy as np
+import matplotlib.image as mpi
+import matplotlib.pyplot as plt
 #import pandas as pd
 import math
 from datetime import datetime
@@ -219,12 +221,13 @@ def readgssi(argv=None, call=None):
     infile = ''
     outfile = ''
     frmt = ''
+    plot = False
     dmi = False
     help_text = 'usage:\nreadgssi.py -i <input file> -o <output file> -f <format: (csv|h5|segy)>\n'#optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
 
     # parse passed command line arguments. this may get moved somewhere else, but for now:
     try:
-        opts, args = getopt.getopt(argv,'hdi:o:f:',['help','dmi','input=','output=','format='])
+        opts, args = getopt.getopt(argv,'hpdi:o:f:',['help','plot','dmi','input=','output=','format='])
     # the 'no option supplied' error
     except getopt.GetoptError:
         print('invalid argument(s) supplied')
@@ -255,6 +258,8 @@ def readgssi(argv=None, call=None):
                     frmt = 'segy'
                 elif arg in ('h5', 'hdf5', 'H5', 'HDF5'):
                     frmt = 'h5'
+                elif arg in ('plot'):
+                    plot = True
                 else:
                     # else the user has given an invalid format
                     print(help_text)
@@ -262,6 +267,8 @@ def readgssi(argv=None, call=None):
             else:
                 print(help_text)
                 sys.exit(2)
+        if opt in ('-p', '--plot'):
+            plot = True
         if opt in ('-d', '--dmi'):
             #dmi = True
             pass # not doing anything with this at the moment
@@ -319,6 +326,7 @@ def readgssi(argv=None, call=None):
                     'infile': infile,
                     'outfile': outfile,
                     'frmt': frmt,
+                    'plot': plot,
                     'rh_system': rh_system,
                     'rh_version': rh_version,
                     'rh_nchan': rh_nchan,
@@ -378,6 +386,7 @@ if __name__ == "__main__":
 
             # what is the output format
             if r[0]['frmt'] in 'csv':
+                import pandas as pd
                 data = pd.DataFrame(r[1]) # using pandas to output csv
                 print('writing file to:    ' + of)
                 data.to_csv(of) # write
@@ -411,31 +420,45 @@ if __name__ == "__main__":
                 # make data structure
                 n = 0 # line number, iteratively increased
                 f = h5py.File(of, 'a') # open or create a file
-                # single-channel IceRadar h5 structure is /line_x/location_n/datacapture_0/echogram_0 (/group/group/group/dataset)
-                # each dataset has an 'attributes' item attached, containing a four-item list. items are sort of formatted in dictionary style:
-                # [('PCSavetimestamp', str), ('GPS Cluster- MetaData_xml', str), ('Digitizer-MetaData_xml', str), ('GPS Cluster_UTM-MetaData_xml', str)]
-                # PCSavetimestamp formatting: m/d/yyyy_h:m:ss PM
+
+                '''
+                single-channel IceRadar h5 structure is
+                /line_x/location_n/datacapture_0/echogram_0 (/group/group/group/dataset)
+                each dataset has an 'attributes' item attached, formatted in 'collections.defaultdict' style:
+                [('PCSavetimestamp', str), ('GPS Cluster- MetaData_xml', str), ('Digitizer-MetaData_xml', str), ('GPS Cluster_UTM-MetaData_xml', str)]
+                PCSavetimestamp formatting: m/d/yyyy_h:m:ss PM
+                '''
 
                 svts = 'PCSavetimestamp'
                 gpsx = 'GPS Cluster- MetaData_xml'
                 dimx = 'Digitizer-MetaData_xml'
                 gutx = 'GPS Cluster_UTM-MetaData_xml'
 
-                li = f.create_group('line_0')
-                for column in r[1].T:
-                    lo = li.create_group('location_' + str(n))
+                li = f.create_group('line_0') # create line zero
+                for column in r[1].T: 
+                    lo = li.create_group('location_' + str(n)) # create a 'location' for each trace
                     dc = lo.create_group('datacapture_0')
                     eg = dc.create_dataset('echogram_0', (r[1].shape[0],), data=column)
-                    eg.attrs.create(svts, )
-                    eg.attrs.create(gpsx, )
-                    eg.attrs.create(dimx, )
-                    eg.attrs.create(gutx, )
+                    eg.attrs.create(svts, ) # store pcsavetimestamp attribute
+                    eg.attrs.create(gpsx, ) # store gpscluster attribute
+                    eg.attrs.create(dimx, ) # store digitizer attribute
+                    eg.attrs.create(gutx, ) # store utm gpscluster attribute
                     n += 1
                 f.close()
             elif r[0]['frmt'] in 'segy':
+            	'''
+            	segy output is not yet available
+            	'''
                 print('SEG-Y is not yet supported, please choose another format.')
-            print('done.')
-        
+            print('done exporting.')
+        if r[0]['plot']:
+            '''
+            let's do some matplotlib....later
+            '''
+            #print('plotting...')
+            #img = mpi.imread(r[1].astype(np.float32))
+            #imgplot = plt.imshow(img)
+            print('plotting is not yet supported, please choose another format.')
 
     except TypeError as e: # shows up when the user selects an input file that doesn't exist
         print(e)
