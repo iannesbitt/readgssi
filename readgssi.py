@@ -194,7 +194,7 @@ def readdzg(fi, frmt, spu, traces):
                             y = (y1 - y0) / (elapsed) * (t - prevtrace) + y0 # interpolate longitude
                             z = (z1 - z0) / (elapsed) * (t - prevtrace) + z0 # interpolate altitude
                             tracetime = prevtime + timedelta(seconds=elapsedelta.total_seconds() * (t - prevtrace))
-                            tup = (t, x, y, z, gh, q, sats, dil, tracetime)
+                            tup = (t, x, y, z, gh, q, sats, dil, sec, tracetime)
                             arr[rownp] = tup
                             rownp += 1
                     else: # we're on the very first row
@@ -227,11 +227,12 @@ def readgssi(argv=None, call=None):
     frmt = ''
     plot = False
     dmi = False
-    help_text = 'usage:\nreadgssi.py -i <input file> -o <output file> -f <format: (csv|h5|segy)>\n'#optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
+    antfreq = False
+    help_text = 'usage:\nreadgssi.py -i <input file> -a <antenna frequency> -o <output file> -f <format: (csv|h5|segy)>\n'#optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
 
     # parse passed command line arguments. this may get moved somewhere else, but for now:
     try:
-        opts, args = getopt.getopt(argv,'hpdi:o:f:',['help','plot','dmi','input=','output=','format='])
+        opts, args = getopt.getopt(argv,'hpdi:a:o:f:',['help','plot','dmi','input=','antfreq=','output=','format='])
     # the 'no option supplied' error
     except getopt.GetoptError:
         print('invalid argument(s) supplied')
@@ -253,6 +254,13 @@ def readgssi(argv=None, call=None):
                 outfile = arg
                 if '~' in outfile:
                     outfile = os.path.expanduser(infile) # expand tilde, see above
+        if opt in ('-a', '--freq'):
+            try:
+                antfreq = round(float(arg),1)
+            except:
+                print('%s is not a valid decimal or integer frequency value.' % arg)
+                print(help_text)
+                sys.exit(2)
         if opt in ('-f', '--format'): # the format string
             # check whether the string is a supported format
             if arg:
@@ -304,7 +312,7 @@ def readgssi(argv=None, call=None):
                 rh_nchan = struct.unpack('<h', f.read(2))[0] # number of channels
                 rhf_epsr = struct.unpack('<f', f.read(4))[0] # average dilectric
                 rhf_top = struct.unpack('<f', f.read(4))[0] # position in meters (useless?)
-                rhf_depth = struct.unpack('<f', f.read(4))[0] # range in meters (again-useless?)
+                rhf_depth = struct.unpack('<f', f.read(4))[0] # range in meters
                 #rhf_coordx = struct.unpack('<ff', f.read(8))[0] # this is definitely useless
                 f.seek(113) # skip to something that matters
                 vsbyte = f.read(1) # byte containing versioning bits
@@ -331,6 +339,7 @@ def readgssi(argv=None, call=None):
                     'outfile': outfile,
                     'frmt': frmt,
                     'plot': plot,
+                    'antfreq': antfreq,
                     'rh_system': rh_system,
                     'rh_version': rh_version,
                     'rh_nchan': rh_nchan,
@@ -341,6 +350,7 @@ def readgssi(argv=None, call=None):
                     'rhf_epsr': rhf_epsr,
                     'rhb_cdt': rhb_cdt,
                     'rhb_mdt': rhb_mdt,
+                    'rhf_depth': rhf_depth,
                 }
 
                 return returns, data
@@ -361,22 +371,24 @@ if __name__ == "__main__":
         rhf_spm = r[0]['rhf_spm']
         line_dur = r[1].shape[1]/rhf_sps
         # print some useful things to command line users from returned dictionary
-        print('input file:         ' + r[0]['infile'])
-        print('system:             ' + UNIT[r[0]['rh_system']])
-        print('date created:       ' + str(r[0]['rhb_cdt']))
-        print('date modified:      ' + str(r[0]['rhb_mdt']))
-        print('gps-enabled file:   ' + GPS[r[0]['rh_version']])
-        print('number of channels: ' + str(r[0]['rh_nchan']))
-        print('samples per trace:  ' + str(r[0]['rh_nsamp']))
-        print('bits per sample:    ' + BPS[r[0]['rh_bits']])
-        print('traces per second:  ' + str(rhf_sps))
-        print('traces per meter:   ' + str(rhf_spm))
-        print('dilectric:          ' + str(r[0]['rhf_epsr']))
-        print('traces:             ' + str(r[1].shape[1]))
+        print('input file:         %s' % r[0]['infile'])
+        print('system:             %s' % UNIT[r[0]['rh_system']])
+        print('antenna frequency:  %.1f' % r[0]['antfreq'])
+        print('date created:       %s' % r[0]['rhb_cdt'])
+        print('date modified:      %s' % r[0]['rhb_mdt'])
+        print('gps-enabled file:   %s' % GPS[r[0]['rh_version']])
+        print('number of channels: %i' % r[0]['rh_nchan'])
+        print('samples per trace:  %i' % r[0]['rh_nsamp'])
+        print('bits per sample:    %s' % BPS[r[0]['rh_bits']])
+        print('traces per second:  %.1f' % rhf_sps)
+        print('traces per meter:   %.1f' % rhf_spm)
+        print('dilectric:          %.1f' % r[0]['rhf_epsr'])
+        print('sampling depth:       %.1f' % r[0]['rhf_depth'])
+        print('traces:             %.1f' % r[1].shape[1])
         if rhf_spm == 0:
-            print('seconds:            ' + str(line_dur))
+            print('seconds:            %.1f' % line_dur)
         else:
-            print('meters:             ' + str(r[1].shape[1]/rhf_spm))
+            print('meters:             %.1f' % r[1].shape[1]/rhf_spm)
         if r[0]['frmt']:
             print('outputting to ' + r[0]['frmt'] + " . . .")
 
@@ -392,7 +404,7 @@ if __name__ == "__main__":
             if r[0]['frmt'] in 'csv':
                 import pandas as pd
                 data = pd.DataFrame(r[1]) # using pandas to output csv
-                print('writing file to:    ' + of)
+                print('writing file to:    %s' % of)
                 data.to_csv(of) # write
                 del data
             elif r[0]['frmt'] in 'h5':
@@ -419,7 +431,7 @@ if __name__ == "__main__":
                 if os.path.exists(fnoext + '.DZG'):
                     gps = readdzg(fnoext + '.DZG', 'dzg', rhf_sps, r[1].shape[1])
                 else:
-                    pass
+                    gps = '' # fix
 
                 # make data structure
                 n = 0 # line number, iteratively increased
@@ -430,23 +442,42 @@ if __name__ == "__main__":
                 /line_x/location_n/datacapture_0/echogram_0 (/group/group/group/dataset)
                 each dataset has an 'attributes' item attached, formatted in 'collections.defaultdict' style:
                 [('PCSavetimestamp', str), ('GPS Cluster- MetaData_xml', str), ('Digitizer-MetaData_xml', str), ('GPS Cluster_UTM-MetaData_xml', str)]
-                PCSavetimestamp formatting: m/d/yyyy_h:m:ss PM
                 '''
 
                 svts = 'PCSavetimestamp'
                 gpsx = 'GPS Cluster- MetaData_xml'
+                gpsclstr = '<Cluster>\r\n<Name>GPS Cluster</Name>\r\n<NumElts>%i</NumElts>\r\n<String>\r\n<Name>GPS_timestamp_UTC</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<String>\r\n<Name>Lat_N</Name>\r\n<Val>%.4f</Val>\r\n</String>\r\n<String>\r\n<Name>Long_ W</Name>\r\n<Val>%.4f</Val>\r\n</String>\r\n<String>\r\n<Name>Fix_Quality</Name>\r\n<Val>%i</Val>\r\n</String>\r\n<String>\r\n<Name>Num _Sat</Name>\r\n<Val>%i</Val>\r\n</String>\r\n<String>\r\n<Name>Dilution</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<String>\r\n<Name>Alt_asl_m</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<String>\r\n<Name>Geoid_Heigh_m</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<Boolean>\r\n<Name>GPS Fix valid</Name>\r\n<Val>%i</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>GPS Message ok</Name>\r\n<Val>%i</Val>\r\n</Boolean>\r\n</Cluster>\r\n'
                 dimx = 'Digitizer-MetaData_xml'
+                dimxstr = ''
                 gutx = 'GPS Cluster_UTM-MetaData_xml'
+                gpsutmstr = '<Cluster>\r\n<Name>GPS_UTM Cluster</Name>\r\n<NumElts>10</NumElts>\r\n<String>\r\n<Name>Datum</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Easting_m</Name>\r\n<Val></Val>\r\n</String>\r\n<String>\r\n<Name>Northing_m</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Elevation</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Zone</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Satellites (dup)</Name>\r\n<Val>%i</Val>\r\n</String>\r\n<Boolean>\r\n<Name>GPS Fix Valid (dup)</Name>\r\n<Val>1</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>GPS Message ok (dup)</Name>\r\n<Val>1</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>Flag_1</Name>\r\n<Val>0</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>Flag_2</Name>\r\n<Val>0</Val>\r\n</Boolean>\r\n</Cluster>\r\n'
 
                 li = f.create_group('line_0') # create line zero
-                for column in r[1].T: 
-                    lo = li.create_group('location_' + str(n)) # create a 'location' for each trace
+                for column in r[1].T:
+                    # create strings
+
+                    # pcsavetimestamp
+                    # formatting: m/d/yyyy_h:m:ss PM
+                    svts_str = gps[n]['timestamp'].strftime('%m/%d/%Y_%H:%M:%S %p')
+
+                    # gpscluster
+                    # order we need: (len(list), tracetime, y, x, q, sats, dil, z, gh, 1, 1)
+                    # rows in gps: tracenum, lat, lon, altitude, geoid_ht, qual, num_sats, hdop, timestamp
+                    gpsx_str = gpsclstr % (10, gps[n]['gps_sec'], gps[n]['lat'], gps[n]['lon'], gps[n]['qual'], gps[n]['num_sats'], gps[n]['hdop'], gps[n]['altitude'], gps[n]['geoid_ht'], 1, 1)
+
+                    # digitizer
+                    dimx_str = dimxstr
+
+                	# utm gpscluster
+                    gutx_str = gpsutmstr % gps[n]['num_sats']
+
+                    lo = li.create_group('location_' + str(n)) # create a location for each trace
                     dc = lo.create_group('datacapture_0')
                     eg = dc.create_dataset('echogram_0', (r[1].shape[0],), data=column)
-                    eg.attrs.create(svts, ) # store pcsavetimestamp attribute
-                    eg.attrs.create(gpsx, ) # store gpscluster attribute
-                    eg.attrs.create(dimx, ) # store digitizer attribute
-                    eg.attrs.create(gutx, ) # store utm gpscluster attribute
+                    eg.attrs.create(svts, svts_str) # store pcsavetimestamp attribute
+                    eg.attrs.create(gpsx, gpsx_str) # store gpscluster attribute
+                    eg.attrs.create(dimx, dimx_str) # store digitizer attribute
+                    eg.attrs.create(gutx, gutx_str) # store utm gpscluster attribute
                     n += 1
                 f.close()
             elif r[0]['frmt'] in 'segy':
