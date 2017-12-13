@@ -55,6 +55,22 @@ UNIT = {
     14: 'StructureScan Mini XT',
 }
 
+ANT = {
+    '3200': None,
+    '3207': 100,
+    '5106': 200,
+    '50300': 300,
+    '350': 350,
+    '50270': 270,
+    '50400': 400,
+    '800': 800,
+    '3101': 900,
+    '51600': 1600,
+    '62000': 2000,
+    '62300': 2300,
+    '52600': 2600,
+}
+
 # whether or not the file is GPS-enabled (does not guarantee presence of GPS data in file)
 GPS = {
     1: 'no',
@@ -128,6 +144,7 @@ def readdzg(fi, frmt, spu, traces):
     td = False
     prevtrace = False
     rmc = False
+    antname = False
     x0, x1, y0, y1, z0, z1 = False, False, False, False, False, False # coordinates
     with open(fi, 'r') as gf:
         if frmt == 'dzg': # if we're working with DZG format
@@ -228,6 +245,7 @@ def readgssi(argv=None, call=None):
     plot = False
     dmi = False
     antfreq = False
+    rh_antname = ''
     help_text = 'usage:\nreadgssi.py -i <input file> -a <antenna frequency> -o <output file> -f <format: (csv|h5|segy)>\n'#optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
 
     # parse passed command line arguments. this may get moved somewhere else, but for now:
@@ -314,12 +332,18 @@ def readgssi(argv=None, call=None):
                 rhf_top = struct.unpack('<f', f.read(4))[0] # position in meters (useless?)
                 rhf_depth = struct.unpack('<f', f.read(4))[0] # range in meters
                 #rhf_coordx = struct.unpack('<ff', f.read(8))[0] # this is definitely useless
+                f.seek(98) # start of antenna bit
+                rh_ant = struct.unpack('<14c', f.read(14))
+                i = 0
+                while i < 14:
+                    if rh_ant[i] != '\x00':
+                        rh_antname += rh_ant[i]
+                    i += 1
                 f.seek(113) # skip to something that matters
                 vsbyte = f.read(1) # byte containing versioning bits
                 rh_version = readbit(vsbyte, 0, 2) # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
                 rh_system = readbit(vsbyte, 3, 7) # the system type (values in UNIT={...} dictionary above)
                 del vsbyte
-
 
                 if rh_data < MINHEADSIZE: # whether or not the header is normal or big-->determines offset to data array
                     f.seek(MINHEADSIZE * rh_data)
@@ -340,6 +364,7 @@ def readgssi(argv=None, call=None):
                     'frmt': frmt,
                     'plot': plot,
                     'antfreq': antfreq,
+                    'rh_antname': rh_antname.rsplit('x')[0],
                     'rh_system': rh_system,
                     'rh_version': rh_version,
                     'rh_nchan': rh_nchan,
@@ -373,7 +398,20 @@ if __name__ == "__main__":
         # print some useful things to command line users from returned dictionary
         print('input file:         %s' % r[0]['infile'])
         print('system:             %s' % UNIT[r[0]['rh_system']])
-        print('antenna frequency:  %.1f' % r[0]['antfreq'])
+        print('antenna:            %s' % r[0]['rh_antname'])
+        if antfreq:
+            print('user ant frequency: %.1f' % r[0]['antfreq'])
+        elif r[0]['rh_antname']:
+            try:
+                print('antenna frequency:  %.1f' % ANT[r[0]['rh_antname']])
+            except ValueError as e:
+                print('WARNING: could not read frequency for given antenna name.\nerror info: %s' % e)
+                print(help_text)
+                sys.exit(2)
+        else:
+            print('no frequency information could be read from the header. please specify the frequency of the antenna using the -a flag')
+            print(help_text)
+            sys.exit(2)
         print('date created:       %s' % r[0]['rhb_cdt'])
         print('date modified:      %s' % r[0]['rhb_mdt'])
         print('gps-enabled file:   %s' % GPS[r[0]['rh_version']])
@@ -383,12 +421,15 @@ if __name__ == "__main__":
         print('traces per second:  %.1f' % rhf_sps)
         print('traces per meter:   %.1f' % rhf_spm)
         print('dilectric:          %.1f' % r[0]['rhf_epsr'])
-        print('sampling depth:       %.1f' % r[0]['rhf_depth'])
-        print('traces:             %.1f' % r[1].shape[1])
-        if rhf_spm == 0:
-            print('seconds:            %.1f' % line_dur)
+        print('sampling depth:     %.1f' % r[0]['rhf_depth'])
+        if r[1].shape[1] == int(r[1].shape[1]):
+            print('traces:             %i' % r[1].shape[1])
         else:
-            print('meters:             %.1f' % r[1].shape[1]/rhf_spm)
+            print('traces:             %f' % r[1].shape[1])
+        if rhf_spm == 0:
+            print('seconds:            %.8f' % line_dur)
+        else:
+            print('meters:             %.2f' % r[1].shape[1]/rhf_spm)
         if r[0]['frmt']:
             print('outputting to ' + r[0]['frmt'] + " . . .")
 
