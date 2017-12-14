@@ -193,8 +193,8 @@ def readdzg(fi, frmt, spu, traces):
             shift = (rowrmc/gpssps - traces/spu) / 2 # number of GPS samples to cut from each end of file
             #print('cutting ' + str(shift) + ' extra gps records from the beginning and end of the file')
             dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('altitude', 'float32'), ('geoid_ht', 'float32'), ('qual', 'uint8'), ('num_sats', 'uint8'), ('hdop', 'float32'), ('gps_sec', 'float32'), ('timestamp', 'datetime64[us]')] # array columns
-            arr = np.zeros(traces+100, dt) # numpy array with num rows = num gpr traces, and columns defined above
-            print('creating array of %i interpolated gps locations...' % traces)
+            arr = np.zeros(traces+1000, dt) # numpy array with num rows = num gpr traces, and columns defined above
+            print('creating array of %i interpolated gps locations...' % traces+1000)
             gf.seek(0) # back to beginning of file
             for ln in gf: # loop over file line by line
                 if rmc == True: # if there is RMC, we can use the full datestamp
@@ -210,10 +210,10 @@ def readdzg(fi, frmt, spu, traces):
                     msg = pynmea2.parse(ln.rstrip())
                     x1, y1, z1, gh, q, sats, dil = float(msg.lon), float(msg.lat), float(msg.altitude), float(msg.geo_sep), int(msg.gps_qual), int(msg.num_sats), float(msg.horizontal_dil)
                     if msg.lon_dir in 'W':
-                        lathem = 'south'
+                        lonhem = 'west'
                         x1 = -x1
                     if msg.lat_dir in 'S':
-                        lonhem = 'west'
+                        lathem = 'south'
                         y1 = -y1
                     if prevtime: # if this is our second or more GPS epoch, calculate delta trace and current trace
                         elapsedelta = timestamp - prevtime # t1 - t0 in timedelta format
@@ -239,7 +239,7 @@ def readdzg(fi, frmt, spu, traces):
                     x0, y0, z0, sec0 = x1, y1, z1, sec1 # set xyzs0 for next loop
                     prevtime = timestamp # set t0 for next loop
                     prevtrace = trace
-            print('processed %i rows' % rownp)
+            print('processed %i gps locations' % rownp)
             arr = arr[0:traces:1]
             print('cut %i rows from end of file' % (rownp - traces))
             # if there's no need to use pandas, we shouldn't (library load speed mostly, also this line is old):
@@ -531,6 +531,7 @@ if __name__ == "__main__":
                 # make data structure
                 n = 0 # line number, iteratively increased
                 f = h5py.File(of, 'a') # open or create a file
+                print('exporting to %s' % of)
 
                 try:
                     li = f.create_group('line_0') # create line zero
