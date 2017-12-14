@@ -159,6 +159,8 @@ def readdzg(fi, frmt, spu, traces):
     prevtrace = False
     rmc = False
     antname = False
+    lathem = 'north'
+    lonhem = 'east'
     x0, x1, y0, y1, z0, z1 = False, False, False, False, False, False # coordinates
     with open(fi, 'r') as gf:
         if frmt == 'dzg': # if we're working with DZG format
@@ -184,15 +186,15 @@ def readdzg(fi, frmt, spu, traces):
                     rowgga += 1
             if rowgga != rowrmc:
                 print("WARNING: GGA and RMC sentences are not recorded at the same rate! This could cause unforseen problems!")
-                print('rmc records: ' + rowrmc)
-                print('gga records: ' + rowgga)
+                print('rmc records: %i' % rowrmc)
+                print('gga records: %i' % rowgga)
             gpssps = 1 / td.total_seconds() # GPS samples per second
-            print('found ' + str(rowrmc) + ' GPS epochs at rate of ' + str(gpssps) + 'Hz')
+            print('found %i GPS epochs at rate of %.1f Hz' % (rowrmc, gpssps))
             shift = (rowrmc/gpssps - traces/spu) / 2 # number of GPS samples to cut from each end of file
-            print('cutting ' + str(shift) + ' records from the beginning and end of the file')
+            #print('cutting ' + str(shift) + ' extra gps records from the beginning and end of the file')
             dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('altitude', 'float32'), ('geoid_ht', 'float32'), ('qual', 'uint8'), ('num_sats', 'uint8'), ('hdop', 'float32'), ('gps_sec', 'float32'), ('timestamp', 'datetime64[us]')] # array columns
             arr = np.zeros(traces+100, dt) # numpy array with num rows = num gpr traces, and columns defined above
-            print('creating array of ' + str(traces) + ' interpolated locations...')
+            print('creating array of %i interpolated gps locations...' % traces)
             gf.seek(0) # back to beginning of file
             for ln in gf: # loop over file line by line
                 if rmc == True: # if there is RMC, we can use the full datestamp
@@ -208,8 +210,10 @@ def readdzg(fi, frmt, spu, traces):
                     msg = pynmea2.parse(ln.rstrip())
                     x1, y1, z1, gh, q, sats, dil = float(msg.lon), float(msg.lat), float(msg.altitude), float(msg.geo_sep), int(msg.gps_qual), int(msg.num_sats), float(msg.horizontal_dil)
                     if msg.lon_dir in 'W':
+                        lathem = 'south'
                         x1 = -x1
                     if msg.lat_dir in 'S':
+                        lonhem = 'west'
                         y1 = -y1
                     if prevtime: # if this is our second or more GPS epoch, calculate delta trace and current trace
                         elapsedelta = timestamp - prevtime # t1 - t0 in timedelta format
@@ -231,11 +235,13 @@ def readdzg(fi, frmt, spu, traces):
                             arr[rownp] = tup
                             rownp += 1
                     else: # we're on the very first row
-                        pass # we don't do anything here :)
+                        print('using %s and %s hemispheres' % (lonhem, lathem))
                     x0, y0, z0, sec0 = x1, y1, z1, sec1 # set xyzs0 for next loop
                     prevtime = timestamp # set t0 for next loop
                     prevtrace = trace
-            print('processed ' + str(rownp) + ' rows')
+            print('processed %i rows' % rownp)
+            arr = arr[0:traces:1]
+            print('cut %i rows from end of file' % (rownp - traces))
             # if there's no need to use pandas, we shouldn't (library load speed mostly, also this line is old):
             #array = pd.DataFrame({ 'ts' : arr['ts'], 'lat' : arr['lat'], 'lon' : arr['lon'] }, index=arr['tracenum'])
         elif frmt == 'csv':
@@ -529,7 +535,7 @@ if __name__ == "__main__":
                 try:
                     li = f.create_group('line_0') # create line zero
                 except ValueError: # the line already exists in the file
-                    pass
+                    li = f['line_0']
                 for sample in r[1].T:
                     # create strings
 
@@ -543,10 +549,10 @@ if __name__ == "__main__":
                     gpsx_str = gpsclstr % (gps[n]['gps_sec'], gps[n]['lat'], gps[n]['lon'], gps[n]['qual'], gps[n]['num_sats'], gps[n]['hdop'], gps[n]['altitude'], gps[n]['geoid_ht'], 1, 1)
 
                     # digitizer
-                    dimx_str = dimxstr % r[0]['rhf_depth'], freq, r[0]['rh_nsamp'], r[0]['stack']
+                    dimx_str = dimxstr % (r[0]['rhf_depth'], freq, r[0]['rh_nsamp'], r[0]['stack'])
 
                 	# utm gpscluster
-                    gutx_str = gpsutmstr % gps[n]['num_sats']
+                    gutx_str = gpsutmstr % (gps[n]['num_sats'])
 
                     lo = li.create_group('location_' + str(n)) # create a location for each trace
                     dc = lo.create_group('datacapture_0')
