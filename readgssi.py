@@ -193,8 +193,8 @@ def readdzg(fi, frmt, spu, traces):
             shift = (rowrmc/gpssps - traces/spu) / 2 # number of GPS samples to cut from each end of file
             #print('cutting ' + str(shift) + ' extra gps records from the beginning and end of the file')
             dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('altitude', 'float32'), ('geoid_ht', 'float32'), ('qual', 'uint8'), ('num_sats', 'uint8'), ('hdop', 'float32'), ('gps_sec', 'float32'), ('timestamp', 'datetime64[us]')] # array columns
-            arr = np.zeros(traces+1000, dt) # numpy array with num rows = num gpr traces, and columns defined above
-            print('creating array of %i interpolated gps locations...' % traces+1000)
+            arr = np.zeros((int(traces)+1000), dt) # numpy array with num rows = num gpr traces, and columns defined above
+            print('creating array of %i interpolated gps locations...' % (traces+1000))
             gf.seek(0) # back to beginning of file
             for ln in gf: # loop over file line by line
                 if rmc == True: # if there is RMC, we can use the full datestamp
@@ -530,7 +530,7 @@ if __name__ == "__main__":
 
                 # make data structure
                 n = 0 # line number, iteratively increased
-                f = h5py.File(of, 'a') # open or create a file
+                f = h5py.File(of, 'w') # open or create a file
                 print('exporting to %s' % of)
 
                 try:
