@@ -149,10 +149,10 @@ def readdzg(fi, frmt, spu, traces):
     ...but let's keep it simple for now.
     '''
     trace = 0 # the elapsed number of traces iterated through
-    tracenum = 0 # the increase in trace number
-    rownp = 0 # row number iterated through (numpy array)
-    rowrmc = 0 # row number iterated through (gps file)
-    rowgga = 0
+    tracenum = 0 # the sequential increase in trace number
+    rownp = 0 # array row number
+    rowrmc = 0 # rmc record iterated through (gps file)
+    rowgga = 0 # gga record
     timestamp = False
     prevtime = False
     td = False
@@ -190,11 +190,9 @@ def readdzg(fi, frmt, spu, traces):
                 print('gga records: %i' % rowgga)
             gpssps = 1 / td.total_seconds() # GPS samples per second
             print('found %i GPS epochs at rate of %.1f Hz' % (rowrmc, gpssps))
-            shift = (rowrmc/gpssps - traces/spu) / 2 # number of GPS samples to cut from each end of file
-            #print('cutting ' + str(shift) + ' extra gps records from the beginning and end of the file')
             dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('altitude', 'float32'), ('geoid_ht', 'float32'), ('qual', 'uint8'), ('num_sats', 'uint8'), ('hdop', 'float32'), ('gps_sec', 'float32'), ('timestamp', 'datetime64[us]')] # array columns
             arr = np.zeros((int(traces)+1000), dt) # numpy array with num rows = num gpr traces, and columns defined above
-            print('creating array of %i interpolated gps locations...' % (traces+1000))
+            print('creating array of %i interpolated gps locations...' % (traces))
             gf.seek(0) # back to beginning of file
             for ln in gf: # loop over file line by line
                 if rmc == True: # if there is RMC, we can use the full datestamp
@@ -220,9 +218,9 @@ def readdzg(fi, frmt, spu, traces):
                         elapsed = float((elapsedelta).total_seconds()) # seconds elapsed
                         if elapsed > 3600.0:
                             print("WARNING: Time jumps by more than an hour in this GPS dataset and there are no RMC sentences to anchor the datestamp!")
-                            print("This dataset may cross over the UTC midnight dateline!\nprevious timestamp: " + prevtime + "\ncurrent timestamp:  " + timestamp)
-                            print("trace number:       " + trace)
-                        tracenum = round(elapsed * spu, 5) # calculate the increase in trace number, rounded to 5 decimals to eliminate machine error
+                            print("This dataset may cross over the UTC midnight dateline!\nprevious timestamp: %s\ncurrent timestamp:  %s" % (prevtime, timestamp))
+                            print("trace number:       %s" % trace)
+                        tracenum = round(elapsed * spu, 8) # calculate the increase in trace number, rounded to 5 decimals to eliminate machine error
                         trace += tracenum # increment to reflect current trace
                         resamp = np.arange(math.ceil(prevtrace), math.ceil(trace), 1) # make an array of integer values between t0 and t1
                         for t in resamp:
@@ -240,8 +238,17 @@ def readdzg(fi, frmt, spu, traces):
                     prevtime = timestamp # set t0 for next loop
                     prevtrace = trace
             print('processed %i gps locations' % rownp)
-            arr = arr[0:traces:1]
-            print('cut %i rows from end of file' % (rownp - traces))
+            diff = rownp - traces
+            shift, endshift = 0, 0
+            if diff > 0:
+                shift = diff / 2
+                if diff / 2 == diff / 2.:
+                    endshift = shift
+                else:
+                    endshift = shift - 1
+            arrend = traces + endshift
+            arr = arr[shift:arrend:1]
+            print('cut %i rows from beginning and %s from end of gps array, new size %s' % (shift, endshift, arr.shape[0]))
             # if there's no need to use pandas, we shouldn't (library load speed mostly, also this line is old):
             #array = pd.DataFrame({ 'ts' : arr['ts'], 'lat' : arr['lat'], 'lon' : arr['lon'] }, index=arr['tracenum'])
         elif frmt == 'csv':
@@ -352,11 +359,10 @@ def readgssi(argv=None, call=None):
                 rhf_position = struct.unpack('<f', f.read(4))[0] # position (ns)
                 rhf_range = struct.unpack('<f', f.read(4))[0] # range (ns)
                 rh_npass = struct.unpack('<h', f.read(2))[0] # number of passes for 2-D files
-                f.seek(32) # ensure correct read position for rfdatebyte
+                f.seek(31) # ensure correct read position for rfdatebyte
                 rhb_cdt = readtime(f.read(4)) # creation date and time in bits, structured as little endian u5u6u5u5u4u7
-                f.seek(36)
                 rhb_mdt = readtime(f.read(4)) # modification date and time in bits, structured as little endian u5u6u5u5u4u7
-                f.seek(44) # skip across some proprietary BS
+                f.seek(44) # skip across some proprietary stuff
                 rh_text = struct.unpack('<h', f.read(2))[0] # offset to text
                 rh_ntext = struct.unpack('<h', f.read(2))[0] # size of text
                 rh_proc = struct.unpack('<h', f.read(2))[0] # offset to processing history
