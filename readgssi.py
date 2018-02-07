@@ -29,9 +29,14 @@ import h5py
 import pynmea2
 
 NAME = 'readgssi'
-VERSION = '0.0.3-dev'
+VERSION = '0.0.4-dev'
+YEAR = 2018
 AUTHOR = 'Ian Nesbitt'
 AFFIL = 'School of Earth and Climate Sciences, University of Maine'
+
+HELP_TEXT = 'usage:\nreadgssi.py -i <input DZX> -o <output file> -f <output format: (csv|h5|segy)>\n\noptional flags:\n-v       = verbose\n-p       = plot output\n-d       = input file uses DMI instrument\n-a <int> = specify antenna frequency\n-s <int> = specify trace stacking value'
+#optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
+
 
 MINHEADSIZE = 1024 # absolute minimum total header size
 PAREASIZE = 128 # fixed info header size
@@ -57,7 +62,7 @@ UNIT = {
 }
 
 # a dictionary of standard gssi antennas and frequencies
-# unsure of 
+# unsure of what they all look like in code, however
 ANT = {
     '3200': None,
     '3200MLF': None,
@@ -129,7 +134,7 @@ def readtime(bits):
         except:
             return garbagedate # most of the time the info returned is garbage, so we return arbitrary datetime again
 
-def readdzg(fi, frmt, spu, traces):
+def readdzg(fi, frmt, spu, traces, verbose=False):
     '''
     a parser to extract gps data from DZG file format
     DZG contains raw NMEA sentences, which should include RMC and GGA
@@ -189,12 +194,14 @@ def readdzg(fi, frmt, spu, traces):
                 print('rmc records: %i' % rowrmc)
                 print('gga records: %i' % rowgga)
             gpssps = 1 / td.total_seconds() # GPS samples per second
-            print('found %i GPS epochs at rate of %.1f Hz' % (rowrmc, gpssps))
+            if verbose:
+                print('found %i GPS epochs at rate of %.1f Hz' % (rowrmc, gpssps))
             shift = (rowrmc/gpssps - traces/spu) / 2 # number of GPS samples to cut from each end of file
             #print('cutting ' + str(shift) + ' extra gps records from the beginning and end of the file')
             dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('altitude', 'float32'), ('geoid_ht', 'float32'), ('qual', 'uint8'), ('num_sats', 'uint8'), ('hdop', 'float32'), ('gps_sec', 'float32'), ('timestamp', 'datetime64[us]')] # array columns
             arr = np.zeros((int(traces)+1000), dt) # numpy array with num rows = num gpr traces, and columns defined above
-            print('creating array of %i interpolated gps locations...' % (traces+1000))
+            if verbose:
+                print('creating array of %i interpolated gps locations...' % (traces+1000))
             gf.seek(0) # back to beginning of file
             for ln in gf: # loop over file line by line
                 if rmc == True: # if there is RMC, we can use the full datestamp
@@ -235,13 +242,15 @@ def readdzg(fi, frmt, spu, traces):
                             arr[rownp] = tup
                             rownp += 1
                     else: # we're on the very first row
-                        print('using %s and %s hemispheres' % (lonhem, lathem))
+                        if verbose:
+                            print('using %s and %s hemispheres' % (lonhem, lathem))
                     x0, y0, z0, sec0 = x1, y1, z1, sec1 # set xyzs0 for next loop
                     prevtime = timestamp # set t0 for next loop
                     prevtrace = trace
-            print('processed %i gps locations' % rownp)
+            if verbose:
+                print('processed %i gps locations' % rownp)
+                print('cut %i rows from end of file' % (rownp - traces))
             arr = arr[0:traces:1]
-            print('cut %i rows from end of file' % (rownp - traces))
             # if there's no need to use pandas, we shouldn't (library load speed mostly, also this line is old):
             #array = pd.DataFrame({ 'ts' : arr['ts'], 'lat' : arr['lat'], 'lon' : arr['lon'] }, index=arr['tracenum'])
         elif frmt == 'csv':
@@ -249,7 +258,7 @@ def readdzg(fi, frmt, spu, traces):
     return arr
 
 
-def readgssi(argv=None, call=None):
+def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=None, verbose=False):
     '''
     function to unpack and return things we need from the header, and the data itself
 
@@ -261,81 +270,8 @@ def readgssi(argv=None, call=None):
     # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
     # print('fixed header size: '+str(packed_size)+'\n')
     '''
-    infile = ''
-    outfile = ''
-    frmt = ''
-    plot = False
-    dmi = False
-    antfreq = False
-    stack = 0
-    rh_antname = ''
-    help_text = 'usage:\nreadgssi.py -i <input file> -a <antenna frequency> -o <output file> -f <format: (csv|h5|segy)>\n'#optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
 
-    # parse passed command line arguments. this may get moved somewhere else, but for now:
-    try:
-        opts, args = getopt.getopt(argv,'hpdi:a:o:f:s:',['help','plot','dmi','input=','antfreq=','output=','format='])
-    # the 'no option supplied' error
-    except getopt.GetoptError:
-        print('error: invalid argument(s) supplied')
-        print(help_text)
-        sys.exit(2)
-    for opt, arg in opts: 
-        if opt in ('-h', '--help'): # the help case
-            print(AUTHOR)
-            print(AFFIL + '\n')
-            print(help_text)
-            sys.exit()
-        if opt in ('-i', '--input'): # the input file
-            if arg:
-                infile = arg
-                if '~' in infile:
-                    infile = os.path.expanduser(infile) # if using --input=~/... tilde needs to be expanded 
-        if opt in ('-o', '--output'): # the output file
-            if arg:
-                outfile = arg
-                if '~' in outfile:
-                    outfile = os.path.expanduser(infile) # expand tilde, see above
-        if opt in ('-a', '--freq'):
-            try:
-                antfreq = round(float(arg),1)
-            except:
-                print('error: %s is not a valid decimal or integer frequency value.' % arg)
-                print(help_text)
-                sys.exit(2)
-        if opt in ('-f', '--format'): # the format string
-            # check whether the string is a supported format
-            if arg:
-                if arg in ('csv', 'CSV'):
-                    frmt = 'csv'
-                elif arg in ('sgy', 'segy', 'seg-y', 'SGY', 'SEGY', 'SEG-Y'):
-                    frmt = 'segy'
-                elif arg in ('h5', 'hdf5', 'H5', 'HDF5'):
-                    frmt = 'h5'
-                elif arg in ('plot'):
-                    plot = True
-                else:
-                    # else the user has given an invalid format
-                    print(help_text)
-                    sys.exit(2)
-            else:
-                print(help_text)
-                sys.exit(2)
-        if opt in ('-s', '--stack'):
-            if arg:
-                try:
-                    int(arg)
-                    stack = arg
-                except:
-                    print('error: stacking flag must be followed by an integer.')
-                    print(help_text)
-                    sys.exit(2)
-            else:
-                stack = 0
-        if opt in ('-p', '--plot'):
-            plot = True
-        if opt in ('-d', '--dmi'):
-            #dmi = True
-            pass # not doing anything with this at the moment
+    rh_antname = ''
 
     if infile:
         try:
@@ -394,7 +330,7 @@ def readgssi(argv=None, call=None):
                 else:
                     data = np.fromfile(f, np.int32).reshape(-1,rh_nsamp).T # 32-bit
 
-                # create return dictionary
+                # create dictionary
                 returns = {
                     'infile': infile,
                     'outfile': outfile,
@@ -416,60 +352,61 @@ def readgssi(argv=None, call=None):
                     'rhf_depth': rhf_depth,
                 }
 
-                return returns, data
+                r = [returns, data]
         except IOError as e: # the user has selected an inaccessible or nonexistent file
             print("i/o error: DZT file is inaccessable or does not exist")
             print('detail: ' + str(e) + '\n')
-            print(help_text)
-        
+            print(HELP_TEXT)
+            sys.exit(2)
+    else:
+        print('an unknown error occurred')
+        sys.exit(2)
 
-if __name__ == "__main__":
-    '''
-    this is the direct command line call use case
-    '''
-    print(NAME + ' ' + VERSION)
     try:
-        r = readgssi(argv=sys.argv[1:])
         rhf_sps = r[0]['rhf_sps']
         rhf_spm = r[0]['rhf_spm']
         line_dur = r[1].shape[1]/rhf_sps
-        # print some useful things to command line users from returned dictionary
-        print('input file:         %s' % r[0]['infile'])
-        print('system:             %s' % UNIT[r[0]['rh_system']])
-        print('antenna:            %s' % r[0]['rh_antname'])
+        # if verbose, print some useful things to command line users from returned dictionary
+        if verbose:
+            print('input file:         %s' % r[0]['infile'])
+            print('system:             %s' % UNIT[r[0]['rh_system']])
+            print('antenna:            %s' % r[0]['rh_antname'])
         if r[0]['antfreq']:
-            print('user ant frequency: %.1f' % r[0]['antfreq'] + ' MHz')
+            if verbose:
+                print('user ant frequency: %.1f' % r[0]['antfreq'] + ' MHz')
             freq = r[0]['antfreq']
         elif r[0]['rh_antname']:
             try:
-                print('antenna frequency:  %.1f' % ANT[r[0]['rh_antname']] + ' MHz')
+                if verbose:
+                    print('antenna frequency:  %.1f' % ANT[r[0]['rh_antname']] + ' MHz')
                 freq = ANT[r[0]['rh_antname']]
             except ValueError as e:
                 print('WARNING: could not read frequency for given antenna name.\nerror info: %s' % e)
-                print(help_text)
+                print(HELP_TEXT)
                 sys.exit(2)
         else:
             print('no frequency information could be read from the header.\nplease specify the frequency of the antenna in MHz using the -a flag.')
-            print(help_text)
+            print(HELP_TEXT)
             sys.exit(2)
-        print('date created:       %s' % r[0]['rhb_cdt'])
-        print('date modified:      %s' % r[0]['rhb_mdt'])
-        print('gps-enabled file:   %s' % GPS[r[0]['rh_version']])
-        print('number of channels: %i' % r[0]['rh_nchan'])
-        print('samples per trace:  %i' % r[0]['rh_nsamp'])
-        print('bits per sample:    %s' % BPS[r[0]['rh_bits']])
-        print('traces per second:  %.1f' % rhf_sps)
-        print('traces per meter:   %.1f' % rhf_spm)
-        print('dilectric:          %.1f' % r[0]['rhf_epsr'])
-        print('sampling depth:     %.1f' % r[0]['rhf_depth'])
-        if r[1].shape[1] == int(r[1].shape[1]):
-            print('traces:             %i' % r[1].shape[1])
-        else:
-            print('traces:             %f' % r[1].shape[1])
-        if rhf_spm == 0:
-            print('seconds:            %.8f' % line_dur)
-        else:
-            print('meters:             %.2f' % r[1].shape[1]/rhf_spm)
+        if verbose:
+            print('date created:       %s' % r[0]['rhb_cdt'])
+            print('date modified:      %s' % r[0]['rhb_mdt'])
+            print('gps-enabled file:   %s' % GPS[r[0]['rh_version']])
+            print('number of channels: %i' % r[0]['rh_nchan'])
+            print('samples per trace:  %i' % r[0]['rh_nsamp'])
+            print('bits per sample:    %s' % BPS[r[0]['rh_bits']])
+            print('traces per second:  %.1f' % rhf_sps)
+            print('traces per meter:   %.1f' % rhf_spm)
+            print('dilectric:          %.1f' % r[0]['rhf_epsr'])
+            print('sampling depth:     %.1f' % r[0]['rhf_depth'])
+            if r[1].shape[1] == int(r[1].shape[1]):
+                print('traces:             %i' % r[1].shape[1])
+            else:
+                print('traces:             %f' % r[1].shape[1])
+            if rhf_spm == 0:
+                print('seconds:            %.8f' % line_dur)
+            else:
+                print('meters:             %.2f' % r[1].shape[1]/rhf_spm)
         if r[0]['frmt']:
             print('outputting to ' + r[0]['frmt'] + " . . .")
 
@@ -524,7 +461,7 @@ if __name__ == "__main__":
                 gpsutmstr = '<Cluster>\r\n<Name>GPS_UTM Cluster</Name>\r\n<NumElts>10</NumElts>\r\n<String>\r\n<Name>Datum</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Easting_m</Name>\r\n<Val></Val>\r\n</String>\r\n<String>\r\n<Name>Northing_m</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Elevation</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Zone</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Satellites (dup)</Name>\r\n<Val>%i</Val>\r\n</String>\r\n<Boolean>\r\n<Name>GPS Fix Valid (dup)</Name>\r\n<Val>1</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>GPS Message ok (dup)</Name>\r\n<Val>1</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>Flag_1</Name>\r\n<Val>0</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>Flag_2</Name>\r\n<Val>0</Val>\r\n</Boolean>\r\n</Cluster>\r\n'
 
                 if os.path.exists(fnoext + '.DZG'):
-                    gps = readdzg(fnoext + '.DZG', 'dzg', rhf_sps, r[1].shape[1])
+                    gps = readdzg(fnoext + '.DZG', 'dzg', rhf_sps, r[1].shape[1], verbose)
                 else:
                     gps = '' # fix
 
@@ -552,7 +489,7 @@ if __name__ == "__main__":
                     # digitizer
                     dimx_str = dimxstr % (r[0]['rhf_depth'], freq, r[0]['rh_nsamp'], r[0]['stack'])
 
-                	# utm gpscluster
+                    # utm gpscluster
                     gutx_str = gpsutmstr % (gps[n]['num_sats'])
 
                     lo = li.create_group('location_' + str(n)) # create a location for each trace
@@ -565,9 +502,9 @@ if __name__ == "__main__":
                     n += 1
                 f.close()
             elif r[0]['frmt'] in 'segy':
-            	'''
-            	segy output is not yet available
-            	'''
+                '''
+                segy output is not yet available
+                '''
                 print('SEG-Y is not yet supported, please choose another format.')
             print('done exporting.')
         if r[0]['plot']:
@@ -582,6 +519,97 @@ if __name__ == "__main__":
     except TypeError as e: # shows up when the user selects an input file that doesn't exist
         print(e)
         sys.exit(2)
+    
+
+if __name__ == "__main__":
+    '''
+    this is the direct command line call use case
+    '''
+    print(NAME + ' ' + VERSION)
+
+    verbose = False
+    infile, outfile, antfreq, frmt, plot, stack = None, None, None, None, None, None
+
+
+# some of this needs to be tweaked to formulate a command call to one of the main body functions
+# variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plot=False, stack=None)
+    try:
+        opts, args = getopt.getopt(sys.argv[1:],'hvpdi:a:o:f:s:',['help','verbose','plot','dmi','input=','antfreq=','output=','format=','stack='])
+    # the 'no option supplied' error
+    except getopt.GetoptError:
+        print('error: invalid argument(s) supplied')
+        print(HELP_TEXT)
+        sys.exit(2)
+    for opt, arg in opts: 
+        if opt in ('-h', '--help'): # the help case
+            print(u'Copyright %s %s %s' % (u'\u00a9', AUTHOR, YEAR))
+            print(AFFIL + '\n')
+            print(HELP_TEXT)
+            sys.exit()
+        if opt in ('-v', '--verbose'):
+            verbose = True
+        if opt in ('-i', '--input'): # the input file
+            if arg:
+                infile = arg
+                if '~' in infile:
+                    infile = os.path.expanduser(infile) # if using --input=~/... tilde needs to be expanded 
+        if opt in ('-o', '--output'): # the output file
+            if arg:
+                outfile = arg
+                if '~' in outfile:
+                    outfile = os.path.expanduser(infile) # expand tilde, see above
+        if opt in ('-a', '--freq'):
+            try:
+                antfreq = round(float(arg),1)
+            except:
+                print('error: %s is not a valid decimal or integer frequency value.' % arg)
+                print(HELP_TEXT)
+                sys.exit(2)
+        if opt in ('-f', '--format'): # the format string
+            # check whether the string is a supported format
+            if arg:
+                arg = arg.lower()
+                if arg in ('csv', '.csv'):
+                    frmt = 'csv'
+                elif arg in ('sgy', 'segy', 'seg-y', '.sgy', '.segy', '.seg-y'):
+                    frmt = 'segy'
+                elif arg in ('h5', 'hdf5', '.h5', '.hdf5'):
+                    frmt = 'h5'
+                elif arg in ('plot'):
+                    plot = True
+                else:
+                    # else the user has given an invalid format
+                    print(HELP_TEXT)
+                    sys.exit(2)
+            else:
+                print(HELP_TEXT)
+                sys.exit(2)
+        if opt in ('-s', '--stack'):
+            if arg:
+                try:
+                    int(arg)
+                    stack = arg
+                except:
+                    print('error: stacking flag must be followed by an integer.')
+                    print(HELP_TEXT)
+                    sys.exit(2)
+            else:
+                stack = 0
+        if opt in ('-p', '--plot'):
+            plot = True
+        if opt in ('-d', '--dmi'):
+            #dmi = True
+            print('DMI devices are not supported at the moment.')
+            pass # not doing anything with this at the moment
+
+    # call the function with the values we just got
+    if infile:
+        readgssi(infile, outfile, antfreq, frmt, plot, stack, verbose)
+
+elif __name__ == '__version__':
+    print(NAME + ' ' + VERSION)
+    print(AUTHOR)
+    print(AFFIL)
 
 else:
     '''
