@@ -154,10 +154,10 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     ...but let's keep it simple for now.
     '''
     trace = 0 # the elapsed number of traces iterated through
-    tracenum = 0 # the increase in trace number
-    rownp = 0 # row number iterated through (numpy array)
-    rowrmc = 0 # row number iterated through (gps file)
-    rowgga = 0
+    tracenum = 0 # the sequential increase in trace number
+    rownp = 0 # array row number
+    rowrmc = 0 # rmc record iterated through (gps file)
+    rowgga = 0 # gga record
     timestamp = False
     prevtime = False
     td = False
@@ -196,12 +196,10 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
             gpssps = 1 / td.total_seconds() # GPS samples per second
             if verbose:
                 print('found %i GPS epochs at rate of %.1f Hz' % (rowrmc, gpssps))
-            shift = (rowrmc/gpssps - traces/spu) / 2 # number of GPS samples to cut from each end of file
-            #print('cutting ' + str(shift) + ' extra gps records from the beginning and end of the file')
             dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('altitude', 'float32'), ('geoid_ht', 'float32'), ('qual', 'uint8'), ('num_sats', 'uint8'), ('hdop', 'float32'), ('gps_sec', 'float32'), ('timestamp', 'datetime64[us]')] # array columns
             arr = np.zeros((int(traces)+1000), dt) # numpy array with num rows = num gpr traces, and columns defined above
             if verbose:
-                print('creating array of %i interpolated gps locations...' % (traces+1000))
+                print('creating array of %i interpolated gps locations...' % (traces))
             gf.seek(0) # back to beginning of file
             for ln in gf: # loop over file line by line
                 if rmc == True: # if there is RMC, we can use the full datestamp
@@ -227,9 +225,9 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
                         elapsed = float((elapsedelta).total_seconds()) # seconds elapsed
                         if elapsed > 3600.0:
                             print("WARNING: Time jumps by more than an hour in this GPS dataset and there are no RMC sentences to anchor the datestamp!")
-                            print("This dataset may cross over the UTC midnight dateline!\nprevious timestamp: " + prevtime + "\ncurrent timestamp:  " + timestamp)
-                            print("trace number:       " + trace)
-                        tracenum = round(elapsed * spu, 5) # calculate the increase in trace number, rounded to 5 decimals to eliminate machine error
+                            print("This dataset may cross over the UTC midnight dateline!\nprevious timestamp: %s\ncurrent timestamp:  %s" % (prevtime, timestamp))
+                            print("trace number:       %s" % trace)
+                        tracenum = round(elapsed * spu, 8) # calculate the increase in trace number, rounded to 5 decimals to eliminate machine error
                         trace += tracenum # increment to reflect current trace
                         resamp = np.arange(math.ceil(prevtrace), math.ceil(trace), 1) # make an array of integer values between t0 and t1
                         for t in resamp:
@@ -249,8 +247,18 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
                     prevtrace = trace
             if verbose:
                 print('processed %i gps locations' % rownp)
-                print('cut %i rows from end of file' % (rownp - traces))
-            arr = arr[0:traces:1]
+            diff = rownp - traces
+            shift, endshift = 0, 0
+            if diff > 0:
+                shift = diff / 2
+                if diff / 2 == diff / 2.:
+                    endshift = shift
+                else:
+                    endshift = shift - 1
+            arrend = traces + endshift
+            arr = arr[shift:arrend:1]
+            if verbose:
+                print('cut %i rows from beginning and %s from end of gps array, new size %s' % (shift, endshift, arr.shape[0]))
             # if there's no need to use pandas, we shouldn't (library load speed mostly, also this line is old):
             #array = pd.DataFrame({ 'ts' : arr['ts'], 'lat' : arr['lat'], 'lon' : arr['lon'] }, index=arr['tracenum'])
         elif frmt == 'csv':
@@ -258,7 +266,7 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     return arr
 
 
-def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=None, verbose=False):
+def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=1, verbose=False):
     '''
     function to unpack and return things we need from the header, and the data itself
 
@@ -288,11 +296,10 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=No
                 rhf_position = struct.unpack('<f', f.read(4))[0] # position (ns)
                 rhf_range = struct.unpack('<f', f.read(4))[0] # range (ns)
                 rh_npass = struct.unpack('<h', f.read(2))[0] # number of passes for 2-D files
-                f.seek(32) # ensure correct read position for rfdatebyte
+                f.seek(31) # ensure correct read position for rfdatebyte
                 rhb_cdt = readtime(f.read(4)) # creation date and time in bits, structured as little endian u5u6u5u5u4u7
-                f.seek(36)
                 rhb_mdt = readtime(f.read(4)) # modification date and time in bits, structured as little endian u5u6u5u5u4u7
-                f.seek(44) # skip across some proprietary BS
+                f.seek(44) # skip across some proprietary stuff
                 rh_text = struct.unpack('<h', f.read(2))[0] # offset to text
                 rh_ntext = struct.unpack('<h', f.read(2))[0] # size of text
                 rh_proc = struct.unpack('<h', f.read(2))[0] # offset to processing history
@@ -452,12 +459,16 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=No
                 [('PCSavetimestamp', str), ('GPS Cluster- MetaData_xml', str), ('Digitizer-MetaData_xml', str), ('GPS Cluster_UTM-MetaData_xml', str)]
                 '''
 
+                # setup formattable strings
                 svts = 'PCSavetimestamp'
                 gpsx = 'GPS Cluster- MetaData_xml'
-                gpsclstr = '<Cluster>\r\n<Name>GPS Cluster</Name>\r\n<NumElts>10</NumElts>\r\n<String>\r\n<Name>GPS_timestamp_UTC</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<String>\r\n<Name>Lat_N</Name>\r\n<Val>%.4f</Val>\r\n</String>\r\n<String>\r\n<Name>Long_ W</Name>\r\n<Val>%.4f</Val>\r\n</String>\r\n<String>\r\n<Name>Fix_Quality</Name>\r\n<Val>%i</Val>\r\n</String>\r\n<String>\r\n<Name>Num _Sat</Name>\r\n<Val>%i</Val>\r\n</String>\r\n<String>\r\n<Name>Dilution</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<String>\r\n<Name>Alt_asl_m</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<String>\r\n<Name>Geoid_Heigh_m</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<Boolean>\r\n<Name>GPS Fix valid</Name>\r\n<Val>%i</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>GPS Message ok</Name>\r\n<Val>%i</Val>\r\n</Boolean>\r\n</Cluster>\r\n'
+                # main gps string. 8 formattable values: gps_sec, lat, lon, qual, num_sats, hdop, altitude, geoid_ht
+                gpsclstr = '<Cluster>\r\n<Name>GPS Cluster</Name>\r\n<NumElts>10</NumElts>\r\n<String>\r\n<Name>GPS_timestamp_UTC</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<String>\r\n<Name>Lat_N</Name>\r\n<Val>%.4f</Val>\r\n</String>\r\n<String>\r\n<Name>Long_ W</Name>\r\n<Val>%.4f</Val>\r\n</String>\r\n<String>\r\n<Name>Fix_Quality</Name>\r\n<Val>%i</Val>\r\n</String>\r\n<String>\r\n<Name>Num _Sat</Name>\r\n<Val>%i</Val>\r\n</String>\r\n<String>\r\n<Name>Dilution</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<String>\r\n<Name>Alt_asl_m</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<String>\r\n<Name>Geoid_Heigh_m</Name>\r\n<Val>%.2f</Val>\r\n</String>\r\n<Boolean>\r\n<Name>GPS Fix valid</Name>\r\n<Val>1</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>GPS Message ok</Name>\r\n<Val>1</Val>\r\n</Boolean>\r\n</Cluster>\r\n'
                 dimx = 'Digitizer-MetaData_xml'
+                # digitizer string. 3 formattable values: rhf_depth, rh_nsamp, stack
                 dimxstr = '<Cluster>\r\n<Name>Digitizer MetaData</Name>\r\n<NumElts>3</NumElts>\r\n<Cluster>\r\n<Name>Digitizer settings</Name>\r\n<NumElts>5</NumElts>\r\n<Cluster>\r\n<Name>Vertical</Name>\r\n<NumElts>3</NumElts>\r\n<DBL>\r\n<Name>vertical range</Name>\r\n<Val>%f</Val>\r\n</DBL>\r\n<DBL>\r\n<Name>Vertical Offset</Name>\r\n<Val>0.00000000000000</Val>\r\n</DBL>\r\n<I32>\r\n<Name>vertical coupling</Name>\r\n<Val>1</Val>\r\n</I32>\r\n</Cluster>\r\n<Cluster>\r\n<Name>Channel</Name>\r\n<NumElts>1</NumElts>\r\n<DBL>\r\n<Name>maximum input frequency</Name>\r\n<Val>%f</Val>\r\n</DBL>\r\n</Cluster>\r\n<Cluster>\r\n<Name>Horizontal</Name>\r\n<NumElts>2</NumElts>\r\n<DBL>\r\n<Name> Sample Rate</Name>\r\n<Val>250000000.00000000000000</Val>\r\n</DBL>\r\n<I32>\r\n<Name>Record Length</Name>\r\n<Val>%i</Val>\r\n</I32>\r\n</Cluster>\r\n<Cluster>\r\n<Name>Trigger</Name>\r\n<NumElts>12</NumElts>\r\n<U16>\r\n<Name>trigger type</Name>\r\n<Val>0</Val>\r\n</U16>\r\n<DBL>\r\n<Name>trigger delay</Name>\r\n<Val>0.00000000000000</Val>\r\n</DBL>\r\n<DBL>\r\n<Name>reference position</Name>\r\n<Val>10.00000000000000</Val>\r\n</DBL>\r\n<DBL>\r\n<Name>trigger level</Name>\r\n<Val>2.00000000000000E-2</Val>\r\n</DBL>\r\n<DBL>\r\n<Name>hysteresis</Name>\r\n<Val>0.00000000000000</Val>\r\n</DBL>\r\n<DBL>\r\n<Name>low level</Name>\r\n<Val>0.00000000000000</Val>\r\n</DBL>\r\n<DBL>\r\n<Name>high level</Name>\r\n<Val>0.00000000000000</Val>\r\n</DBL>\r\n<U16>\r\n<Name>trigger coupling</Name>\r\n<Val>1</Val>\r\n</U16>\r\n<I32>\r\n<Name>trigger window mode</Name>\r\n<Val>0</Val>\r\n</I32>\r\n<I32>\r\n<Name>trigger slope</Name>\r\n<Val>0</Val>\r\n</I32>\r\n<String>\r\n<Name>trigger source</Name>\r\n<Val>0</Val>\r\n</String>\r\n<I32>\r\n<Name>Trigger Modifier</Name>\r\n<Val>2</Val>\r\n</I32>\r\n</Cluster>\r\n<String>\r\n<Name>channel name</Name>\r\n<Val>0</Val>\r\n</String>\r\n</Cluster>\r\n<U16>\r\n<Name>Stacking</Name>\r\n<Val>%i</Val>\r\n</U16>\r\n<Cluster>\r\n<Name>Radargram extra info</Name>\r\n<NumElts>2</NumElts>\r\n<DBL>\r\n<Name>relativeInitialX</Name>\r\n<Val>-1.51999998365682E-7</Val>\r\n</DBL>\r\n<DBL>\r\n<Name>xIncrement</Name>\r\n<Val>3.99999988687227E-9</Val>\r\n</DBL>\r\n</Cluster>\r\n</Cluster>\r\n'
                 gutx = 'GPS Cluster_UTM-MetaData_xml'
+                # gps UTM string. 1 formattable value: num_sats
                 gpsutmstr = '<Cluster>\r\n<Name>GPS_UTM Cluster</Name>\r\n<NumElts>10</NumElts>\r\n<String>\r\n<Name>Datum</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Easting_m</Name>\r\n<Val></Val>\r\n</String>\r\n<String>\r\n<Name>Northing_m</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Elevation</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Zone</Name>\r\n<Val>NaN</Val>\r\n</String>\r\n<String>\r\n<Name>Satellites (dup)</Name>\r\n<Val>%i</Val>\r\n</String>\r\n<Boolean>\r\n<Name>GPS Fix Valid (dup)</Name>\r\n<Val>1</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>GPS Message ok (dup)</Name>\r\n<Val>1</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>Flag_1</Name>\r\n<Val>0</Val>\r\n</Boolean>\r\n<Boolean>\r\n<Name>Flag_2</Name>\r\n<Val>0</Val>\r\n</Boolean>\r\n</Cluster>\r\n'
 
                 if os.path.exists(fnoext + '.DZG'):
@@ -467,7 +478,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=No
 
                 # make data structure
                 n = 0 # line number, iteratively increased
-                f = h5py.File(of, 'w') # open or create a file
+                f = h5py.File(of, 'w') # overwrite existing file
                 print('exporting to %s' % of)
 
                 try:
@@ -484,7 +495,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=No
                     # gpscluster
                     # order we need: (len(list), tracetime, y, x, q, sats, dil, z, gh, 1, 1)
                     # rows in gps: tracenum, lat, lon, altitude, geoid_ht, qual, num_sats, hdop, timestamp
-                    gpsx_str = gpsclstr % (gps[n]['gps_sec'], gps[n]['lat'], gps[n]['lon'], gps[n]['qual'], gps[n]['num_sats'], gps[n]['hdop'], gps[n]['altitude'], gps[n]['geoid_ht'], 1, 1)
+                    gpsx_str = gpsclstr % (gps[n]['gps_sec'], gps[n]['lat'], gps[n]['lon'], gps[n]['qual'], gps[n]['num_sats'], gps[n]['hdop'], gps[n]['altitude'], gps[n]['geoid_ht'])
 
                     # digitizer
                     dimx_str = dimxstr % (r[0]['rhf_depth'], freq, r[0]['rh_nsamp'], r[0]['stack'])
@@ -506,6 +517,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=No
                 segy output is not yet available
                 '''
                 print('SEG-Y is not yet supported, please choose another format.')
+                print(help_text)
+                sys.exit(2)
             print('done exporting.')
         if r[0]['plot']:
             '''
