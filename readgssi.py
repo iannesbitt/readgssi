@@ -16,20 +16,22 @@
 # (https://opensource.org/licenses/MIT) to obtain a copy.
 
 import sys, getopt, os
-import struct, bitstruct
+import struct
 import numpy as np
-import matplotlib.image as mpi
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-#import pandas as pd
+import matplotlib.colors as colors
+from mpl_toolkits.basemap import Basemap
+import pandas as pd
 import math
 from decimal import Decimal
 from datetime import datetime, timedelta
 import pytz
 import h5py
-import pynmea2
+import pynmea
 
 NAME = 'readgssi'
-VERSION = '0.0.4-dev'
+VERSION = '0.0.5-dev'
 YEAR = 2018
 AUTHOR = 'Ian Nesbitt'
 AFFIL = 'School of Earth and Climate Sciences, University of Maine'
@@ -282,6 +284,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=1,
     rh_antname = ''
 
     if infile:
+        if verbose:
+            print('reading header information...')
         try:
             with open(infile, 'rb') as f:
                 # open the binary, start reading chunks
@@ -310,21 +314,16 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=1,
                 rhf_depth = struct.unpack('<f', f.read(4))[0] # range in meters
                 #rhf_coordx = struct.unpack('<ff', f.read(8))[0] # this is definitely useless
                 f.seek(98) # start of antenna bit
-                rh_ant = struct.unpack('<14c', f.read(14)) # again...who stores data like this??
+                rh_ant = f.read(14).decode('utf-8').split('\x00')[0]
                 
-                # this is a blatant hack to read antenna information without putting any binary in the string
-                i = 0
-                while i < 14:
-                    if rh_ant[i] != '\x00':
-                        rh_antname += rh_ant[i]
-                    i += 1
-                    
+                rh_antname = rh_ant
+                
                 f.seek(113) # skip to something that matters
                 vsbyte = f.read(1) # byte containing versioning bits
-                rh_version = readbit(vsbyte, 0, 2) # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
-                rh_system = readbit(vsbyte, 3, 7) # the system type (values in UNIT={...} dictionary above)
+                rh_version = ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
+                rh_system = ord(vsbyte) >> 3 # the system type (values in UNIT={...} dictionary above)
                 del vsbyte
-
+                
                 if rh_data < MINHEADSIZE: # whether or not the header is normal or big-->determines offset to data array
                     f.seek(MINHEADSIZE * rh_data)
                 else:
@@ -357,6 +356,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=1,
                     'rhb_cdt': rhb_cdt,
                     'rhb_mdt': rhb_mdt,
                     'rhf_depth': rhf_depth,
+                    'rhf_position': rhf_position,
                 }
 
                 r = [returns, data]
@@ -410,10 +410,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=1,
                 print('traces:             %i' % r[1].shape[1])
             else:
                 print('traces:             %f' % r[1].shape[1])
-            if rhf_spm == 0:
-                print('seconds:            %.8f' % line_dur)
-            else:
-                print('meters:             %.2f' % r[1].shape[1]/rhf_spm)
+            print('seconds:            %.8f' % line_dur)
+            print('samp/m:             %.2f' % (float(rhf_spm)))
         if r[0]['frmt']:
             print('outputting to ' + r[0]['frmt'] + " . . .")
 
@@ -427,7 +425,6 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=1,
 
             # what is the output format
             if r[0]['frmt'] in 'csv':
-                import pandas as pd
                 data = pd.DataFrame(r[1]) # using pandas to output csv
                 print('writing file to:    %s' % of)
                 data.to_csv(of) # write
@@ -522,12 +519,56 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=1,
             print('done exporting.')
         if r[0]['plot']:
             '''
-            let's do some matplotlib....later
+            let's do some matplotlib
             '''
-            #print('plotting...')
-            #img = mpi.imread(r[1].astype(np.float32))
-            #imgplot = plt.imshow(img)
-            print('plotting is not yet supported, please choose another format.')
+            arr = r[1].astype(np.float32)
+            img_arr = arr[abs(int(r[0]['rhf_position'])+5):r[0]['rh_nsamp']]
+            
+            if r[0]['stack'] > 1:
+                print('stacking %sx' % r[0]['stack'])
+                j = r[0]['stack']
+                i = list(range(j))
+                l = list(range(int(img_arr.shape[1]/j)))
+                stack = np.copy(img_arr[:,::j])
+                for s in l:
+                    stack[:,s] = stack[:,s] + img_arr[:,s*j+1:s*j+j].sum(axis=1)
+                img_arr = stack
+            elif r[0]['stack'].lower() == 'auto':
+                print('attempting automatic stacking method...')
+                
+            else:
+                print('stacking must be indicated with an integer greater than 1, "auto", or None.')
+                print('a stacking value of 1 equates to None. "auto" will attempt to stack to about a 3:1 x to y axis ratio.')
+                print('result will not be stacked.')
+                    
+
+            median = np.median(img_arr)
+            if abs(median) >= 10:
+                print('median: %s (median is >10, so recentering array values by this amount)' % median)
+                img_arr = img_arr - median
+            else:
+                print('median: %s (median < 10; not recentering array)' % median)
+            std = np.std(img_arr)
+            print('std:  %s' % std)
+            ll = -std * 0.1
+            ul = std * 0.1
+            
+            figsz = (int(figsize*(img_arr.shape[1]/img_arr.shape[0])), figsize)
+            print('plotting %sx%sin image...' % (figsz))
+
+            fig = plt.figure(figsize=(figsz), dpi=150, constrained_layout=True)
+            img = plt.imshow(img_arr, cmap='viridis', clim=(ll, ul),
+                             norm=colors.SymLogNorm(linthresh=0.001, linscale=1,
+                                                    vmin=ll, vmax=ul),)
+            fig.colorbar(img)
+            plt.title('%s - stacking: %s' % (infile.split('/')[1], j))
+            print('saving figure as %s.png' % outfile.split('.')[0])
+            plt.savefig(os.path.join(outfile.split('.')[0] + '.png'))
+            plt.clf()
+            print('drawing histogram...')
+            fig = plt.figure(figsize=(10,6))
+            hst = plt.hist(img_arr.ravel(), bins=256, range=(ll, ul), fc='k', ec='k')
+            plt.show()
 
     except TypeError as e: # shows up when the user selects an input file that doesn't exist
         print(e)
@@ -547,7 +588,7 @@ if __name__ == "__main__":
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plot=False, stack=None)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hvpdi:a:o:f:s:',['help','verbose','plot','dmi','input=','antfreq=','output=','format=','stack='])
+        opts, args = getopt.getopt(sys.argv[1:],'hvp:di:a:o:f:s:',['help','verbose','plot=','dmi','input=','antfreq=','output=','format=','stack='])
     # the 'no option supplied' error
     except getopt.GetoptError:
         print('error: invalid argument(s) supplied')
@@ -599,17 +640,30 @@ if __name__ == "__main__":
                 sys.exit(2)
         if opt in ('-s', '--stack'):
             if arg:
+                if 'auto' in arg.lower():
+                    stack = arg.lower()
+                else:
+                    try:
+                        int(arg)
+                        stack = arg
+                    except ValueError:
+                        print('error: stacking flag must be followed by an integer.')
+                        print(HELP_TEXT)
+                        sys.exit(2)
+            else:
+                stack = None
+        if opt in ('-p', '--plot'):
+            plot = True
+            if arg:
                 try:
                     int(arg)
-                    stack = arg
+                    plotsize = arg
                 except:
-                    print('error: stacking flag must be followed by an integer.')
+                    print('error: plot size must be given in numeric format.')
                     print(HELP_TEXT)
                     sys.exit(2)
             else:
-                stack = 0
-        if opt in ('-p', '--plot'):
-            plot = True
+                plotsize = 10
         if opt in ('-d', '--dmi'):
             #dmi = True
             print('DMI devices are not supported at the moment.')
@@ -617,7 +671,7 @@ if __name__ == "__main__":
 
     # call the function with the values we just got
     if infile:
-        readgssi(infile, outfile, antfreq, frmt, plot, stack, verbose)
+        readgssi(infile, outfile, antfreq, frmt, plot, plotsize, stack, verbose)
 
 elif __name__ == '__version__':
     print(NAME + ' ' + VERSION)
