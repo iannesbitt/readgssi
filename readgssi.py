@@ -511,8 +511,14 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             arr = r[1].astype(np.float32)
             img_arr = arr[abs(int(r[0]['rhf_position'])+5):r[0]['rh_nsamp']]
             
-            if r[0]['stack'].lower() in 'auto':
-                print('attempting automatic stacking method...')
+            if str(r[0]['stack']).lower() in 'auto':
+                #print('attempting automatic stacking method...')
+                print('automatic stacking method not implemented yet. no stacking value applied.')
+            else:
+                try:
+                    int(r[0]['stack'])
+                except ValueError:
+                    r[0]['stack'] = 1
             if r[0]['stack'] > 1:
                 print('stacking %sx' % r[0]['stack'])
                 j = r[0]['stack']
