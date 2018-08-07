@@ -549,7 +549,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             figsz = (int(int(figsize)*int(img_arr.shape[1]/img_arr.shape[0])), figsize)
             print('plotting %sx%sin image...' % (figsz))
 
-            fig = plt.figure(figsize=(figsz), dpi=150, constrained_layout=True)
+            fig = plt.figure(figsize=(figsz[0], figsz[1]), dpi=150, constrained_layout=True)
             img = plt.imshow(img_arr, cmap='viridis', clim=(ll, ul),
                              norm=colors.SymLogNorm(linthresh=0.001, linscale=1,
                                                     vmin=ll, vmax=ul),)
