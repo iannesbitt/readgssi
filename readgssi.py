@@ -543,8 +543,10 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             print('std:  %s' % std)
             ll = -std * 0.1
             ul = std * 0.1
-            
-            figsz = (int(figsize*(img_arr.shape[1]/img_arr.shape[0])), figsize)
+            print('lower color limit: %s' % ll)
+            print('upper color limit: %s' % ul)
+
+            figsz = (int(int(figsize)*int(img_arr.shape[1]/img_arr.shape[0])), figsize)
             print('plotting %sx%sin image...' % (figsz))
 
             fig = plt.figure(figsize=(figsz), dpi=150, constrained_layout=True)
