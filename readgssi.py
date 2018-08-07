@@ -577,8 +577,9 @@ if __name__ == "__main__":
     try:
         opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:',['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack='])
     # the 'no option supplied' error
-    except getopt.GetoptError:
+    except getopt.GetoptError as e:
         print('error: invalid argument(s) supplied')
+        print('error text: %s' % e)
         print(HELP_TEXT)
         sys.exit(2)
     for opt, arg in opts: 
