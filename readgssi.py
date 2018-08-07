@@ -511,6 +511,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             arr = r[1].astype(np.float32)
             img_arr = arr[abs(int(r[0]['rhf_position'])+5):r[0]['rh_nsamp']]
             
+            if r[0]['stack'].lower() in 'auto':
+                print('attempting automatic stacking method...')
             if r[0]['stack'] > 1:
                 print('stacking %sx' % r[0]['stack'])
                 j = r[0]['stack']
@@ -520,14 +522,10 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 for s in l:
                     stack[:,s] = stack[:,s] + img_arr[:,s*j+1:s*j+j].sum(axis=1)
                 img_arr = stack
-            elif r[0]['stack'].lower() == 'auto':
-                print('attempting automatic stacking method...')
-                
             else:
                 print('stacking must be indicated with an integer greater than 1, "auto", or None.')
                 print('a stacking value of 1 equates to None. "auto" will attempt to stack to about a 3:1 x to y axis ratio.')
                 print('result will not be stacked.')
-                    
 
             median = np.median(img_arr)
             if abs(median) >= 10:
@@ -569,11 +567,12 @@ if __name__ == "__main__":
     print(NAME + ' ' + VERSION)
 
     verbose = False
-    infile, outfile, antfreq, frmt, plot, figsize, stack = None, None, None, None, None, None, None
+    stack = 1
+    infile, outfile, antfreq, frmt, plot, figsize = None, None, None, None, None, None
 
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
-# variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plot=False, stack=None)
+# variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plot=False, stack=1)
     try:
         opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:',['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack='])
     # the 'no option supplied' error
@@ -639,7 +638,7 @@ if __name__ == "__main__":
                         print(HELP_TEXT)
                         sys.exit(2)
             else:
-                stack = None
+                stack = 1
         if opt in ('-p', '--plot'):
             plot = True
             if arg:
