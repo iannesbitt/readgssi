@@ -105,19 +105,6 @@ BPS = {
     32: '32 signed'
 }
 
-
-def readbit(bits, start, end):
-    '''
-    function to read variables bitwise, where applicable
-    '''
-    try:
-        if start == 0:
-            return bitstruct.unpack('<u'+str(end+1), bits)[0]
-        else:
-            return bitstruct.unpack('<p'+str(start)+'u'+str(end-start), bits)[0]
-    except:
-        print('error reading bits')
-
 def readtime(bits):
     '''
     function to read dates bitwise.
