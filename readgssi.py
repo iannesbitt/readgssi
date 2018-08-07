@@ -255,7 +255,7 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     return arr
 
 
-def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, stack=1, verbose=False):
+def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10, stack=1, verbose=False):
     '''
     function to unpack and return things we need from the header, and the data itself
 
@@ -569,7 +569,7 @@ if __name__ == "__main__":
     print(NAME + ' ' + VERSION)
 
     verbose = False
-    infile, outfile, antfreq, frmt, plot, stack = None, None, None, None, None, None
+    infile, outfile, antfreq, frmt, plot, figsize, stack = None, None, None, None, None, None, None
 
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
@@ -644,13 +644,13 @@ if __name__ == "__main__":
             if arg:
                 try:
                     int(arg)
-                    plotsize = arg
+                    figsize = arg
                 except:
                     print('error: plot size must be given in numeric format.')
                     print(HELP_TEXT)
                     sys.exit(2)
             else:
-                plotsize = 10
+                figsize = 10
         if opt in ('-d', '--dmi'):
             #dmi = True
             print('DMI devices are not supported at the moment.')
@@ -658,7 +658,7 @@ if __name__ == "__main__":
 
     # call the function with the values we just got
     if infile:
-        readgssi(infile, outfile, antfreq, frmt, plot, plotsize, stack, verbose)
+        readgssi(infile, outfile, antfreq, frmt, plot, figsize, stack, verbose)
 
 elif __name__ == '__version__':
     print(NAME + ' ' + VERSION)
