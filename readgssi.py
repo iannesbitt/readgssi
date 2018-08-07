@@ -658,12 +658,16 @@ if __name__ == "__main__":
 
     # call the function with the values we just got
     if infile:
+        if outfile:
+            pass
+        else:
+            verbose = True
         readgssi(infile, outfile, antfreq, frmt, plot, figsize, stack, verbose)
+    else:
+        
 
 elif __name__ == '__version__':
-    print(NAME + ' ' + VERSION)
-    print(AUTHOR)
-    print(AFFIL)
+    print(VERSION)
 
 else:
     '''
