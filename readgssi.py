@@ -28,7 +28,7 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 import pytz
 import h5py
-import pynmea
+import pynmea2
 
 NAME = 'readgssi'
 VERSION = '0.0.5-dev'
