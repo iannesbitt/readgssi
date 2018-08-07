@@ -664,7 +664,7 @@ if __name__ == "__main__":
             verbose = True
         readgssi(infile, outfile, antfreq, frmt, plot, figsize, stack, verbose)
     else:
-        
+        print(HELP_TEXT)
 
 elif __name__ == '__version__':
     print(VERSION)
