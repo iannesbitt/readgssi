@@ -36,7 +36,7 @@ YEAR = 2018
 AUTHOR = 'Ian Nesbitt'
 AFFIL = 'School of Earth and Climate Sciences, University of Maine'
 
-HELP_TEXT = 'usage:\nreadgssi.py -i <input DZX> -o <output file> -f <output format: (csv|h5|segy)>\n\noptional flags:\n-v       = verbose\n-p       = plot output\n-d       = input file uses DMI instrument\n-a <int> = specify antenna frequency\n-s <int> = specify trace stacking value'
+HELP_TEXT = 'usage:\nreadgssi.py -i <input DZX> -o <output file> -f <output format: (csv|h5|segy)>\n\noptional flags:\n-v       = verbose\n-p       = plot output\n-d       = input file uses DMI instrument\n-a <int> = specify antenna frequency\n-s <int> = specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio'
 #optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
 
 
@@ -109,7 +109,7 @@ def readtime(bits):
     '''
     function to read dates bitwise.
     this is a colossally stupid way of storing dates.
-    I have no idea if I'm unpacking them correctly, and every indication that I'm not
+    I know I'm not unpacking them correctly, a fix is in the development queue
     '''
     garbagedate = datetime(1980,1,1,0,0,0,0,tzinfo=pytz.UTC)
     if bits == '\x00\x00\x00\x00':
@@ -510,18 +510,30 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             '''
             arr = r[1].astype(np.float32)
             img_arr = arr[abs(int(r[0]['rhf_position'])+5):r[0]['rh_nsamp']]
+            j = r[0]['stack']
+            if outfile == None:
+                outname = infile.split('.')[:-1][0]
+            else:
+                outname = outfile.split('.')[:-1][0]
             
-            if str(r[0]['stack']).lower() in 'auto':
-                #print('attempting automatic stacking method...')
-                print('automatic stacking method not implemented yet. no stacking value applied.')
+            if str(j).lower() in 'auto':
+                #print('automatic stacking method not implemented yet. no stacking value applied.')
+                print('attempting automatic stacking method...')
+                ratio = (img_arr.shape[1]/img_arr.shape[0])/(7500/3000)
+                if ratio > 1:
+                    j = round(ratio)
+                else:
+                    j = 1
             else:
                 try:
-                    int(r[0]['stack'])
+                    int(j)
                 except ValueError:
-                    r[0]['stack'] = 1
-            if r[0]['stack'] > 1:
-                print('stacking %sx' % r[0]['stack'])
-                j = r[0]['stack']
+                    print('error: stacking must be indicated with an integer greater than 1, "auto", or None.')
+                    print('a stacking value of 1 equates to None. "auto" will attempt to stack to about a 2.5:1 x to y axis ratio.')
+                    print('the result will not be stacked.')
+                    j = 1
+            if j > 1:
+                print('stacking %sx' % j)
                 i = list(range(j))
                 l = list(range(int(img_arr.shape[1]/j)))
                 stack = np.copy(img_arr[:,::j])
@@ -529,9 +541,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     stack[:,s] = stack[:,s] + img_arr[:,s*j+1:s*j+j].sum(axis=1)
                 img_arr = stack
             else:
-                print('stacking must be indicated with an integer greater than 1, "auto", or None.')
-                print('a stacking value of 1 equates to None. "auto" will attempt to stack to about a 3:1 x to y axis ratio.')
-                print('result will not be stacked.')
+                print('no stacking applied. be warned: this can result in very large files.')
 
             median = np.median(img_arr)
             if abs(median) >= 10:
@@ -546,18 +556,20 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             print('lower color limit: %s' % ll)
             print('upper color limit: %s' % ul)
 
-            figsz = (int(int(figsize)*int(img_arr.shape[1]/img_arr.shape[0])), figsize)
-            print('plotting %sx%sin image...' % (figsz))
+            # having lots of trouble with this line not being friendly with figsize tuple (integer coercion-related errors)
+            # so we will force everything to be integers explicitly
+            figx, figy = int(int(figsize)*int(int(img_arr.shape[1])/int(img_arr.shape[0]))), int(figsize) # force to integer instead of coerce
+            print('plotting %sx%sin image...' % (figx, figy))
 
-            fig = plt.figure(figsize=(figsz[0], figsz[1]), dpi=150, constrained_layout=True)
+            fig = plt.figure(figsize=(figx, figy), dpi=150, constrained_layout=True)
             img = plt.imshow(img_arr, cmap='viridis', clim=(ll, ul),
                              norm=colors.SymLogNorm(linthresh=0.001, linscale=1,
                                                     vmin=ll, vmax=ul),)
             fig.colorbar(img)
             plt.title('%s - stacking: %s' % (infile.split('/')[1], j))
-            print('saving figure as %s.png' % outfile.split('.')[0])
-            plt.savefig(os.path.join(outfile.split('.')[0] + '.png'))
-            plt.clf()
+            print('saving figure as %s.png' % outname)
+            plt.savefig(os.path.join(outname + '.png'))
+            plt.show()
             print('drawing histogram...')
             fig = plt.figure(figsize=(10,6))
             hst = plt.hist(img_arr.ravel(), bins=256, range=(ll, ul), fc='k', ec='k')
@@ -642,11 +654,11 @@ if __name__ == "__main__":
                         int(arg)
                         stack = arg
                     except ValueError:
-                        print('error: stacking flag must be followed by an integer.')
+                        print('error: stacking argument must be an integer or "auto".')
                         print(HELP_TEXT)
                         sys.exit(2)
             else:
-                stack = 1
+                stack = 'auto'
         if opt in ('-p', '--plot'):
             plot = True
             if arg:
