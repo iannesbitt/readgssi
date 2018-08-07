@@ -575,7 +575,7 @@ if __name__ == "__main__":
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plot=False, stack=None)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hvp:di:a:o:f:s:',['help','verbose','plot=','dmi','input=','antfreq=','output=','format=','stack='])
+        opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:',['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack='])
     # the 'no option supplied' error
     except getopt.GetoptError:
         print('error: invalid argument(s) supplied')
