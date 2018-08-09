@@ -21,7 +21,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-from mpl_toolkits.basemap import Basemap
+#from mpl_toolkits.basemap import Basemap
 import pandas as pd
 import math
 from decimal import Decimal
@@ -132,7 +132,6 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     frmt = format ('dzg' = DZG file containing gps sentence strings (see below); 'csv' = comma separated file with)
     spu = samples per unit (second or meter)
     traces = the number of traces in the file
-
     Reading DZG
     We need to relate gpstime to scan number then interpolate for each scan
     between gps measurements.
@@ -259,7 +258,6 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10, stack=1, verbose=False):
     '''
     function to unpack and return things we need from the header, and the data itself
-
     currently unused but potentially useful lines:
     # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s' # the structure of the bytewise header and "gps data" as I understand it - 1024 bytes
     # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2) # the variable size of bytes in the header (most of the time) - 128 bytes
@@ -280,6 +278,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 rh_tag = struct.unpack('<h', f.read(2))[0] # 0x00ff if header, 0xfnff if old file format
                 rh_data = struct.unpack('<h', f.read(2))[0] # offset to data from beginning of file
                 rh_nsamp = struct.unpack('<h', f.read(2))[0] # samples per scan
+#                rh_nsamp=1024
                 rh_bits = struct.unpack('<h', f.read(2))[0] # bits per data word
                 rh_zero = struct.unpack('<h', f.read(2))[0] # if sir-30 or utilityscan df, then repeats per sample; otherwise 0x80 for 8bit and 0x8000 for 16bit
                 rhf_sps = struct.unpack('<f', f.read(4))[0] # scans per second
@@ -318,11 +317,11 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     f.seek(MINHEADSIZE * rh_nchan)
 
                 if rh_bits == 8:
-                    data = np.fromfile(f, np.uint8).reshape(-1,rh_nsamp).T # 8-bit
+                    data = np.fromfile(f, np.uint8).reshape(-1,(rh_nsamp*rh_nchan)).T # 8-bit
                 elif rh_bits == 16:
-                    data = np.fromfile(f, np.uint16).reshape(-1,rh_nsamp).T # 16-bit
+                    data = np.fromfile(f, np.uint16).reshape(-1,(rh_nsamp*rh_nchan)).T # 16-bit
                 else:
-                    data = np.fromfile(f, np.int32).reshape(-1,rh_nsamp).T # 32-bit
+                    data = np.fromfile(f, np.int32).reshape(-1,(rh_nsamp*rh_nchan)).T # 32-bit
 
                 # create dictionary
                 returns = {
@@ -449,7 +448,6 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 - marks are made at same time on GPS and SIR
                 - gps and gpr are in same location when mark is made
                 - good quality horizontal solution
-
                 single-channel IceRadar h5 structure is
                 /line_x/location_n/datacapture_0/echogram_0 (/group/group/group/dataset)
                 each dataset has an 'attributes' item attached, formatted in 'collections.defaultdict' style:
@@ -522,13 +520,15 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             let's do some matplotlib
             '''
             arr = r[1].astype(np.float32)
-            #img_arr = arr[abs(int(r[0]['rhf_position'])+5):r[0]['rh_nsamp']]
-            img_arr = arr[abs(int(90)+5):r[0]['rh_nsamp']]
-
-            new_arr = {}
             chans = list(range(r[0]['rh_nchan']))
+            img_arr = arr[abs(int(47)):r[0]['rh_nchan']*r[0]['rh_nsamp']]
+            new_arr = {}
             for ar in chans:
-                new_arr[ar] = img_arr[:,:int(img_arr.shape[1]/r[0]['rh_nchan'])]
+                print ar
+                a=[]
+                a=img_arr[abs(int(47))+(ar)*r[0]['rh_nsamp']:(ar+1)*r[0]['rh_nsamp']-abs(int(47))]
+                new_arr[ar] = a[:,:int(img_arr.shape[1])]
+                    
             img_arr = new_arr
             del new_arr
 
@@ -545,7 +545,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     print('attempting automatic stacking method...')
                     ratio = (img_arr[ar].shape[1]/img_arr[ar].shape[0])/(7500/3000)
                     if ratio > 1:
-                        j = round(ratio)
+                        j = int(ratio)
                     else:
                         j = 1
                 else:
@@ -585,19 +585,22 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 figx, figy = int(int(figsize)*int(int(img_arr[ar].shape[1])/int(img_arr[ar].shape[0]))), int(figsize) # force to integer instead of coerce
                 print('plotting %sx%sin image...' % (figx, figy))
 
-                fig = plt.figure(figsize=(figx, figy), dpi=150, constrained_layout=True)
-                img = plt.imshow(img_arr[ar], cmap='viridis', clim=(ll, ul),
+                fig = plt.figure()#(figsize=(figx, figy), dpi=150)#, constrained_layout=True)
+                img = plt.imshow(img_arr[ar], cmap='Greys', clim=(ll, ul),
                                  norm=colors.SymLogNorm(linthresh=std, linscale=1,
-                                                        vmin=ll, vmax=ul),)
-                fig.colorbar(img)
+                                                        vmin=ll, vmax=ul),)                
+                
+                
+                
                 plt.title('%s - %s MHz - stacking: %s' % (os.path.split(infile)[-1], ANT[r[0]['rh_antname']][fi], j))
+#                plt.show()
                 print('saving figure as %s_%sMHz.png' % (os.path.splitext(infile)[0], ANT[r[0]['rh_antname']][fi]))
                 plt.savefig(os.path.join(os.path.splitext(infile)[0] + '_' + str(ANT[r[0]['rh_antname']][fi]) + 'MHz.png'))
-                plt.show()
-                print('drawing histogram...')
-                fig = plt.figure(figsize=(10,6))
-                hst = plt.hist(img_arr[ar].ravel(), bins=256, range=(ll, ul), fc='k', ec='k')
-                plt.show()
+                
+                #3print('drawing histogram...')
+                #fig = plt.figure(figsize=(10,6))
+                #hst = plt.hist(img_arr[ar].ravel(), bins=256, range=(ll, ul), fc='k', ec='k')
+                #plt.show()
                 fi += 1
 
     except TypeError as e: # shows up when the user selects an input file that doesn't exist
