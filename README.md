@@ -11,6 +11,7 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 - changed the way files are saved (bug in 0.0.5 mangled some filenames)
 #### known bugs:
 - translation to anything but csv is broken (hope to have time for a fix soon)
+  - csv translation does not work for dual-channel radar devices (exports to file but channels are merged end-to-end)
 - color bar shows up too large on most plots (no known fix yet)
 - colormap of radargram doesn't fit all data (adding user-adjustable gain soon)
 - time-zero is broken (it's currently a constant and needs to be a function of antenna separation and samplerate)
