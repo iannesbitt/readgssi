@@ -7,6 +7,7 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 ## changes in 0.0.6-beta2
 - added support for the D50800 antenna
 - added plotting support for dual-channel radar devices
+  - merged #3 from @fxsimon which fixed a bug that caused multi-channel file traces to be read in a 121212 sequence instead of 111222
 - updated the workings of the plotting algorithm's colormap
 - changed the way files are saved (bug in 0.0.5 mangled some filenames)
 - added the ability to specify colormap and whether to draw a colorbar and a histogram
