@@ -1,8 +1,19 @@
-# readgssi v0.0.5
+# readgssi v0.0.6-beta
 
 A tool intended for use as an open-source translator and preprocessing module for subsurface data collected with GSSI ground-penetrating georadar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and will be able to translate to multiple output formats including HDF5 and CSV, and create matplotlib plots as well, though not all formats are available yet (SEG-Y is in future plans). Original Matlab code developed by Gabe Lewis, Dartmouth College Department of Earth Sciences. Python translation written with permission by Ian Nesbitt, University of Maine School of Earth and Climate Science.
 
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
+
+## changes in 0.0.6
+- added support for the D50800 antenna
+- added plotting support for dual-channel radar devices
+- updated the workings of the plotting algorithm's colormap
+- changed the way files are saved (bug in 0.0.5 mangled some filenames)
+#### known bugs:
+- translation to anything but csv is broken (hope to have time for a fix soon)
+- color bar shows up too large on most plots (no known fix yet)
+- colormap of radargram doesn't fit all data (adding user-adjustable gain soon)
+- time-zero is broken (it's currently a constant and needs to be a function of antenna separation and samplerate)
 
 ## usage
 From a unix command line:
@@ -29,6 +40,11 @@ The above command will create and save a plot named "DZT__001.png" with a y-size
 readgssi.py -i DZT__001.DZT -p 20 -s "auto"
 ```
 This will create the same plot but use the autostacking algorithm to stack the x-axis to approximately 2.5\*y for optimal display.
+
+```
+readgssi.py -i DZT__001.DZT -o test.csv -f CSV
+```
+Not sure this works at the moment, but ordinarily would translate the radar data to CSV format, which can be imported to, for example, `numpy` or `pandas` (or R, if that's your cup of tea).
 
 ## future
 - GPS transcription (read from associated DZG file or CSV with mark name, lon, lat, elev, time)
