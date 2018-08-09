@@ -1,5 +1,4 @@
 backports.functools-lru-cache==1.5
-basemap==1.0.7
 bitstruct==3.7.0
 cycler==0.10.0
 h5py==2.7.1
