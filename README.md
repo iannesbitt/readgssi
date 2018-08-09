@@ -4,7 +4,7 @@ A tool intended for use as an open-source translator and preprocessing module fo
 
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 
-## changes in 0.0.6-beta2
+## changes since 0.0.5
 - added support for the D50800 antenna
 - added plotting support for dual-channel radar devices
   - merged #3 from @fxsimon which fixed a bug that caused multi-channel file traces to be read in a 121212 sequence instead of 111222
