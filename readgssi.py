@@ -36,7 +36,7 @@ YEAR = 2018
 AUTHOR = 'Ian Nesbitt'
 AFFIL = 'School of Earth and Climate Sciences, University of Maine'
 
-HELP_TEXT = 'usage:\nreadgssi.py -i <input DZX> -o <output file> -f <output format: (csv|h5|segy)>\n\noptional flags:\n-v       = verbose\n-p       = plot output\n-d       = input file uses DMI instrument\n-a <int> = specify antenna frequency\n-s <int> = specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio'
+HELP_TEXT = 'usage:\nreadgssi.py -i <input DZX> -o <output file> -f <output format: (csv|h5|segy)>\n\noptional flags:\n-v       = verbose\n-p <int> = plot output with size in inches\n-d       = input file uses DMI instrument\n-a <int> = specify antenna frequency\n-s <int> = specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio'
 #optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
 
 
