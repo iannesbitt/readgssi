@@ -255,7 +255,7 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     return arr
 
 
-def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10, stack=1, verbose=False, histogram=False, colormap='viridis'):
+def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10, stack=1, verbose=False, histogram=False, colormap='viridis', colorbar=False):
     '''
     function to unpack and return things we need from the header, and the data itself
     currently unused but potentially useful lines:
@@ -563,7 +563,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                         stack[:,s] = stack[:,s] + img_arr[ar][:,s*j+1:s*j+j].sum(axis=1)
                     img_arr[ar] = stack
                 else:
-                    if str(j).lower() in auto:
+                    if str(j).lower() in 'auto':
                         pass
                     else:
                         print('no stacking applied. be warned: this can result in very large and awkwardly-shaped figures.')
@@ -603,6 +603,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                                  norm=colors.SymLogNorm(linthresh=std, linscale=1,
                                                         vmin=ll, vmax=ul),)                
 
+                if colorbar:
+                    fig.colorbar(img)
                 plt.title('%s - %s MHz - stacking: %s' % (os.path.split(infile)[-1], ANT[r[0]['rh_antname']][fi], j))
                 print('saving figure as %s_%sMHz.png' % (os.path.splitext(infile)[0], ANT[r[0]['rh_antname']][fi]))
                 plt.savefig(os.path.join(os.path.splitext(infile)[0] + '_' + str(ANT[r[0]['rh_antname']][fi]) + 'MHz.png'))
@@ -628,13 +630,13 @@ if __name__ == "__main__":
 
     verbose = False
     stack = 1
-    infile, outfile, antfreq, frmt, plot, figsize, histogram, colormap = None, None, None, None, None, None, None, None
+    infile, outfile, antfreq, frmt, plot, figsize, histogram, colormap, colorbar = None, None, None, None, None, None, None, None, None
 
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plot=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:gc:',['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack=','histogram','colormap='])
+        opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:gc:b',['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack=','histogram','colormap=','colorbar'])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
         print('error: invalid argument(s) supplied')
@@ -723,6 +725,10 @@ if __name__ == "__main__":
                 colormap = arg
             else:
                 colormap = 'viridis'
+        else:
+            colormap = 'viridis'
+        if opt in ('-b', '--colorbar'):
+            colorbar = True
 
 
     # call the function with the values we just got
@@ -731,7 +737,7 @@ if __name__ == "__main__":
             pass
         else:
             verbose = True
-        readgssi(infile, outfile, antfreq, frmt, plot, figsize, stack, verbose, histogram, colormap)
+        readgssi(infile, outfile, antfreq, frmt, plot, figsize, stack, verbose, histogram, colormap, colorbar)
     else:
         print(HELP_TEXT)
 
