@@ -1,3 +1,4 @@
+# coding=utf-8
 ## readgssi.py
 ## intended to translate radar data from DZT to other more workable formats.
 ## DZT is a file format maintained by Geophysical Survey Systems Incorporated (GSSI).
@@ -36,7 +37,23 @@ YEAR = 2018
 AUTHOR = 'Ian Nesbitt'
 AFFIL = 'School of Earth and Climate Sciences, University of Maine'
 
-HELP_TEXT = 'usage:\nreadgssi.py -i <input DZX> -o <output file> -f <output format: (csv|h5|segy)>\n\noptional flags:\n-v       = verbose\n-p <int> = plot output with size in inches\n-d       = input file uses DMI instrument\n-a <int> = specify antenna frequency\n-s <int> = specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio\n-g       = produce a histogram of data values\n-g "str" = specify the colormap, defaults to "viridis" (see https://matplotlib.org/users/colormaps.html#grayscale-conversion'
+HELP_TEXT = '''usage:
+readgssi.py -i input.DZT [OPTIONS]
+
+optional flags:
+     OPTION     |      ARGUMENT       |       FUNCTIONALITY
+-v, --verbose   |                     |  verbosity
+-o, --output    | file:  /dir/f.ext   |  specify an output file
+-f, --format    | string, eg. "csv"   |  specify output format (csv is the only working format currently)
+-p, --plot      | +integer or "auto"  |  plot will be x inches high (dpi=150), or "auto". default: 10
+-c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
+-g, --gain      | positive integer    |  gain value (higher=greater contrast, default: 1)
+-b, --colorbar  |                     |  add a colorbar to the figure
+-a, --antfreq   | positive integer    |  specify antenna frequency (read automatically if not given)
+-s, --stack     | +integer or "auto"  |  specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
+-m, --histogram |                     |  produce a histogram of data values
+'''
+
 #optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
 
 
@@ -255,7 +272,7 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     return arr
 
 
-def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10, stack=1, verbose=False, histogram=False, colormap='viridis', colorbar=False):
+def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10, stack=1, verbose=False, histogram=False, colormap='viridis', colorbar=False, gain=1):
     '''
     function to unpack and return things we need from the header, and the data itself
     currently unused but potentially useful lines:
@@ -570,10 +587,10 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
 
                 mean = np.mean(img_arr[ar])
                 if abs(mean) >= 10:
-                    print('mean: %s (mean is >10, so recentering array values by this amount)' % mean)
+                    print('mean: %s (mean is greater than 10, so recentering array values by this amount)' % mean)
                     img_arr[ar] = img_arr[ar] - mean
                 else:
-                    print('mean: %s (mean < 10; not recentering array)' % mean)
+                    print('mean: %s (mean is less than 10; not recentering array)' % mean)
                 std = np.std(img_arr[ar])
                 print('std:  %s' % std)
                 ll = -std * 3 # lower color limit (1/10 of a standard deviation works well for 100MHz in a lake)
@@ -586,28 +603,32 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
 
                 if figsize != 'auto':
                     figx, figy = int(int(figsize)*int(int(img_arr[ar].shape[1])/int(img_arr[ar].shape[0]))), int(figsize) # force to integer instead of coerce
-                    print('plotting %sx%sin image...' % (figx, figy))
+                    print('plotting %sx%sin image with gain=%s...' % (figx, figy, gain))
                     fig = plt.figure(figsize=(figx, figy), dpi=150, constrained_layout=True)
                 else:
-                    print('plotting...')
+                    print('plotting with gain=%s...' % gain)
                     fig = plt.figure(constrained_layout=True)
                 
                 try:
                     img = plt.imshow(img_arr[ar], cmap=colormap, clim=(ll, ul),
-                                 norm=colors.SymLogNorm(linthresh=std, linscale=1,
+                                 norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                                         vmin=ll, vmax=ul),)
+                except:
                     print('matplotlib did not accept colormap "%s", using viridis instead' % colormap)
                     print('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
-                except:
                     img = plt.imshow(img_arr[ar], cmap='viridis', clim=(ll, ul),
-                                 norm=colors.SymLogNorm(linthresh=std, linscale=1,
+                                 norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                                         vmin=ll, vmax=ul),)                
 
                 if colorbar:
                     fig.colorbar(img)
-                plt.title('%s - %s MHz - stacking: %s' % (os.path.split(infile)[-1], ANT[r[0]['rh_antname']][fi], j))
-                print('saving figure as %s_%sMHz.png' % (os.path.splitext(infile)[0], ANT[r[0]['rh_antname']][fi]))
-                plt.savefig(os.path.join(os.path.splitext(infile)[0] + '_' + str(ANT[r[0]['rh_antname']][fi]) + 'MHz.png'))
+                plt.title('%s - %s MHz - stacking: %s - gain: %s' % (os.path.split(infile)[-1], ANT[r[0]['rh_antname']][fi], j, gain))
+                if outfile:
+                    print('saving figure as %s.png' % (os.path.splitext(outfile)[0]))
+                    plt.savefig(os.path.join(os.path.splitext(outfile)[0] + '.png'))
+                else:
+                    print('saving figure as %s_%sMHz.png' % (os.path.splitext(infile)[0], ANT[r[0]['rh_antname']][fi]))
+                    plt.savefig(os.path.join(os.path.splitext(infile)[0] + '_' + str(ANT[r[0]['rh_antname']][fi]) + 'MHz.png'))
                 plt.show()
                 
                 if histogram:
@@ -630,13 +651,13 @@ if __name__ == "__main__":
 
     verbose = False
     stack = 1
-    infile, outfile, antfreq, frmt, plot, figsize, histogram, colormap, colorbar = None, None, None, None, None, None, None, None, None
+    infile, outfile, antfreq, frmt, plot, figsize, histogram, colormap, colorbar, gain = None, None, None, None, None, None, None, None, None, None
 
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plot=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:gc:b',['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack=','histogram','colormap=','colorbar'])
+        opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:mc:bg:',['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack=','histogram','colormap=','colorbar','gain='])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
         print('error: invalid argument(s) supplied')
@@ -645,7 +666,7 @@ if __name__ == "__main__":
         sys.exit(2)
     for opt, arg in opts: 
         if opt in ('-h', '--help'): # the help case
-            print(u'Copyright %s %s %s' % (u'\u00a9', AUTHOR, YEAR))
+            print(u'Copyleft %s %s %s' % (u'\U0001F12F', AUTHOR, YEAR))
             print(AFFIL + '\n')
             print(HELP_TEXT)
             sys.exit()
@@ -663,7 +684,7 @@ if __name__ == "__main__":
                     outfile = os.path.expanduser(infile) # expand tilde, see above
         if opt in ('-a', '--freq'):
             try:
-                antfreq = round(float(arg),1)
+                antfreq = round(float(abs(arg)),1)
             except:
                 print('error: %s is not a valid decimal or integer frequency value.' % arg)
                 print(HELP_TEXT)
@@ -690,12 +711,12 @@ if __name__ == "__main__":
         if opt in ('-s', '--stack'):
             if arg:
                 if 'auto' in str(arg).lower():
-                    stack = str(arg).lower()
+                    stack = 'auto'
                 else:
                     try:
-                        stack = int(arg)
+                        stack = abs(int(arg))
                     except ValueError:
-                        print('error: stacking argument must be an integer or "auto".')
+                        print('error: stacking argument must be a positive integer or "auto".')
                         print(HELP_TEXT)
                         sys.exit(2)
             else:
@@ -707,9 +728,9 @@ if __name__ == "__main__":
                     figsize = str(arg).lower()
                 else:
                     try:
-                        figsize = int(arg)
+                        figsize = abs(int(arg))
                     except ValueError:
-                        print('error: plot size argument must be an integer or "auto".')
+                        print('error: plot size argument must be a positive integer or "auto".')
                         print(HELP_TEXT)
                         sys.exit(2)
             else:
@@ -718,7 +739,7 @@ if __name__ == "__main__":
             #dmi = True
             print('DMI devices are not supported at the moment.')
             pass # not doing anything with this at the moment
-        if opt in ('-g', '--histogram'):
+        if opt in ('-m', '--histogram'):
             histogram = True
         if opt in ('-c', '--colormap'):
             if arg:
@@ -729,6 +750,17 @@ if __name__ == "__main__":
             colormap = 'viridis'
         if opt in ('-b', '--colorbar'):
             colorbar = True
+        if opt in ('-g', '--gain'):
+            if arg:
+                try:
+                    gain = abs(int(arg))
+                except:
+                    print('gain must be positive. defaulting to gain=1.')
+                    gain = 1
+            else:
+                gain = 1
+        else:
+            gain = 1
 
 
     # call the function with the values we just got
@@ -737,7 +769,7 @@ if __name__ == "__main__":
             pass
         else:
             verbose = True
-        readgssi(infile, outfile, antfreq, frmt, plot, figsize, stack, verbose, histogram, colormap, colorbar)
+        readgssi(infile, outfile, antfreq, frmt, plot, figsize, stack, verbose, histogram, colormap, colorbar, gain)
     else:
         print(HELP_TEXT)
 

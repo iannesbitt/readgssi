@@ -3,5 +3,6 @@
 env/
 venv/
 testfiles/
+testdata/
 .DS_Store
 *ipynb*

@@ -1,4 +1,4 @@
-# readgssi v0.0.6-beta2
+# readgssi v0.0.6-beta3
 
 A tool intended for use as an open-source translator and preprocessing module for subsurface data collected with GSSI ground-penetrating georadar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and will be able to translate to multiple output formats including HDF5 and CSV, and create matplotlib plots as well, though not all formats are available yet (SEG-Y is in future plans). Original Matlab code developed by Gabe Lewis, Dartmouth College Department of Earth Sciences. Python translation written with permission by Ian Nesbitt, University of Maine School of Earth and Climate Science.
 
@@ -12,6 +12,7 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 - changed the way files are saved (bug in 0.0.5 mangled some filenames)
 - added the ability to specify colormap and whether to draw a colorbar and a histogram
 - added an automatic figsize option (leaves figsize up to Matplotlib)
+- added ability to apply gain
 #### known bugs:
 - time-zero is broken (it's currently a constant and needs to be a function of antenna separation and samplerate)
 - translation to anything but csv is broken (hope to have time for a fix soon)
@@ -22,18 +23,20 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 ## usage
 ```
 usage:
-readgssi.py -i <input DZX> [OPTIONS]
+readgssi.py -i input.DZT [OPTIONS]
 
 optional flags:
--v                    = verbose
--o f.ext              = specify output file
--f "csv"              = specify output format (csv is the only working format currently)
--p integer or "auto"  = plot will be x inches high (dpi=150), or if "auto", the default matplotlib figsize
--c "Greys"            = specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
--b                    = add a colorbar to the figure
--a integer            = specify antenna frequency (read automatically if not given)
--s integer or "auto"  = specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
--g                    = produce a histogram of data values
+    COMMAND     |      ARGUMENT       |       FUNCTIONALITY
+-v, --verbose   |                     |  verbosity
+-o, --output    | file:  /dir/f.ext   |  specify an output file
+-f, --format    | string, eg. "csv"   |  specify output format (csv is the only working format currently)
+-p, --plot      | +integer or "auto"  |  plot will be x inches high (dpi=150), or "auto". default: 10
+-c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
+-g, --gain      | positive float      |  apply a gain value (gain > 1: greater contrast; 0 < gain < 1: less contrast. default: 1)
+-b, --colorbar  |                     |  add a colorbar to the figure
+-a, --antfreq   | positive integer    |  specify antenna frequency (read automatically if not given)
+-s, --stack     | +integer or "auto"  |  specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
+-m, --histogram |                     |  produce a histogram of data values
 ```
 
 From a unix command line:
@@ -53,14 +56,14 @@ Simply specifying an input DZT file will display a host of data about the file i
 - number of seconds
 
 ```
-readgssi.py -i DZT__001.DZT -p 20 -s 6
+readgssi.py -i DZT__001.DZT -p 20 -s 6 -g 50
 ```
-The above command will create and save a plot named "DZT__001.png" with a y-size of 20 inches and stack the x-axis to 6 times shorter than the original data array.
+The above command will create and save a plot named "DZT__001.png" with a y-size of 20 inches and stack the x-axis to 6 times shorter than the original data array. The script will apply a gain of 50, meaning that contrast will be increased by a factor of 50 (`-g 50`).
 
 ```
-readgssi.py -i DZT__001.DZT -p "auto" -s "auto" -g
+readgssi.py -i DZT__001.DZT -p "auto" -s "auto" -g 0.5 -m
 ```
-This will create the same plot but matplotlib will determine the y-axis size and the autostacking algorithm will stack the x-axis to approximately 2.5\*y for optimal display. The `-g` flag will draw a histogram for each data channel.
+This will create the same plot but matplotlib will determine the y-axis size and the autostacking algorithm will stack the x-axis to approximately 2.5\*y for optimal display. Data will be plotted with a gain value of 0.5, which means the plot contrast will be reduced by half (`-g 0.5`). The `-m` flag will draw a histogram for each data channel.
 
 ```
 readgssi.py -i DZT__001.DZT -o test.csv -f CSV
