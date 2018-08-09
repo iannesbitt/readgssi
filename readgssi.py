@@ -66,30 +66,31 @@ UNIT = {
 # a dictionary of standard gssi antennas and frequencies
 # unsure of what they all look like in code, however
 ANT = {
-    '3200': None,
-    '3200MLF': None,
-    '3207': 100,
-    '3207AP': 100,
-    '5106': 200,
-    '5106A': 200,
-    '50300': 300,
-    '350': 350,
-    '350HS': 350,
-    '50270': 270,
-    '50270S': 270,
-    '50400': 400,
-    '50400S': 400,
-    '800': 800,
-    '3101': 900,
-    '3101A': 900,
-    '51600': 1600,
-    '51600S': 1600,
-    '62000': 2000,
-    '62000-003': 2000,
-    '62300': 2300,
-    '62300XT': 2300,
-    '52600': 2600,
-    '52600S': 2600,
+    '3200': ('adjustable'),
+    '3200MLF': ('adjustable'),
+    '3207': (100,),
+    '3207AP': (100,),
+    '5106': (200,),
+    '5106A': (200,),
+    '50300': (300,),
+    '350': (350,),
+    '350HS': (350,),
+    '50270': (270,),
+    '50270S': (270,),
+    '50400': (400,),
+    '50400S': (400,),
+    '800': (800,),
+    '3101': (900,),
+    '3101A': (900,),
+    '51600': (1600,),
+    '51600S': (1600,),
+    '62000': (2000,),
+    '62000-003': (2000,),
+    '62300': (2300,),
+    '62300XT': (2300,),
+    '52600': (2600,),
+    '52600S': (2600,),
+    'D50800': (800,300,),
 }
 
 # whether or not the file is GPS-enabled (does not guarantee presence of GPS data in file)
@@ -366,14 +367,23 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             print('system:             %s' % UNIT[r[0]['rh_system']])
             print('antenna:            %s' % r[0]['rh_antname'])
         if r[0]['antfreq']:
+            i = 1
             if verbose:
-                print('user ant frequency: %.1f' % r[0]['antfreq'] + ' MHz')
+                if r[0]['rh_nchan'] > 1:
+                    for ar in ANT[r[0]['rh_antname']]:
+                        print('user ant frequency: %s' % ar + ' MHz')
+                else:
+                    print('user ant frequency: %s' % ANT[r[0]['rh_antname']] + ' MHz')
             freq = r[0]['antfreq']
         elif r[0]['rh_antname']:
             try:
-                if verbose:
-                    print('antenna frequency:  %.1f' % ANT[r[0]['rh_antname']] + ' MHz')
                 freq = ANT[r[0]['rh_antname']]
+                if verbose:
+                    if r[0]['rh_nchan'] > 1:
+                        for ar in freq:
+                            print('antenna frequency:  %s' % ar + ' MHz')
+                    else:
+                        print('antenna frequency:  %s' % ANT[r[0]['rh_antname']] + ' MHz')
             except ValueError as e:
                 print('WARNING: could not read frequency for given antenna name.\nerror info: %s' % e)
                 print(HELP_TEXT)
@@ -385,7 +395,10 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
         if verbose:
             print('date created:       %s' % r[0]['rhb_cdt'])
             print('date modified:      %s' % r[0]['rhb_mdt'])
-            print('gps-enabled file:   %s' % GPS[r[0]['rh_version']])
+            try:
+                print('gps-enabled file:   %s' % GPS[r[0]['rh_version']])
+            except (TypeError, KeyError) as e:
+                print('gps-enabled file:   %s' % 'unknown')
             print('number of channels: %i' % r[0]['rh_nchan'])
             print('samples per trace:  %i' % r[0]['rh_nsamp'])
             print('bits per sample:    %s' % BPS[r[0]['rh_bits']])
@@ -394,9 +407,9 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             print('dilectric:          %.1f' % r[0]['rhf_epsr'])
             print('sampling depth:     %.1f' % r[0]['rhf_depth'])
             if r[1].shape[1] == int(r[1].shape[1]):
-                print('traces:             %i' % r[1].shape[1])
+                print('traces:             %i' % int(r[1].shape[1]/r[0]['rh_nchan']))
             else:
-                print('traces:             %f' % r[1].shape[1])
+                print('traces:             %f' % int(r[1].shape[1]/r[0]['rh_nchan']))
             print('seconds:            %.8f' % line_dur)
             print('samp/m:             %.2f' % (float(rhf_spm)))
         if r[0]['frmt']:
@@ -509,71 +522,83 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             let's do some matplotlib
             '''
             arr = r[1].astype(np.float32)
-            img_arr = arr[abs(int(r[0]['rhf_position'])+5):r[0]['rh_nsamp']]
-            j = r[0]['stack']
-            if outfile == None:
-                outname = infile.split('.')[:-1][0]
-            else:
-                outname = outfile.split('.')[:-1][0]
-            
-            if str(j).lower() in 'auto':
-                #print('automatic stacking method not implemented yet. no stacking value applied.')
-                print('attempting automatic stacking method...')
-                ratio = (img_arr.shape[1]/img_arr.shape[0])/(7500/3000)
-                if ratio > 1:
-                    j = round(ratio)
+            #img_arr = arr[abs(int(r[0]['rhf_position'])+5):r[0]['rh_nsamp']]
+            img_arr = arr[abs(int(90)+5):r[0]['rh_nsamp']]
+
+            new_arr = {}
+            chans = list(range(r[0]['rh_nchan']))
+            for ar in chans:
+                new_arr[ar] = img_arr[:,:int(img_arr.shape[1]/r[0]['rh_nchan'])]
+            img_arr = new_arr
+            del new_arr
+
+            fi = 0
+            for ar in img_arr:
+                j = r[0]['stack']
+                if outfile:
+                    outname = os.path.split(outfile)[-1].split('.')[:-1][0]
                 else:
-                    j = 1
-            else:
-                try:
-                    int(j)
-                except ValueError:
-                    print('error: stacking must be indicated with an integer greater than 1, "auto", or None.')
-                    print('a stacking value of 1 equates to None. "auto" will attempt to stack to about a 2.5:1 x to y axis ratio.')
-                    print('the result will not be stacked.')
-                    j = 1
-            if j > 1:
-                print('stacking %sx' % j)
-                i = list(range(j))
-                l = list(range(int(img_arr.shape[1]/j)))
-                stack = np.copy(img_arr[:,::j])
-                for s in l:
-                    stack[:,s] = stack[:,s] + img_arr[:,s*j+1:s*j+j].sum(axis=1)
-                img_arr = stack
-            else:
-                print('no stacking applied. be warned: this can result in very large files.')
+                    outname = os.path.split(infile)[-1].split('.')[:-1][0]
 
-            median = np.median(img_arr)
-            if abs(median) >= 10:
-                print('median: %s (median is >10, so recentering array values by this amount)' % median)
-                img_arr = img_arr - median
-            else:
-                print('median: %s (median < 10; not recentering array)' % median)
-            std = np.std(img_arr)
-            print('std:  %s' % std)
-            ll = -std * 0.1
-            ul = std * 0.1
-            print('lower color limit: %s' % ll)
-            print('upper color limit: %s' % ul)
+                if str(j).lower() in 'auto':
+                    #print('automatic stacking method not implemented yet. no stacking value applied.')
+                    print('attempting automatic stacking method...')
+                    ratio = (img_arr[ar].shape[1]/img_arr[ar].shape[0])/(7500/3000)
+                    if ratio > 1:
+                        j = round(ratio)
+                    else:
+                        j = 1
+                else:
+                    try:
+                        j = int(j)
+                    except ValueError:
+                        print('error: stacking must be indicated with an integer greater than 1, "auto", or None.')
+                        print('a stacking value of 1 equates to None. "auto" will attempt to stack to about a 2.5:1 x to y axis ratio.')
+                        print('the result will not be stacked.')
+                        j = 1
+                if j > 1:
+                    print('stacking %sx' % j)
+                    i = list(range(j))
+                    l = list(range(int(img_arr[ar].shape[1]/j)))
+                    stack = np.copy(img_arr[ar][:,::j])
+                    for s in l:
+                        stack[:,s] = stack[:,s] + img_arr[ar][:,s*j+1:s*j+j].sum(axis=1)
+                    img_arr[ar] = stack
+                else:
+                    print('no stacking applied. be warned: this can result in very large and awkwardly-shaped figures.')
 
-            # having lots of trouble with this line not being friendly with figsize tuple (integer coercion-related errors)
-            # so we will force everything to be integers explicitly
-            figx, figy = int(int(figsize)*int(int(img_arr.shape[1])/int(img_arr.shape[0]))), int(figsize) # force to integer instead of coerce
-            print('plotting %sx%sin image...' % (figx, figy))
+                mean = np.mean(img_arr[ar])
+                if abs(mean) >= 10:
+                    print('mean: %s (mean is >10, so recentering array values by this amount)' % mean)
+                    img_arr[ar] = img_arr[ar] - mean
+                else:
+                    print('mean: %s (mean < 10; not recentering array)' % mean)
+                std = np.std(img_arr[ar])
+                print('std:  %s' % std)
+                ll = -std * 3 # lower color limit (1/10 of a standard deviation works well for 100MHz in a lake)
+                ul = std * 3 # upper color limit (1/10 of a standard deviation works well for 100MHz in a lake)
+                print('lower color limit: %s' % ll)
+                print('upper color limit: %s' % ul)
 
-            fig = plt.figure(figsize=(figx, figy), dpi=150, constrained_layout=True)
-            img = plt.imshow(img_arr, cmap='viridis', clim=(ll, ul),
-                             norm=colors.SymLogNorm(linthresh=0.001, linscale=1,
-                                                    vmin=ll, vmax=ul),)
-            fig.colorbar(img)
-            plt.title('%s - stacking: %s' % (infile.split('/')[1], j))
-            print('saving figure as %s.png' % outname)
-            plt.savefig(os.path.join(outname + '.png'))
-            plt.show()
-            print('drawing histogram...')
-            fig = plt.figure(figsize=(10,6))
-            hst = plt.hist(img_arr.ravel(), bins=256, range=(ll, ul), fc='k', ec='k')
-            plt.show()
+                # having lots of trouble with this line not being friendly with figsize tuple (integer coercion-related errors)
+                # so we will force everything to be integers explicitly
+                figx, figy = int(int(figsize)*int(int(img_arr[ar].shape[1])/int(img_arr[ar].shape[0]))), int(figsize) # force to integer instead of coerce
+                print('plotting %sx%sin image...' % (figx, figy))
+
+                fig = plt.figure(figsize=(figx, figy), dpi=150, constrained_layout=True)
+                img = plt.imshow(img_arr[ar], cmap='viridis', clim=(ll, ul),
+                                 norm=colors.SymLogNorm(linthresh=std, linscale=1,
+                                                        vmin=ll, vmax=ul),)
+                fig.colorbar(img)
+                plt.title('%s - %s MHz - stacking: %s' % (os.path.split(infile)[-1], ANT[r[0]['rh_antname']][fi], j))
+                print('saving figure as %s_%sMHz.png' % (os.path.splitext(infile)[0], ANT[r[0]['rh_antname']][fi]))
+                plt.savefig(os.path.join(os.path.splitext(infile)[0] + '_' + str(ANT[r[0]['rh_antname']][fi]) + 'MHz.png'))
+                plt.show()
+                print('drawing histogram...')
+                fig = plt.figure(figsize=(10,6))
+                hst = plt.hist(img_arr[ar].ravel(), bins=256, range=(ll, ul), fc='k', ec='k')
+                plt.show()
+                fi += 1
 
     except TypeError as e: # shows up when the user selects an input file that doesn't exist
         print(e)
