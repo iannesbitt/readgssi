@@ -1,4 +1,4 @@
-# readgssi v0.0.6-beta3
+# readgssi v0.0.6-beta4
 
 ![alt text](examples/1.png)
 
@@ -15,12 +15,12 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 - added the ability to specify colormap and whether to draw a colorbar and a histogram
 - added an automatic figsize option (leaves figsize up to Matplotlib)
 - added ability to apply gain
+- fixed bug that didn't caused gain to be applied incorrectly
+- script now tries to automatically calculate timezero using (nsamp\*range)/position
 #### known bugs:
-- time-zero is broken (it's currently a constant and needs to be a function of antenna separation and samplerate)
 - translation to anything but csv is broken (hope to have time for a fix soon)
   - csv translation does not work for dual-channel radar devices (exports to file but channels are merged end-to-end)
 - color bar shows up too large on some plots (no known fix yet)
-- colormap of radargram doesn't always work for certain types of data (adding user-adjustable gain soon)
 
 ## usage
 ```
