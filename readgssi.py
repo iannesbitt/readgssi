@@ -352,6 +352,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     'rh_version': rh_version,
                     'rh_nchan': rh_nchan,
                     'rh_nsamp': rh_nsamp,
+                    'rhf_range': rhf_range,
                     'rh_bits': rh_bits,
                     'rhf_sps': rhf_sps,
                     'rhf_spm': rhf_spm,
@@ -537,11 +538,12 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             '''
             arr = r[1].astype(np.float32)
             chans = list(range(r[0]['rh_nchan']))
-            img_arr = arr[abs(int(47)):r[0]['rh_nchan']*r[0]['rh_nsamp']]
+            timezero = abs(round(float(r[0]['rh_nsamp'])/float(r[0]['rhf_range'])*float(r[0]['rhf_position'])))
+            img_arr = arr[timezero:r[0]['rh_nchan']*r[0]['rh_nsamp']]
             new_arr = {}
             for ar in chans:
                 a=[]
-                a=img_arr[abs(int(47))+(ar)*r[0]['rh_nsamp']:(ar+1)*r[0]['rh_nsamp']-abs(int(47))]
+                a=img_arr[(ar)*r[0]['rh_nsamp']:(ar+1)*r[0]['rh_nsamp']-timezero]
                 new_arr[ar] = a[:,:int(img_arr.shape[1])]
                     
             img_arr = new_arr
@@ -753,7 +755,7 @@ if __name__ == "__main__":
         if opt in ('-g', '--gain'):
             if arg:
                 try:
-                    gain = abs(int(arg))
+                    gain = abs(float(arg))
                 except:
                     print('gain must be positive. defaulting to gain=1.')
                     gain = 1
