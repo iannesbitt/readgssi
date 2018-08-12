@@ -1,4 +1,5 @@
 # readgssi v0.0.6-beta4
+Copyleft © 2017-2018
 
 ![Example Radargram](examples/1.png)
 
