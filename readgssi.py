@@ -544,6 +544,28 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             for ar in chans:
                 a=[]
                 a=img_arr[(ar)*r[0]['rh_nsamp']:(ar+1)*r[0]['rh_nsamp']-timezero]
+                    
+                #Average Background Removal
+                meantrace=[0]*len(a[0])
+                for i in range(len(a)):
+                    for j in range(len(a[0])):
+                        meantrace[i]=a[i][j]+meantrace[i]
+                meantrace=[i/len(a[0])for i in meantrace]
+                
+                for j in range(len(a[0])):
+                    for i in range(len(a)):
+                        a[i][j]= a[i][j] - meantrace[i]                
+                
+                
+                #Dewow filter     
+                signal=zip(*a)[10]     
+                model = np.polyfit(range(len(signal)),signal, 3)
+                predicted = list(np.polyval(model, range(len(signal))))
+                for j in range(len(a[0])):
+                    for i in range(len(a)):
+                        a[i][j]= a[i][j] - predicted[i]
+                        
+                     
                 new_arr[ar] = a[:,:int(img_arr.shape[1])]
                     
             img_arr = new_arr
