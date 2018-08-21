@@ -1,14 +1,15 @@
-# readgssi v0.0.6-beta4
+# readgssi v0.0.6-beta5
 
 ![Example Radargram](examples/1.png)
 
-`readgssi` is a tool intended for use as an open-source translator and preprocessing module for subsurface data collected with GSSI ground-penetrating georadar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and plot the data contained in those files. `readgssi` is currently able to translate most DZT files to CSV and will be able to translate to multiple other output formats including HDF5 and SEG-Y, though not all formats are available yet (see [future](#future)). Original Matlab code developed by Gabe Lewis, Dartmouth College Department of Earth Sciences. Python translation written with permission by Ian Nesbitt, University of Maine School of Earth and Climate Sciences.
+`readgssi` is a tool intended for use as an open-source translator and preprocessing module for subsurface data collected with GSSI ground-penetrating georadar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and plot the data contained in those files. `readgssi` is also currently able to translate most DZT files to CSV and will be able to translate to multiple other output formats including HDF5 and SEG-Y, though not all formats are available yet (see [future](#future)). Original Matlab code developed by Gabe Lewis, Dartmouth College Department of Earth Sciences. Python translation written with permission by Ian Nesbitt, University of Maine School of Earth and Climate Sciences.
 
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 
 ## changes since 0.0.5
-- added support for the D50800 antenna
-- added plotting support for dual-channel radar devices
+- added basic background removal and dewow capability (courtesy of [@fxsimon](https://github.com/fxsimon))
+- added support for the D50800/D50300 antenna
+  - added plotting support for dual-channel radar devices
   - merged #3 from @fxsimon which fixed a bug that caused multi-channel file traces to be read in a 121212 sequence instead of 111222
 - updated the workings of the plotting algorithm's colormap
 - changed the way files are saved (bug in 0.0.5 mangled some filenames)
@@ -25,7 +26,7 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 ## usage
 ```
 usage:
-readgssi.py -i input.DZT [OPTIONS]
+python readgssi.py -i input.DZT [OPTIONS]
 
 optional flags:
     COMMAND     |      ARGUMENT       |       FUNCTIONALITY
@@ -43,7 +44,7 @@ optional flags:
 
 From a unix command line:
 ```
-readgssi.py -i DZT__001.DZT
+python readgssi.py -i DZT__001.DZT
 ```
 Simply specifying an input DZT file like in the above command (`-i file`) will display a host of data about the file including:
 - name of GSSI control unit
@@ -58,17 +59,17 @@ Simply specifying an input DZT file like in the above command (`-i file`) will d
 - number of seconds
 
 ```
-readgssi.py -i DZT__001.DZT -p 20 -s 6 -g 50
+python readgssi.py -i DZT__001.DZT -p 20 -s 6 -g 50
 ```
 The above command will create and save a plot named "DZT__001.png" with a y-size of 20 inches (`-p 20`) and stack the x-axis to 6 times shorter than the original data array (`-s 6`). The script will apply a gain of 50 `-g 50`), meaning that contrast will be increased by a factor of 50.
 
 ```
-readgssi.py -i DZT__001.DZT -p "auto" -s "auto" -g 0.5 -m
+python readgssi.py -i DZT__001.DZT -p "auto" -s "auto" -g 0.5 -m
 ```
 This will create the same plot but matplotlib will determine the y-axis size (`-p "auto"`) and the autostacking algorithm will stack the x-axis to approximately 2.5\*y for optimal display (`-s "auto"`). Data will be plotted with a gain value of 0.5, which means the plot contrast will be reduced by half (`-g 0.5`). The `-m` flag will draw a histogram for each data channel.
 
 ```
-readgssi.py -i DZT__001.DZT -o test.csv -f CSV
+python readgssi.py -i DZT__001.DZT -o test.csv -f CSV
 ```
 Translates radar data to CSV format, which can be imported to, for example, `numpy` or `pandas` (or R, if that's your cup of tea).
 
@@ -78,7 +79,7 @@ Translates radar data to CSV format, which can be imported to, for example, `num
 - Thomas Paulin ([@thomaspaulin](https://github.com/thomaspaulin))
 
 ## future
-- GPS transcription (read from associated DZG file or CSV with mark name, lon, lat, elev, time)
+- GPS transcription (read from associated DZG file or CSV with fields `mark name, lon, lat, elev, time`)
 - supplementing a flag indicating geophysical format (HDF5, SEGY, etc.) will write to that format
 - calls to readgssi.readgssi(filename) from script or python shell will return np array and critical file statistics
 

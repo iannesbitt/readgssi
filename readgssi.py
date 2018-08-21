@@ -10,7 +10,7 @@
 # Gabe Lewis, Dartmouth College Department of Earth Sciences.
 # matlab code was adapted for python with permission by
 # Ian Nesbitt, University of Maine School of Earth and Climate Sciences.
-# Copyright (c) 2017 Ian Nesbitt
+# Copyleft (c) 2017 Ian Nesbitt
 
 # this code is freely available under the MIT License. if you did not receive
 # a copy of the license upon obtaining this software, please visit
@@ -32,13 +32,13 @@ import h5py
 import pynmea2
 
 NAME = 'readgssi'
-VERSION = '0.0.6-beta4'
+VERSION = '0.0.6-beta5'
 YEAR = 2018
 AUTHOR = 'Ian Nesbitt'
 AFFIL = 'School of Earth and Climate Sciences, University of Maine'
 
 HELP_TEXT = '''usage:
-readgssi.py -i input.DZT [OPTIONS]
+python readgssi.py -i input.DZT [OPTIONS]
 
 optional flags:
      OPTION     |      ARGUMENT       |       FUNCTIONALITY
@@ -620,7 +620,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     print('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
                     img = plt.imshow(img_arr[ar], cmap='viridis', clim=(ll, ul),
                                  norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
-                                                        vmin=ll, vmax=ul),)                
+                                                        vmin=ll, vmax=ul),)
 
                 if colorbar:
                     fig.colorbar(img)
