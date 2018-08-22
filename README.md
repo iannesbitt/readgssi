@@ -1,4 +1,5 @@
 # readgssi v0.0.6-beta5
+*Copyleft 🄯 2017-2018*
 
 ![Example Radargram](examples/1.png)
 
@@ -75,6 +76,7 @@ Translates radar data to CSV format, which can be imported to, for example, `num
 
 ## contributors
 - Ian Nesbitt ([@iannesbitt](https://github.com/iannesbitt), author)
+- [Gabe Lewis](https://earthsciences.dartmouth.edu/people/gabriel-lewis)
 - Francois-Xavier Simon ([@fxsimon](https://github.com/fxsimon))
 - Thomas Paulin ([@thomaspaulin](https://github.com/thomaspaulin))
 
