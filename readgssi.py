@@ -49,7 +49,7 @@ optional flags:
 -n, --noshow    |                     |  suppress matplotlib popup window and simply save a figure (useful for multiple file processing)
 -c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
 -g, --gain      | positive integer    |  gain value (higher=greater contrast, default: 1)
--r, --bgr       |                     |  background removal algorithm (useful in ice, sediment, and water)
+-r, --bgr       |                     |  background removal algorithm (useful in many media, ice, sediment, water, etc.)
 -w, --dewow     |                     |  dewow algorithm
 -b, --colorbar  |                     |  add a colorbar to the figure
 -a, --antfreq   | positive integer    |  specify antenna frequency (read automatically if not given)
