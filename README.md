@@ -8,10 +8,10 @@
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 
 ## changes since 0.0.5
-- added basic background removal and dewow capability (courtesy of [@fxsimon](https://github.com/fxsimon))
+- added basic background removal and dewow capability ([#5](https://github.com/iannesbitt/readgssi/pull/5) from [@fxsimon](https://github.com/fxsimon))
 - added support for the D50800/D50300 antenna
   - added plotting support for dual-channel radar devices
-  - merged #3 from [@fxsimon](https://github.com/fxsimon) which fixed a bug that caused multi-channel file traces to be read in a 121212 sequence instead of 111222
+  - merged [#5](https://github.com/iannesbitt/readgssi/pull/3) from [@fxsimon](https://github.com/fxsimon) which fixed a bug that caused multi-channel file traces to be read in a 121212 sequence instead of 111222
 - updated the workings of the plotting algorithm's colormap
 - changed the way files are saved (bug in 0.0.5 mangled some filenames)
 - added the ability to specify colormap and whether to draw a colorbar and a histogram
@@ -63,14 +63,14 @@ Simply specifying an input DZT file like in the above command (`-i file`) will d
 - number of seconds
 
 ```
-python readgssi.py -i DZT__001.DZT -p 20 -s 6 -g 50
+python readgssi.py -i DZT__001.DZT -p 20 -s 6 -g 50 -r
 ```
-The above command will create and save a plot named "DZT__001.png" with a y-size of 20 inches (`-p 20`) and stack the x-axis to 6 times shorter than the original data array (`-s 6`). The script will apply a gain of 50 `-g 50`), meaning that contrast will be increased by a factor of 50.
+The above command will cause `readgssi` to save and show a plot named "DZT__001.png" with a y-size of 10 inches (`-p 10`) and stack the x-axis to 6 times shorter than the original data array (`-s 6`). The script will apply a gain of 50 `-g 50`), meaning that it will increase the contrast by a factor of 50. `readgssi` will also apply a background removal filter (`-r`).
 
 ```
-python readgssi.py -i DZT__001.DZT -p "auto" -s "auto" -g 0.5 -m
+python readgssi.py -i DZT__001.DZT -p "auto" -s "auto" -g 0.5 -m -w -n
 ```
-This will create the same plot but matplotlib will determine the y-axis size (`-p "auto"`) and the autostacking algorithm will stack the x-axis to approximately 2.5\*y for optimal display (`-s "auto"`). Data will be plotted with a gain value of 0.5, which means the plot contrast will be reduced by half (`-g 0.5`). The `-m` flag will draw a histogram for each data channel.
+This will cause `readgssi` to create a plot from the same file, but matplotlib will determine the y-axis size (`-p "auto"`) and the autostacking algorithm will stack the x-axis to approximately 2.5\*y for optimal display (`-s "auto"`). The script will plot the data with a gain value of 0.5 (`-g 0.5`), which means it will reduce the plot contrast by half. The `-m` flag will draw a histogram for each data channel. `readgssi` will run a dewow filter (`-w`), and although matplotlib will save a PNG of the figure, the script will suppress the matplotlib window (`-n`, useful for processing an entire directory full of DZTs).
 
 ```
 python readgssi.py -i DZT__001.DZT -o test.csv -f CSV
