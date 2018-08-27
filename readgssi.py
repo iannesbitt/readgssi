@@ -29,7 +29,7 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 import pytz
 import h5py
-import pynmea2
+#import pynmea2
 
 NAME = 'readgssi'
 VERSION = '0.0.6-beta5'
@@ -46,8 +46,11 @@ optional flags:
 -o, --output    | file:  /dir/f.ext   |  specify an output file
 -f, --format    | string, eg. "csv"   |  specify output format (csv is the only working format currently)
 -p, --plot      | +integer or "auto"  |  plot will be x inches high (dpi=150), or "auto". default: 10
+-n, --noshow    |                     |  suppress matplotlib popup window and simply save a figure (useful for multiple file processing)
 -c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
 -g, --gain      | positive integer    |  gain value (higher=greater contrast, default: 1)
+-r, --bgr       |                     |  background removal algorithm (useful in ice, sediment, and water)
+-w, --dewow     |                     |  dewow algorithm
 -b, --colorbar  |                     |  add a colorbar to the figure
 -a, --antfreq   | positive integer    |  specify antenna frequency (read automatically if not given)
 -s, --stack     | +integer or "auto"  |  specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
@@ -272,7 +275,7 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     return arr
 
 
-def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10, stack=1, verbose=False, histogram=False, colormap='viridis', colorbar=False, gain=1):
+def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10, stack=1, verbose=False, histogram=False, colormap='viridis', colorbar=False, gain=1, bgr=False, dewow=False, noshow=False):
     '''
     function to unpack and return things we need from the header, and the data itself
     currently unused but potentially useful lines:
@@ -542,8 +545,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             img_arr = arr[timezero:r[0]['rh_nchan']*r[0]['rh_nsamp']]
             new_arr = {}
             for ar in chans:
-                a=[]
-                a=img_arr[(ar)*r[0]['rh_nsamp']:(ar+1)*r[0]['rh_nsamp']-timezero]
+                a = []
+                a = img_arr[(ar)*r[0]['rh_nsamp']:(ar+1)*r[0]['rh_nsamp']-timezero]
                 new_arr[ar] = a[:,:int(img_arr.shape[1])]
                     
             img_arr = new_arr
@@ -581,11 +584,36 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     for s in l:
                         stack[:,s] = stack[:,s] + img_arr[ar][:,s*j+1:s*j+j].sum(axis=1)
                     img_arr[ar] = stack
+                    del stack
                 else:
                     if str(j).lower() in 'auto':
                         pass
                     else:
                         print('no stacking applied. be warned: this can result in very large and awkwardly-shaped figures.')
+
+                if bgr:
+                    #Average Background Removal
+                    print('removing background...')
+                    meantrace = [0]*len(img_arr[ar][0])
+                    for ix in range(len(img_arr[ar])):
+                        for jx in range(len(img_arr[ar][0])):
+                            meantrace[ix] = img_arr[ar][ix][jx] + meantrace[ix]
+                    meantrace = [ix/len(img_arr[ar][0]) for ix in meantrace]
+                    
+                    for jx in range(len(img_arr[ar][0])):
+                        for ix in range(len(img_arr[ar])):
+                            img_arr[ar][ix][jx] = img_arr[ar][ix][jx] - meantrace[ix]
+                
+                if dewow:
+                    #Dewow filter
+                    print('dewowing data...')
+                    signal = list(zip(*img_arr[ar]))[10]
+                    model = np.polyfit(range(len(signal)), signal, 3)
+                    predicted = list(np.polyval(model, range(len(signal))))
+                    for jx in range(len(img_arr[ar][0])):
+                        for ix in range(len(img_arr[ar])):
+                            img_arr[ar][ix][jx]= img_arr[ar][ix][jx] - predicted[ix]
+
 
                 mean = np.mean(img_arr[ar])
                 if abs(mean) >= 10:
@@ -631,7 +659,12 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 else:
                     print('saving figure as %s_%sMHz.png' % (os.path.splitext(infile)[0], ANT[r[0]['rh_antname']][fi]))
                     plt.savefig(os.path.join(os.path.splitext(infile)[0] + '_' + str(ANT[r[0]['rh_antname']][fi]) + 'MHz.png'))
-                plt.show()
+                if noshow:
+                    print('not showing matplotlib')
+                    plt.close()
+                else:
+                    print('showing matplotlib figure...')
+                    plt.show()
                 
                 if histogram:
                     print('drawing histogram...')
@@ -653,13 +686,14 @@ if __name__ == "__main__":
 
     verbose = False
     stack = 1
-    infile, outfile, antfreq, frmt, plot, figsize, histogram, colormap, colorbar, gain = None, None, None, None, None, None, None, None, None, None
-
+    infile, outfile, antfreq, frmt, plot, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
+    colormap = 'viridis'
+    gain = 1
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plot=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:mc:bg:',['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack=','histogram','colormap=','colorbar','gain='])
+        opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:rwnmc:bg:',['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack=','bgr','dewow','noshow','histogram','colormap=','colorbar','gain='])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
         print('error: invalid argument(s) supplied')
@@ -721,8 +755,12 @@ if __name__ == "__main__":
                         print('error: stacking argument must be a positive integer or "auto".')
                         print(HELP_TEXT)
                         sys.exit(2)
-            else:
-                stack = 'auto'
+        if opt in ('-r', '--bgr'):
+            bgr = True
+        if opt in ('-w', '--dewow'):
+            dewow = True
+        if opt in ('-n', '--noshow'):
+            noshow = True
         if opt in ('-p', '--plot'):
             plot = True
             if arg:
@@ -735,8 +773,6 @@ if __name__ == "__main__":
                         print('error: plot size argument must be a positive integer or "auto".')
                         print(HELP_TEXT)
                         sys.exit(2)
-            else:
-                figsize = 10
         if opt in ('-d', '--dmi'):
             #dmi = True
             print('DMI devices are not supported at the moment.')
@@ -746,10 +782,6 @@ if __name__ == "__main__":
         if opt in ('-c', '--colormap'):
             if arg:
                 colormap = arg
-            else:
-                colormap = 'viridis'
-        else:
-            colormap = 'viridis'
         if opt in ('-b', '--colorbar'):
             colorbar = True
         if opt in ('-g', '--gain'):
@@ -759,10 +791,6 @@ if __name__ == "__main__":
                 except:
                     print('gain must be positive. defaulting to gain=1.')
                     gain = 1
-            else:
-                gain = 1
-        else:
-            gain = 1
 
 
     # call the function with the values we just got
@@ -771,7 +799,7 @@ if __name__ == "__main__":
             pass
         else:
             verbose = True
-        readgssi(infile, outfile, antfreq, frmt, plot, figsize, stack, verbose, histogram, colormap, colorbar, gain)
+        readgssi(infile=infile, outfile=outfile, antfreq=antfreq, frmt=frmt, plot=plot, figsize=figsize, stack=stack, verbose=verbose, histogram=histogram, colormap=colormap, colorbar=colorbar, gain=gain, bgr=bgr, dewow=dewow, noshow=noshow)
     else:
         print(HELP_TEXT)
 

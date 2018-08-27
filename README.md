@@ -11,7 +11,7 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 - added basic background removal and dewow capability (courtesy of [@fxsimon](https://github.com/fxsimon))
 - added support for the D50800/D50300 antenna
   - added plotting support for dual-channel radar devices
-  - merged #3 from @fxsimon which fixed a bug that caused multi-channel file traces to be read in a 121212 sequence instead of 111222
+  - merged #3 from [@fxsimon](https://github.com/fxsimon) which fixed a bug that caused multi-channel file traces to be read in a 121212 sequence instead of 111222
 - updated the workings of the plotting algorithm's colormap
 - changed the way files are saved (bug in 0.0.5 mangled some filenames)
 - added the ability to specify colormap and whether to draw a colorbar and a histogram
@@ -35,8 +35,11 @@ optional flags:
 -o, --output    | file:  /dir/f.ext   |  specify an output file
 -f, --format    | string, eg. "csv"   |  specify output format (csv is the only working format currently)
 -p, --plot      | +integer or "auto"  |  plot will be x inches high (dpi=150), or "auto". default: 10
+-n, --noshow    |                     |  suppress matplotlib popup window and simply save a figure (useful for multiple file processing)
 -c, --colormap  | string, eg. "Greys" |  specify the colormap ([https://matplotlib.org/users/colormaps.html#grayscale-conversion](https://matplotlib.org/users/colormaps.html#grayscale-conversion))
 -g, --gain      | positive float      |  apply a gain value (gain > 1: greater contrast; 0 < gain < 1: less contrast. default: 1)
+-r, --bgr       |                     |  background removal algorithm (useful in ice, sediment, and water)
+-w, --dewow     |                     |  dewow algorithm
 -b, --colorbar  |                     |  add a colorbar to the figure
 -a, --antfreq   | positive integer    |  specify antenna frequency (read automatically if not given)
 -s, --stack     | +integer or "auto"  |  specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
