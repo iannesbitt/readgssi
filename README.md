@@ -90,6 +90,19 @@ python readgssi.py -i DZT__002.DZT -o 2b.png -p 10 -s "auto" -r
 ```
 ![Example 2b](examples/2b.png)
 
+## dewow
+#### example A: no dewow
+```
+python readgssi.py -i DZT__003.DZT -o 3a.png -p 10 -s "auto" -r
+```
+![Example 3a](examples/3a.png)
+
+#### example B: dewow applied
+```
+python readgssi.py -i DZT__003.DZT -o 3b.png -p 10 -s "auto" -r -w
+```
+![Example 3b](examples/3b.png)
+
 
 ## contributors
 - Ian Nesbitt ([@iannesbitt](https://github.com/iannesbitt), author)

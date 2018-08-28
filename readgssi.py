@@ -612,7 +612,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     predicted = list(np.polyval(model, range(len(signal))))
                     for jx in range(len(img_arr[ar][0])):
                         for ix in range(len(img_arr[ar])):
-                            img_arr[ar][ix][jx]= img_arr[ar][ix][jx] - predicted[ix]
+                            img_arr[ar][ix][jx] = img_arr[ar][ix][jx] - predicted[ix]
 
 
                 mean = np.mean(img_arr[ar])
