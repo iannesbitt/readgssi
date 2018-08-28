@@ -80,7 +80,7 @@ Translates radar data to CSV format, which can be imported to, for example, `num
 #### example 1A
 ```bash
 python readgssi.py -i DZT__001.DZT -p 5 -s auto
-```bash
+```
 The above command will cause `readgssi` to save and show a plot named "DZT__001_100MHz.png" with a y-size of 6 inches at 150 dpi (`-p 6`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing, approximately 2.5\*y (`-s auto`).
 ![Example 1a](examples/DZT__001_100MHz.png)
 
