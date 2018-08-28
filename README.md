@@ -8,7 +8,7 @@
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 
 ## changes since 0.0.5
-- fixed a bug that caused plots of dual-channel radar files to be written out to one file
+- fixed a bug that caused both plots of dual-channel radar files to be written out to one file
 - fixed a bug that caused manually-created output file names to be ignored when plotting
 - added basic background removal and dewow capability ([#5](https://github.com/iannesbitt/readgssi/pull/5) from [@fxsimon](https://github.com/fxsimon))
 - added support for the D50800/D50300 antenna
@@ -22,9 +22,10 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 - fixed bug that caused gain to be applied incorrectly
 - script now tries to automatically calculate timezero using (nsamp\*range)/position
 #### known bugs:
-- translation to anything but csv is broken (hope to have time for a fix soon)
+- translation to anything but csv is broken (hope to have time to at least fix HDF5 output soon)
   - csv translation does not work for dual-channel radar devices (exports to file but channels are merged end-to-end)
 - color bar shows up too large on some plots (no known fix yet)
+- dewow doesn't work on all files
 
 ## usage
 ```
