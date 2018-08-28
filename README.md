@@ -30,7 +30,9 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 - histogram only shows pre-gain data distribution
 
 ## usage
-```
+```bash
+$ python readgssi.py -h
+
 usage:
 python readgssi.py -i input.DZT [OPTIONS]
 

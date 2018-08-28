@@ -1,4 +1,5 @@
 # coding=utf-8
+
 ## readgssi.py
 ## intended to translate radar data from DZT to other more workable formats.
 ## DZT is a file format maintained by Geophysical Survey Systems Incorporated (GSSI).
