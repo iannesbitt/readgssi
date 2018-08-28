@@ -654,8 +654,12 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     fig.colorbar(img)
                 plt.title('%s - %s MHz - stacking: %s - gain: %s' % (os.path.split(infile)[-1], ANT[r[0]['rh_antname']][fi], j, gain))
                 if outfile:
-                    print('saving figure as %s.png' % (os.path.splitext(outfile)[0]))
-                    plt.savefig(os.path.join(os.path.splitext(outfile)[0] + '.png'))
+                    if len(img_arr) > 1:
+                        print('saving figure as %s_%sMHz.png' % (os.path.splitext(outfile)[0], ANT[r[0]['rh_antname']][fi]))
+                        plt.savefig(os.path.join(os.path.splitext(outfile)[0] + '_' + str(ANT[r[0]['rh_antname']][fi]) + 'MHz.png'))
+                    else:
+                        print('saving figure as %s.png' % (os.path.splitext(outfile)[0]))
+                        plt.savefig(os.path.join(os.path.splitext(outfile)[0] + '.png'))
                 else:
                     print('saving figure as %s_%sMHz.png' % (os.path.splitext(infile)[0], ANT[r[0]['rh_antname']][fi]))
                     plt.savefig(os.path.join(os.path.splitext(infile)[0] + '_' + str(ANT[r[0]['rh_antname']][fi]) + 'MHz.png'))
@@ -717,7 +721,7 @@ if __name__ == "__main__":
             if arg:
                 outfile = arg
                 if '~' in outfile:
-                    outfile = os.path.expanduser(infile) # expand tilde, see above
+                    outfile = os.path.expanduser(outfile) # expand tilde, see above
         if opt in ('-a', '--freq'):
             try:
                 antfreq = round(float(abs(arg)),1)

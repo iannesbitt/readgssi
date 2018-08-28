@@ -11,7 +11,7 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 - added basic background removal and dewow capability ([#5](https://github.com/iannesbitt/readgssi/pull/5) from [@fxsimon](https://github.com/fxsimon))
 - added support for the D50800/D50300 antenna
   - added plotting support for dual-channel radar devices
-  - merged [#5](https://github.com/iannesbitt/readgssi/pull/3) from [@fxsimon](https://github.com/fxsimon) which fixed a bug that caused multi-channel file traces to be read in a 121212 sequence instead of 111222
+  - merged [#3](https://github.com/iannesbitt/readgssi/pull/3) from [@fxsimon](https://github.com/fxsimon) which fixed a bug that caused multi-channel file traces to be read in a 121212 sequence instead of 111222
 - updated the workings of the plotting algorithm's colormap
 - changed the way files are saved (bug in 0.0.5 mangled some filenames)
 - added the ability to specify colormap and whether to draw a colorbar and a histogram
@@ -76,6 +76,20 @@ This will cause `readgssi` to create a plot from the same file, but matplotlib w
 python readgssi.py -i DZT__001.DZT -o test.csv -f CSV
 ```
 Translates radar data to CSV format, which can be imported to, for example, `numpy` or `pandas` (or R, if that's your cup of tea).
+
+## background removal
+#### example A: no background removal
+```
+python readgssi.py -i DZT__002.DZT -o 2a.png -p 10 -s "auto"
+```
+![Example 2a](examples/2a.png)
+
+#### example B: horizontal mean BGR algorithm applied
+```
+python readgssi.py -i DZT__002.DZT -o 2b.png -p 10 -s "auto" -r
+```
+![Example 2b](examples/2b.png)
+
 
 ## contributors
 - Ian Nesbitt ([@iannesbitt](https://github.com/iannesbitt), author)
