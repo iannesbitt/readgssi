@@ -8,6 +8,8 @@
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 
 ## changes since 0.0.5
+- fixed a bug that caused plots of dual-channel radar files to be written out to one file
+- fixed a bug that caused manually-created output file names to be ignored when plotting
 - added basic background removal and dewow capability ([#5](https://github.com/iannesbitt/readgssi/pull/5) from [@fxsimon](https://github.com/fxsimon))
 - added support for the D50800/D50300 antenna
   - added plotting support for dual-channel radar devices
