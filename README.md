@@ -8,6 +8,7 @@
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 
 ## changes since 0.0.5
+- added example code and plots
 - fixed a bug that caused both plots of dual-channel radar files to be written out to one file
 - fixed a bug that caused manually-created output file names to be ignored when plotting
 - added basic background removal and dewow capability ([#5](https://github.com/iannesbitt/readgssi/pull/5) from [@fxsimon](https://github.com/fxsimon))
