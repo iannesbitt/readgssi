@@ -27,6 +27,7 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
   - csv translation does not work for dual-channel radar devices (exports to file but channels are merged end-to-end)
 - color bar shows up too large on some plots (no known fix yet)
 - dewow doesn't work on all files
+- histogram only shows pre-gain data distribution
 
 ## usage
 ```
