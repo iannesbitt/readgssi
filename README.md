@@ -1,7 +1,7 @@
 # readgssi v0.0.6-beta5
 *Copyleft 🄯 2017-2018*
 
-![Example Radargram](examples/1.png)
+![Example Radargram](examples/1a.png)
 
 `readgssi` is a tool intended for use as an open-source translator and preprocessing module for subsurface data collected with GSSI ground-penetrating georadar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and plot the data contained in those files. `readgssi` is also currently able to translate most DZT files to CSV and will be able to translate to multiple other output formats including HDF5 and SEG-Y, though not all formats are available yet (see [future](#future)). Original Matlab code developed by Gabe Lewis, Dartmouth College Department of Earth Sciences. Python translation written with permission by Ian Nesbitt, University of Maine School of Earth and Climate Sciences.
 
@@ -62,46 +62,42 @@ Simply specifying an input DZT file like in the above command (`-i file`) will d
 - number of traces
 - number of seconds
 
-```
-python readgssi.py -i DZT__001.DZT -p 20 -s 6 -g 50 -r
-```
-The above command will cause `readgssi` to save and show a plot named "DZT__001.png" with a y-size of 10 inches (`-p 10`) and stack the x-axis to 6 times shorter than the original data array (`-s 6`). The script will apply a gain of 50 `-g 50`), meaning that it will increase the contrast by a factor of 50. `readgssi` will also apply a background removal filter (`-r`).
-
-```
-python readgssi.py -i DZT__001.DZT -p "auto" -s "auto" -g 0.5 -m -w -n
-```
-This will cause `readgssi` to create a plot from the same file, but matplotlib will determine the y-axis size (`-p "auto"`) and the autostacking algorithm will stack the x-axis to approximately 2.5\*y for optimal display (`-s "auto"`). The script will plot the data with a gain value of 0.5 (`-g 0.5`), which means it will reduce the plot contrast by half. The `-m` flag will draw a histogram for each data channel. `readgssi` will run a dewow filter (`-w`), and although matplotlib will save a PNG of the figure, the script will suppress the matplotlib window (`-n`, useful for processing an entire directory full of DZTs).
-
+## basic functionality
+### CSV output
 ```
 python readgssi.py -i DZT__001.DZT -o test.csv -f CSV
 ```
 Translates radar data to CSV format, which can be imported to, for example, `numpy` or `pandas` (or R, if that's your cup of tea).
 
-## background removal
-#### example A: no background removal
+### plotting
+#### example 1A
 ```
-python readgssi.py -i DZT__002.DZT -o 2a.png -p 10 -s "auto"
+python readgssi.py -i DZT__001.DZT -p 5 -s auto
 ```
+The above command will cause `readgssi` to save and show a plot named "DZT__001_100MHz.png" with a y-size of 6 inches at 150 dpi (`-p 6`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing, approximately 2.5\*y (`-s auto`).
+![Example 1a](examples/DZT__001_100MHz.png)
+
+#### example 1B
+```
+python readgssi.py -i DZT__001.DZT -o 1b.png -p 5 -s auto -g 50 -m -r -w
+```
+This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. The `-m` flag will draw a histogram for each data channel. Finally, `readgssi` will run the background removal (`-r`) and dewow (`-w`) filters.
+![Example 1b](examples/1b.png)
+![Example 1b histogram](examples/1b-h.png)
+
+#### example 2A: no background removal
+```
+python readgssi.py -i DZT__002.DZT -o 2a.png -p 10 -s 3 -c Greys -n
+```
+Here `readgssi` will create a plot of size 10 and stack 3x (`-p 10 -s 3`). Matplotlib will use the "Greys" colormap and save a PNG of the figure, but the script will suppress the matplotlib window (`-n`, useful for processing an entire directory full of DZTs at once).
 ![Example 2a](examples/2a.png)
 
-#### example B: horizontal mean BGR algorithm applied
+#### example 2B: horizontal mean BGR algorithm applied
 ```
-python readgssi.py -i DZT__002.DZT -o 2b.png -p 10 -s "auto" -r
+python readgssi.py -i DZT__002.DZT -o 2b.png -p 10 -s 3 -c Greys -n -r
 ```
+The script does the same thing, except it applies a background removal. Note the difference in ringing artifacts between examples 2a and 2b.
 ![Example 2b](examples/2b.png)
-
-## dewow
-#### example A: no dewow
-```
-python readgssi.py -i DZT__003.DZT -o 3a.png -p 10 -s "auto" -r
-```
-![Example 3a](examples/3a.png)
-
-#### example B: dewow applied
-```
-python readgssi.py -i DZT__003.DZT -o 3b.png -p 10 -s "auto" -r -w
-```
-![Example 3b](examples/3b.png)
 
 
 ## contributors
