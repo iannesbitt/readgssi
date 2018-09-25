@@ -43,7 +43,7 @@ optional flags:
 -f, --format    | string, eg. "csv"   |  specify output format (csv is the only working format currently)
 -p, --plot      | +integer or "auto"  |  plot will be x inches high (dpi=150), or "auto". default: 10
 -n, --noshow    |                     |  suppress matplotlib popup window and simply save a figure (useful for multiple file processing)
--c, --colormap  | string, eg. "Greys" |  specify the colormap ([https://matplotlib.org/users/colormaps.html#grayscale-conversion](https://matplotlib.org/users/colormaps.html#grayscale-conversion))
+-c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
 -g, --gain      | positive float      |  apply a gain value (gain > 1: greater contrast; 0 < gain < 1: less contrast. default: 1)
 -r, --bgr       |                     |  background removal algorithm (useful in ice, sediment, and water)
 -w, --dewow     |                     |  dewow algorithm
