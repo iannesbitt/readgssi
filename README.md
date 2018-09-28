@@ -1,4 +1,4 @@
-# readgssi v0.0.6-beta5
+# readgssi v0.0.6-beta6
 *Copyleft 🄯 2017-2018*
 
 ![Example Radargram](examples/1.png)
@@ -8,6 +8,8 @@
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 
 ## changes since 0.0.5
+- added bandpass filter (requires [obspy](https://obspy.org/))
+- optimized background removal and dewow algorithms significantly
 - added example code and plots
 - fixed a bug that caused both plots of dual-channel radar files to be written out to one file
 - fixed a bug that caused manually-created output file names to be ignored when plotting
@@ -29,6 +31,14 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 - dewow doesn't work on all files
 - histogram only shows pre-gain data distribution
 
+## requirements
+Strongly recommended to install via [anaconda](https://www.anaconda.com/download)
+- [`obspy`](https://obspy.org/)
+- [`matplotlib`](https://matplotlib.org/)
+- [`numpy`](http://www.numpy.org/)
+- [`pandas`](https://pandas.pydata.org/)
+- [`h5py`](https://www.h5py.org/)
+
 ## usage
 ```bash
 $ python readgssi.py -h
@@ -37,20 +47,22 @@ usage:
 python readgssi.py -i input.DZT [OPTIONS]
 
 optional flags:
-    COMMAND     |      ARGUMENT       |       FUNCTIONALITY
+     OPTION     |      ARGUMENT       |       FUNCTIONALITY
 -v, --verbose   |                     |  verbosity
 -o, --output    | file:  /dir/f.ext   |  specify an output file
 -f, --format    | string, eg. "csv"   |  specify output format (csv is the only working format currently)
 -p, --plot      | +integer or "auto"  |  plot will be x inches high (dpi=150), or "auto". default: 10
 -n, --noshow    |                     |  suppress matplotlib popup window and simply save a figure (useful for multiple file processing)
 -c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
--g, --gain      | positive float      |  apply a gain value (gain > 1: greater contrast; 0 < gain < 1: less contrast. default: 1)
--r, --bgr       |                     |  background removal algorithm (useful in ice, sediment, and water)
--w, --dewow     |                     |  dewow algorithm
--b, --colorbar  |                     |  add a colorbar to the figure
+-g, --gain      | positive integer    |  gain value (higher=greater contrast, default: 1)
+-r, --bgr       |                     |  horizontal background removal algorithm (useful to remove ringing)
+-w, --dewow     |                     |  trinomial dewow algorithm
+-t, --bandpass  | +int-+int (MHz)     |  butterworth bandpass filter (positive integer range in megahertz; ex. 100-145)
+-b, --colorbar  |                     |  add a colorbar to the radar figure
 -a, --antfreq   | positive integer    |  specify antenna frequency (read automatically if not given)
 -s, --stack     | +integer or "auto"  |  specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
 -m, --histogram |                     |  produce a histogram of data values
+-z, --zero      | positive integer    |  skip this many samples from the top of the trace downward (useful for removing transceiver delay)
 ```
 
 From a unix command line:
@@ -66,6 +78,7 @@ Simply specifying an input DZT file like in the above command (`-i file`) will d
 - traces per second
 - L1 dilectric
 - sampling depth
+- speed of light at given dilectric
 - number of traces
 - number of seconds
 
