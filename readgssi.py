@@ -32,7 +32,7 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 import pytz
 import h5py
-#import pynmea2
+import pynmea2
 
 NAME = 'readgssi'
 VERSION = '0.0.6-beta6'
@@ -69,6 +69,12 @@ MINHEADSIZE = 1024 # absolute minimum total header size
 PAREASIZE = 128 # fixed info header size
 
 TZ = pytz.timezone('UTC')
+
+# some physical constants for Maxwell's equation for speed of light in a dilectric
+C = 299792458                   # speed of light in a vacuum
+Eps_0 = 8.8541878 * 10**(-12)   # epsilon naught (vacuum permittivity)
+Mu_0 = 1.257 * 10**(-6)         # mu naught (vacuum permeability)
+
 
 # the GSSI field unit used
 UNIT = {
@@ -281,7 +287,7 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
 
 
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10,
-             stack=1, verbose=None, histogram=False, colormap='viridis', colorbar=False,
+             stack=1, verbose=None, histogram=False, colormap='Greys_r', colorbar=False,
              zero=1, gain=1, freqmin=None, freqmax=None, bgr=False, dewow=False,
              specgram=False, noshow=False):
     '''
@@ -722,7 +728,7 @@ if __name__ == "__main__":
     stack = 1
     infile, outfile, antfreq, frmt, plot, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
     freqmin, freqmax, specgram, zero = None, None, None, None
-    colormap = 'viridis'
+    colormap = 'Greys_r'
     gain = 1
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
@@ -807,7 +813,7 @@ if __name__ == "__main__":
                 zero = None
         if opt in ('-t', '--bandpass'):
             if arg:
-                freqmin, freqmax = arg.split('-./ ')
+                freqmin, freqmax = arg.split('-')
                 try:
                     freqmin = int(freqmin)
                     freqmax = int(freqmax)
