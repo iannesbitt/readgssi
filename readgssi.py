@@ -796,8 +796,26 @@ if __name__ == "__main__":
             bgr = True
         if opt in ('-w', '--dewow'):
             dewow = True
-        if opt in ():
-        if opt in (''):
+        if opt in ('-z', '--zero'):
+            if arg:
+                try:
+                    zero = int(arg)
+                except:
+                    print('error: zero correction must be an integer')
+            else:
+                print('warning: no zero correction argument supplied')
+                zero = None
+        if opt in ('-t', '--bandpass'):
+            if arg:
+                freqmin, freqmax = arg.split('-./ ')
+                try:
+                    freqmin = int(freqmin)
+                    freqmax = int(freqmax)
+                except:
+                    print('error: filter frequency must be integers separated by a dash (-)')
+                    freqmin, freqmax = None, None
+            else:
+                print('warning: no filter frequency argument supplied')
         if opt in ('-n', '--noshow'):
             noshow = True
         if opt in ('-p', '--plot'):
