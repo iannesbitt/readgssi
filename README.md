@@ -9,7 +9,7 @@ Questions, feature requests, and bugs: **ian * nesbitt at gmail * com**
 
 ## changes since 0.0.5
 - added bandpass filter (requires [obspy](https://obspy.org/))
-- optimized background removal and dewow algorithms significantly
+- significantly optimized background removal and dewow algorithms
 - added example code and plots
 - fixed a bug that caused both plots of dual-channel radar files to be written out to one file
 - fixed a bug that caused manually-created output file names to be ignored when plotting
