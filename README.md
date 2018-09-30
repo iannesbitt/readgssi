@@ -140,6 +140,9 @@ The script does the same thing, except it applies a background removal. Note the
 - Francois-Xavier Simon ([@fxsimon](https://github.com/fxsimon))
 - Thomas Paulin ([@thomaspaulin](https://github.com/thomaspaulin))
 
+### citation suggestion:
+Ian M. Nesbitt, Gabriel M. Lewis, Francois-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-source tool to read and plot GSSI ground-penetrating radar data. [doi:10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)
+
 ## future
 - GPS transcription (read from associated DZG file or CSV with fields `mark name, lon, lat, elev, time`)
 - supplementing a flag indicating geophysical format (HDF5, SEGY, etc.) will write to that format
