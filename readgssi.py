@@ -288,7 +288,7 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
 
 
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10,
-             stack=1, verbose=None, histogram=False, colormap='Greys_r', colorbar=False,
+             stack=1, verbose=None, histogram=False, colormap='Greys', colorbar=False,
              zero=1, gain=1, freqmin=None, freqmax=None, bgr=False, dewow=False,
              specgram=False, noshow=False):
     '''
@@ -729,7 +729,7 @@ if __name__ == "__main__":
     stack = 1
     infile, outfile, antfreq, frmt, plot, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
     freqmin, freqmax, specgram, zero = None, None, None, None
-    colormap = 'Greys_r'
+    colormap = 'Greys'
     gain = 1
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
