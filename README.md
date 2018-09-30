@@ -10,6 +10,8 @@ The file read parameters are based on GSSI's DZT file description, similar to th
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com** (kindly provide the error, what you are attempting to do, and the file causing you trouble when you contact me)
 
 ## changes since 0.0.5
+- now define time zero point manually (time zero is when the direct wave passes the receiver. previously, i used an unreliable calculation using header values to determine the time zero point)
+  - in the future, i will add a signal processing algorithm to detect the time zero point automatically
 - added bandpass filter (requires [obspy](https://obspy.org/))
 - significantly optimized background removal and dewow algorithms
 - added example code and plots
