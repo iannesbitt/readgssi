@@ -13,13 +13,15 @@
 # Ian Nesbitt, University of Maine School of Earth and Climate Sciences.
 # Copyleft (c) 2017 Ian Nesbitt
 
-# this code is freely available under the MIT License. if you did not receive
-# a copy of the license upon obtaining this software, please visit
-# (https://opensource.org/licenses/MIT) to obtain a copy.
+# this code is freely available under the GNU Affero General Public License 3.0.
+# if you did not receive a copy of the license upon obtaining this software, please visit
+# (https://opensource.org/licenses/AGPL-3.0) to obtain a copy.
 
 import sys, getopt, os
 import struct
 import numpy as np
+from obspy.signal.filter import bandpass
+from obspy.imaging.spectrogram import spectrogram
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -30,10 +32,10 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 import pytz
 import h5py
-#import pynmea2
+import pynmea2
 
 NAME = 'readgssi'
-VERSION = '0.0.6-beta5'
+VERSION = '0.0.6-beta6'
 YEAR = 2018
 AUTHOR = 'Ian Nesbitt'
 AFFIL = 'School of Earth and Climate Sciences, University of Maine'
@@ -49,13 +51,15 @@ optional flags:
 -p, --plot      | +integer or "auto"  |  plot will be x inches high (dpi=150), or "auto". default: 10
 -n, --noshow    |                     |  suppress matplotlib popup window and simply save a figure (useful for multiple file processing)
 -c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
--g, --gain      | positive integer    |  gain value (higher=greater contrast, default: 1)
--r, --bgr       |                     |  background removal algorithm (useful in many media, ice, sediment, water, etc.)
--w, --dewow     |                     |  dewow algorithm
--b, --colorbar  |                     |  add a colorbar to the figure
+-g, --gain      | positive (+)integer |  gain value (higher=greater contrast, default: 1)
+-r, --bgr       |                     |  horizontal background removal algorithm (useful to remove ringing)
+-w, --dewow     |                     |  trinomial dewow algorithm
+-t, --bandpass  | +int-+int (MHz)     |  butterworth bandpass filter (positive integer range in megahertz; ex. 100-145)
+-b, --colorbar  |                     |  add a colorbar to the radar figure
 -a, --antfreq   | positive integer    |  specify antenna frequency (read automatically if not given)
 -s, --stack     | +integer or "auto"  |  specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
 -m, --histogram |                     |  produce a histogram of data values
+-z, --zero      | positive integer    |  skip this many samples from the top of the trace downward (useful for removing transceiver delay)
 '''
 
 #optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
@@ -65,6 +69,12 @@ MINHEADSIZE = 1024 # absolute minimum total header size
 PAREASIZE = 128 # fixed info header size
 
 TZ = pytz.timezone('UTC')
+
+# some physical constants for Maxwell's equation for speed of light in a dilectric
+C = 299792458                   # speed of light in a vacuum
+Eps_0 = 8.8541878 * 10**(-12)   # epsilon naught (vacuum permittivity)
+Mu_0 = 1.257 * 10**(-6)         # mu naught (vacuum permeability)
+
 
 # the GSSI field unit used
 UNIT = {
@@ -277,7 +287,10 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     return arr
 
 
-def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10, stack=1, verbose=False, histogram=False, colormap='viridis', colorbar=False, gain=1, bgr=False, dewow=False, noshow=False):
+def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10,
+             stack=1, verbose=None, histogram=False, colormap='Greys_r', colorbar=False,
+             zero=1, gain=1, freqmin=None, freqmax=None, bgr=False, dewow=False,
+             specgram=False, noshow=False):
     '''
     function to unpack and return things we need from the header, and the data itself
     currently unused but potentially useful lines:
@@ -344,6 +357,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 else:
                     data = np.fromfile(f, np.int32).reshape(-1,(rh_nsamp*rh_nchan)).T # 32-bit
 
+                cr = 1 / math.sqrt(Mu_0 * Eps_0 * rhf_epsr)
+
                 # create dictionary
                 returns = {
                     'infile': infile,
@@ -362,6 +377,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     'rhf_sps': rhf_sps,
                     'rhf_spm': rhf_spm,
                     'rhf_epsr': rhf_epsr,
+                    'cr': cr,
                     'rhb_cdt': rhb_cdt,
                     'rhb_mdt': rhb_mdt,
                     'rhf_depth': rhf_depth,
@@ -426,7 +442,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             print('traces per second:  %.1f' % rhf_sps)
             print('traces per meter:   %.1f' % rhf_spm)
             print('dilectric:          %.1f' % r[0]['rhf_epsr'])
-            print('sampling depth:     %.1f' % r[0]['rhf_depth'])
+            print('speed of light:     %.2E m/sec (%.2f%% of vacuum)' % (r[0]['cr'], r[0]['cr'] / C * 100))
+            print('sampling depth:     %.1f m' % r[0]['rhf_depth'])
             if r[1].shape[1] == int(r[1].shape[1]):
                 print('traces:             %i' % int(r[1].shape[1]/r[0]['rh_nchan']))
             else:
@@ -541,15 +558,16 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             '''
             let's do some matplotlib
             '''
-            arr = r[1].astype(np.float32)
+            arr = r[1].astype(np.int32)
             chans = list(range(r[0]['rh_nchan']))
-            timezero = abs(round(float(r[0]['rh_nsamp'])/float(r[0]['rhf_range'])*float(r[0]['rhf_position'])))
+            timezero = 1
+            #timezero = abs(round(float(r[0]['rh_nsamp'])/float(r[0]['rhf_range'])*float(r[0]['rhf_position'])))
             img_arr = arr[timezero:r[0]['rh_nchan']*r[0]['rh_nsamp']]
             new_arr = {}
             for ar in chans:
                 a = []
-                a = img_arr[(ar)*r[0]['rh_nsamp']:(ar+1)*r[0]['rh_nsamp']-timezero]
-                new_arr[ar] = a[:,:int(img_arr.shape[1])]
+                a = img_arr[(ar)*r[0]['rh_nsamp']:(ar+1)*r[0]['rh_nsamp']]
+                new_arr[ar] = a[zero:,:int(img_arr.shape[1])]
                     
             img_arr = new_arr
             del new_arr
@@ -563,7 +581,6 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     outname = os.path.split(infile)[-1].split('.')[:-1][0]
 
                 if str(j).lower() in 'auto':
-                    #print('automatic stacking method not implemented yet. no stacking value applied.')
                     print('attempting automatic stacking method...')
                     ratio = (img_arr[ar].shape[1]/img_arr[ar].shape[0])/(7500/3000)
                     if ratio > 1:
@@ -593,36 +610,53 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     else:
                         print('no stacking applied. be warned: this can result in very large and awkwardly-shaped figures.')
 
+                mean = np.mean(img_arr[ar])
+                
+                if specgram:
+                    tr = int(img_arr[ar].shape[1] / 2)
+                    print('making spectrogram of trace %s' % (tr))
+                    fq = 1 / (r[0]['rhf_depth'] / r[0]['cr'] / r[0]['rh_nsamp'])
+                    trace = img_arr[ar].T[tr]
+                    spectrogram(trace, fq, wlen=fq/1000, per_lap = 0.99, dbscale=True,
+                        title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, r[0]['rh_antname'][fi], fq))
+                
                 if bgr:
-                    #Average Background Removal
-                    print('removing background...')
-                    meantrace = [0]*len(img_arr[ar][0])
-                    for ix in range(len(img_arr[ar])):
-                        for jx in range(len(img_arr[ar][0])):
-                            meantrace[ix] = img_arr[ar][ix][jx] + meantrace[ix]
-                    meantrace = [ix/len(img_arr[ar][0]) for ix in meantrace]
-                    
-                    for jx in range(len(img_arr[ar][0])):
-                        for ix in range(len(img_arr[ar])):
-                            img_arr[ar][ix][jx] = img_arr[ar][ix][jx] - meantrace[ix]
+                    # Average Background Removal
+                    print('removing horizontal background...')
+                    i = 0
+                    for row in img_arr[ar]:          # each row
+                        mean = np.mean(row)
+                        img_arr[ar][i] = row - mean
+                        i += 1
                 
                 if dewow:
-                    #Dewow filter
+                    # Dewow filter
                     print('dewowing data...')
                     signal = list(zip(*img_arr[ar]))[10]
                     model = np.polyfit(range(len(signal)), signal, 3)
                     predicted = list(np.polyval(model, range(len(signal))))
-                    for jx in range(len(img_arr[ar][0])):
-                        for ix in range(len(img_arr[ar])):
-                            img_arr[ar][ix][jx] = img_arr[ar][ix][jx] - predicted[ix]
+                    i = 0
+                    for column in img_arr[ar].T:      # each column
+                        img_arr[ar].T[i] = column + predicted
+                        i += 1
 
+                if freqmin and freqmax:
+                    # Vertical FIR filter
+                    print('vertical FIR filtering...')
+                    fq = 1 / (r[0]['rhf_depth'] / r[0]['cr'] / r[0]['rh_nsamp'])
+                    freqmin = freqmin * 10 ** 6
+                    freqmax = freqmax * 10 ** 6
+                    
+                    print('Sampling frequency:       %.2E Hz' % fq)
+                    print('Minimum filter frequency: %.2E Hz' % freqmin)
+                    print('Maximum filter frequency: %.2E Hz' % freqmax)
+                    
+                    i = 0
+                    for t in img_arr[ar].T:
+                        f = bandpass(data=t, freqmin=freqmin, freqmax=freqmax, df=fq, corners=2, zerophase=False)
+                        img_arr[ar][:,i] = f
+                        i += 1
 
-                mean = np.mean(img_arr[ar])
-                if abs(mean) >= 10:
-                    print('mean: %s (mean is greater than 10, so recentering array values by this amount)' % mean)
-                    img_arr[ar] = img_arr[ar] - mean
-                else:
-                    print('mean: %s (mean is less than 10; not recentering array)' % mean)
                 std = np.std(img_arr[ar])
                 print('std:  %s' % std)
                 ll = -std * 3 # lower color limit (1/10 of a standard deviation works well for 100MHz in a lake)
@@ -636,10 +670,10 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 if figsize != 'auto':
                     figx, figy = int(int(figsize)*int(int(img_arr[ar].shape[1])/int(img_arr[ar].shape[0]))), int(figsize) # force to integer instead of coerce
                     print('plotting %sx%sin image with gain=%s...' % (figx, figy, gain))
-                    fig = plt.figure(figsize=(figx, figy), dpi=150, constrained_layout=True)
+                    fig = plt.figure(figsize=(figx, figy-1), dpi=150)
                 else:
                     print('plotting with gain=%s...' % gain)
-                    fig = plt.figure(constrained_layout=True)
+                    fig = plt.figure()
                 
                 try:
                     img = plt.imshow(img_arr[ar], cmap=colormap, clim=(ll, ul),
@@ -655,6 +689,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 if colorbar:
                     fig.colorbar(img)
                 plt.title('%s - %s MHz - stacking: %s - gain: %s' % (os.path.split(infile)[-1], ANT[r[0]['rh_antname']][fi], j, gain))
+                plt.tight_layout()
                 if outfile:
                     if len(img_arr) > 1:
                         print('saving figure as %s_%sMHz.png' % (os.path.splitext(outfile)[0], ANT[r[0]['rh_antname']][fi]))
@@ -693,13 +728,16 @@ if __name__ == "__main__":
     verbose = False
     stack = 1
     infile, outfile, antfreq, frmt, plot, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
-    colormap = 'viridis'
+    freqmin, freqmax, specgram, zero = None, None, None, None
+    colormap = 'Greys_r'
     gain = 1
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plot=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:rwnmc:bg:',['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack=','bgr','dewow','noshow','histogram','colormap=','colorbar','gain='])
+        opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:rwnmc:bg:z:t:',
+            ['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack=','bgr',
+            'dewow','noshow','histogram','colormap=','colorbar','gain=','zero=','bandpass='])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
         print('error: invalid argument(s) supplied')
@@ -765,6 +803,26 @@ if __name__ == "__main__":
             bgr = True
         if opt in ('-w', '--dewow'):
             dewow = True
+        if opt in ('-z', '--zero'):
+            if arg:
+                try:
+                    zero = int(arg)
+                except:
+                    print('error: zero correction must be an integer')
+            else:
+                print('warning: no zero correction argument supplied')
+                zero = None
+        if opt in ('-t', '--bandpass'):
+            if arg:
+                freqmin, freqmax = arg.split('-')
+                try:
+                    freqmin = int(freqmin)
+                    freqmax = int(freqmax)
+                except:
+                    print('error: filter frequency must be integers separated by a dash (-)')
+                    freqmin, freqmax = None, None
+            else:
+                print('warning: no filter frequency argument supplied')
         if opt in ('-n', '--noshow'):
             noshow = True
         if opt in ('-p', '--plot'):
@@ -805,7 +863,10 @@ if __name__ == "__main__":
             pass
         else:
             verbose = True
-        readgssi(infile=infile, outfile=outfile, antfreq=antfreq, frmt=frmt, plot=plot, figsize=figsize, stack=stack, verbose=verbose, histogram=histogram, colormap=colormap, colorbar=colorbar, gain=gain, bgr=bgr, dewow=dewow, noshow=noshow)
+        readgssi(infile=infile, outfile=outfile, antfreq=antfreq, frmt=frmt, plot=plot,
+                 figsize=figsize, stack=stack, verbose=verbose, histogram=histogram,
+                 colormap=colormap, colorbar=colorbar, gain=gain, bgr=bgr, zero=zero,
+                 dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax)
     else:
         print(HELP_TEXT)
 
