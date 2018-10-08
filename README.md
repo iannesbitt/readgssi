@@ -4,9 +4,9 @@
 ![Example Radargram](examples/1.png)
 
 [![DOI](https://zenodo.org/badge/110361541.svg)](https://dx.doi.org/10.5281/zenodo.1439120)
-[![License](https://img.shields.io/badge/license-GNU%20Affero%203.0-lightgrey.svg)](https://github.com/iannesbitt/readgssi/)
+[![License](https://img.shields.io/badge/license-GNU%20Affero%203.0-lightgrey.svg)](https://github.com/iannesbitt/readgssi/LICENSE)
 
-`readgssi` is a tool intended for use as an open-source reader and preprocessing module for subsurface data collected with Geophysical Survey Systems Incorporated (GSSI) ground-penetrating georadar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and plot the data contained in those files. `readgssi` is also currently able to translate most DZT files to CSV and will be able to translate to multiple other output formats including HDF5 and SEG-Y, though not all formats are available yet (see [future](#future)). Original Matlab code developed by Gabe Lewis, Dartmouth College Department of Earth Sciences. Python translation written with permission by Ian Nesbitt, University of Maine School of Earth and Climate Sciences.
+`readgssi` is a tool intended for use as an open-source reader and preprocessing module for subsurface data collected with Geophysical Survey Systems Incorporated (GSSI) ground-penetrating georadar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and plot the data contained in those files. `readgssi` is also currently able to translate most DZT files to CSV and will be able to translate to multiple other output formats including HDF5 and SEG-Y, though not all formats are available yet (see [future](#future)). Matlab code donated by [Gabe Lewis](https://earthsciences.dartmouth.edu/people/gabriel-lewis), Dartmouth College Department of Earth Sciences. Python adaptation of Matlab code written with permission by Ian Nesbitt, University of Maine School of Earth and Climate Sciences.
 
 The file read parameters are based on GSSI's DZT file description, similar to the ones available on pages 55-57 of the [SIR-3000 manual](https://support.geophysical.com/gssiSupport/Products/Documents/Control%20Unit%20Manuals/GSSI%20-%20SIR-3000%20Operation%20Manual.pdf). File structure is, unfortunately, prone to change at any time, and although I've been able to test with files from several systems, I have not encountered every iteration of file header yet. If you run into trouble, please [create a github issue](https://github.com/iannesbitt/readgssi/issues), or contact me at the address below.
 
@@ -136,7 +136,6 @@ The script does the same thing, except it applies a background removal. Note the
 
 ## contributors
 - Ian Nesbitt ([@iannesbitt](https://github.com/iannesbitt), author)
-- [Gabe Lewis](https://earthsciences.dartmouth.edu/people/gabriel-lewis)
 - Francois-Xavier Simon ([@fxsimon](https://github.com/fxsimon))
 - Thomas Paulin ([@thomaspaulin](https://github.com/thomaspaulin))
 
