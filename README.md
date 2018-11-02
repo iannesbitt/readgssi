@@ -1,4 +1,4 @@
-# readgssi v0.0.6
+# readgssi v0.0.6-1
 *Copyleft 🄯 2017-2018*
 
 ![Example Radargram](examples/1.png)
