@@ -3,7 +3,7 @@
 
 ![Example Radargram](examples/1.png)
 
-[![DOI](https://zenodo.org/badge/110361541.svg)](https://dx.doi.org/10.5281/zenodo.1439120)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.1439119.svg)](https://dx.doi.org/10.5281/zenodo.1439119)
 [![License](https://img.shields.io/badge/license-GNU%20Affero%203.0-lightgrey.svg)](https://github.com/iannesbitt/readgssi/blob/master/LICENSE)
 
 `readgssi` is a tool intended for use as an open-source reader and preprocessing module for subsurface data collected with Geophysical Survey Systems Incorporated (GSSI) ground-penetrating georadar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and plot the data contained in those files. `readgssi` is also currently able to translate most DZT files to CSV and will be able to translate to multiple other output formats including HDF5 and SEG-Y, though not all formats are available yet (see [future](#future)). Matlab code donated by [Gabe Lewis](https://earthsciences.dartmouth.edu/people/gabriel-lewis), Dartmouth College Department of Earth Sciences. Python adaptation of Matlab code written with permission by Ian Nesbitt, University of Maine School of Earth and Climate Sciences.
@@ -143,7 +143,7 @@ The script does the same thing, except it applies a background removal. Note the
 Ian M. Nesbitt, Francois-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-source tool to read and plot GSSI ground-penetrating radar data. [doi:10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)
 
 ## future
-- GPS transcription (read from associated DZG file or CSV with fields `mark name, lon, lat, elev, time`)
+- GPS transcription (read from associated DZG file or CSV with fields like `mark name, lon, lat, elev, time`)
+- interactive geologic/dilectric layer picking, layer velocity calculation (using minimum of clustered hyperbola tail angle measurements, or manual input), velocity-based depth adjustments, velocity gradient/angle of incidence-based array migration
 - supplementing a flag indicating geophysical format (HDF5, SEGY, etc.) will write to that format
 - break parts of script out into independent functions and supporting python files
-- calls to readgssi.readgssi(filename) from script or python shell will return np array and critical file statistics
