@@ -35,7 +35,7 @@ import h5py
 import pynmea2
 
 NAME = 'readgssi'
-VERSION = '0.0.6-beta6'
+VERSION = '0.0.6'
 YEAR = 2018
 AUTHOR = 'Ian Nesbitt'
 AFFIL = 'School of Earth and Climate Sciences, University of Maine'
