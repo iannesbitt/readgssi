@@ -35,8 +35,8 @@ import h5py
 import pynmea2
 
 NAME = 'readgssi'
-VERSION = '0.0.6-1'
-YEAR = 2018
+VERSION = '0.0.7'
+YEAR = 2019
 AUTHOR = 'Ian Nesbitt'
 AFFIL = 'School of Earth and Climate Sciences, University of Maine'
 
@@ -286,9 +286,113 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
             arr = ''
     return arr
 
+def readdzt(infile):
+    rh_antname = ''
+
+    rh_tag = struct.unpack('<h', f.read(2))[0] # 0x00ff if header, 0xfnff if old file format
+    rh_data = struct.unpack('<h', f.read(2))[0] # offset to data from beginning of file
+    rh_nsamp = struct.unpack('<h', f.read(2))[0] # samples per scan
+    rh_bits = struct.unpack('<h', f.read(2))[0] # bits per data word
+    rh_zero = struct.unpack('<h', f.read(2))[0] # if sir-30 or utilityscan df, then repeats per sample; otherwise 0x80 for 8bit and 0x8000 for 16bit
+    rhf_sps = struct.unpack('<f', f.read(4))[0] # scans per second
+    rhf_spm = struct.unpack('<f', f.read(4))[0] # scans per meter
+    rhf_mpm = struct.unpack('<f', f.read(4))[0] # meters per mark
+    rhf_position = struct.unpack('<f', f.read(4))[0] # position (ns)
+    rhf_range = struct.unpack('<f', f.read(4))[0] # range (ns)
+    rh_npass = struct.unpack('<h', f.read(2))[0] # number of passes for 2-D files
+    f.seek(31) # ensure correct read position for rfdatebyte
+    rhb_cdt = readtime(f.read(4)) # creation date and time in bits, structured as little endian u5u6u5u5u4u7
+    rhb_mdt = readtime(f.read(4)) # modification date and time in bits, structured as little endian u5u6u5u5u4u7
+    f.seek(44) # skip across some proprietary stuff
+    rh_text = struct.unpack('<h', f.read(2))[0] # offset to text
+    rh_ntext = struct.unpack('<h', f.read(2))[0] # size of text
+    rh_proc = struct.unpack('<h', f.read(2))[0] # offset to processing history
+    rh_nproc = struct.unpack('<h', f.read(2))[0] # size of processing history
+    rh_nchan = struct.unpack('<h', f.read(2))[0] # number of channels
+    rhf_epsr = struct.unpack('<f', f.read(4))[0] # average dilectric
+    rhf_top = struct.unpack('<f', f.read(4))[0] # position in meters (useless?)
+    rhf_depth = struct.unpack('<f', f.read(4))[0] # range in meters
+    #rhf_coordx = struct.unpack('<ff', f.read(8))[0] # this is definitely useless
+    f.seek(98) # start of antenna bit
+    rh_ant = f.read(14).decode('utf-8').split('\x00')[0]
+    
+    rh_antname = rh_ant
+    
+    f.seek(113) # skip to something that matters
+    vsbyte = f.read(1) # byte containing versioning bits
+    rh_version = ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
+    rh_system = ord(vsbyte) >> 3 # the system type (values in UNIT={...} dictionary above)
+    del vsbyte
+    
+    if rh_data < MINHEADSIZE: # whether or not the header is normal or big-->determines offset to data array
+        f.seek(MINHEADSIZE * rh_data)
+    else:
+        f.seek(MINHEADSIZE * rh_nchan)
+
+    if rh_bits == 8:
+        data = np.fromfile(f, np.uint8).reshape(-1,(rh_nsamp*rh_nchan)).T # 8-bit
+    elif rh_bits == 16:
+        data = np.fromfile(f, np.uint16).reshape(-1,(rh_nsamp*rh_nchan)).T # 16-bit
+    else:
+        data = np.fromfile(f, np.int32).reshape(-1,(rh_nsamp*rh_nchan)).T # 32-bit
+
+    cr = 1 / math.sqrt(Mu_0 * Eps_0 * rhf_epsr)
+
+    # create dictionary
+    header = {
+        'rh_antname': rh_antname.rsplit('x')[0],
+        'rh_system': rh_system,
+        'rh_version': rh_version,
+        'rh_nchan': rh_nchan,
+        'rh_nsamp': rh_nsamp,
+        'rhf_range': rhf_range,
+        'rh_bits': rh_bits,
+        'rhf_sps': rhf_sps,
+        'rhf_spm': rhf_spm,
+        'rhf_epsr': rhf_epsr,
+        'cr': cr,
+        'rhb_cdt': rhb_cdt,
+        'rhb_mdt': rhb_mdt,
+        'rhf_depth': rhf_depth,
+        'rhf_position': rhf_position,
+    }
+
+    return [header, data]
+
+def header_info(header, data):
+    print('input file:         %s' % header['infile'])
+    print('system:             %s' % UNIT[header['rh_system']])
+    print('antenna:            %s' % header['rh_antname'])
+    if header['rh_nchan'] > 1:
+        i = 1
+        for ar in ANT[header['rh_antname']]:
+            print('ant %s frequency:   %s MHz' % (ar))
+    else:
+        print('antenna frequency:  %s MHz' % ANT[header['rh_antname']])
+    print('date created:       %s' % header['rhb_cdt'])
+    print('date modified:      %s' % header['rhb_mdt'])
+    try:
+        print('gps-enabled file:   %s' % GPS[header['rh_version']])
+    except (TypeError, KeyError) as e:
+        print('gps-enabled file:   %s' % 'unknown')
+    print('number of channels: %i' % header['rh_nchan'])
+    print('samples per trace:  %i' % header['rh_nsamp'])
+    print('bits per sample:    %s' % BPS[header['rh_bits']])
+    print('traces per second:  %.1f' % header['rhf_sps'])
+    print('traces per meter:   %.1f' % header['rhf_spm'])
+    print('dilectric:          %.1f' % header['rhf_epsr'])
+    print('speed of light:     %.2E m/sec (%.2f%% of vacuum)' % (header['cr'], header['cr'] / C * 100))
+    print('sampling depth:     %.1f m' % header['rhf_depth'])
+    if data.shape[1] == int(data.shape[1]):
+        print('traces:             %i' % int(data.shape[1]/header['rh_nchan']))
+    else:
+        print('traces:             %f' % int(data.shape[1]/header['rh_nchan']))
+    print('seconds:            %.8f' % line_dur)
+    print('samp/m:             %.2f' % (float(rhf_spm)))
+
 
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10,
-             stack=1, verbose=None, histogram=False, colormap='Greys', colorbar=False,
+             stack=1, verbose=False, histogram=False, colormap='Greys', colorbar=False,
              zero=1, gain=1, freqmin=None, freqmax=None, bgr=False, dewow=False,
              specgram=False, noshow=False):
     '''
@@ -302,125 +406,34 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
     # print('fixed header size: '+str(packed_size)+'\n')
     '''
 
-    rh_antname = ''
-
     if infile:
+        # read the file
         if verbose:
             print('reading header information...')
         try:
             with open(infile, 'rb') as f:
-                # open the binary, start reading chunks
-                rh_tag = struct.unpack('<h', f.read(2))[0] # 0x00ff if header, 0xfnff if old file format
-                rh_data = struct.unpack('<h', f.read(2))[0] # offset to data from beginning of file
-                rh_nsamp = struct.unpack('<h', f.read(2))[0] # samples per scan
-                rh_bits = struct.unpack('<h', f.read(2))[0] # bits per data word
-                rh_zero = struct.unpack('<h', f.read(2))[0] # if sir-30 or utilityscan df, then repeats per sample; otherwise 0x80 for 8bit and 0x8000 for 16bit
-                rhf_sps = struct.unpack('<f', f.read(4))[0] # scans per second
-                rhf_spm = struct.unpack('<f', f.read(4))[0] # scans per meter
-                rhf_mpm = struct.unpack('<f', f.read(4))[0] # meters per mark
-                rhf_position = struct.unpack('<f', f.read(4))[0] # position (ns)
-                rhf_range = struct.unpack('<f', f.read(4))[0] # range (ns)
-                rh_npass = struct.unpack('<h', f.read(2))[0] # number of passes for 2-D files
-                f.seek(31) # ensure correct read position for rfdatebyte
-                rhb_cdt = readtime(f.read(4)) # creation date and time in bits, structured as little endian u5u6u5u5u4u7
-                rhb_mdt = readtime(f.read(4)) # modification date and time in bits, structured as little endian u5u6u5u5u4u7
-                f.seek(44) # skip across some proprietary stuff
-                rh_text = struct.unpack('<h', f.read(2))[0] # offset to text
-                rh_ntext = struct.unpack('<h', f.read(2))[0] # size of text
-                rh_proc = struct.unpack('<h', f.read(2))[0] # offset to processing history
-                rh_nproc = struct.unpack('<h', f.read(2))[0] # size of processing history
-                rh_nchan = struct.unpack('<h', f.read(2))[0] # number of channels
-                rhf_epsr = struct.unpack('<f', f.read(4))[0] # average dilectric
-                rhf_top = struct.unpack('<f', f.read(4))[0] # position in meters (useless?)
-                rhf_depth = struct.unpack('<f', f.read(4))[0] # range in meters
-                #rhf_coordx = struct.unpack('<ff', f.read(8))[0] # this is definitely useless
-                f.seek(98) # start of antenna bit
-                rh_ant = f.read(14).decode('utf-8').split('\x00')[0]
-                
-                rh_antname = rh_ant
-                
-                f.seek(113) # skip to something that matters
-                vsbyte = f.read(1) # byte containing versioning bits
-                rh_version = ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
-                rh_system = ord(vsbyte) >> 3 # the system type (values in UNIT={...} dictionary above)
-                del vsbyte
-                
-                if rh_data < MINHEADSIZE: # whether or not the header is normal or big-->determines offset to data array
-                    f.seek(MINHEADSIZE * rh_data)
-                else:
-                    f.seek(MINHEADSIZE * rh_nchan)
-
-                if rh_bits == 8:
-                    data = np.fromfile(f, np.uint8).reshape(-1,(rh_nsamp*rh_nchan)).T # 8-bit
-                elif rh_bits == 16:
-                    data = np.fromfile(f, np.uint16).reshape(-1,(rh_nsamp*rh_nchan)).T # 16-bit
-                else:
-                    data = np.fromfile(f, np.int32).reshape(-1,(rh_nsamp*rh_nchan)).T # 32-bit
-
-                cr = 1 / math.sqrt(Mu_0 * Eps_0 * rhf_epsr)
-
-                # create dictionary
-                returns = {
-                    'infile': infile,
-                    'outfile': outfile,
-                    'frmt': frmt,
-                    'plot': plot,
-                    'antfreq': antfreq,
-                    'stack': stack,
-                    'rh_antname': rh_antname.rsplit('x')[0],
-                    'rh_system': rh_system,
-                    'rh_version': rh_version,
-                    'rh_nchan': rh_nchan,
-                    'rh_nsamp': rh_nsamp,
-                    'rhf_range': rhf_range,
-                    'rh_bits': rh_bits,
-                    'rhf_sps': rhf_sps,
-                    'rhf_spm': rhf_spm,
-                    'rhf_epsr': rhf_epsr,
-                    'cr': cr,
-                    'rhb_cdt': rhb_cdt,
-                    'rhb_mdt': rhb_mdt,
-                    'rhf_depth': rhf_depth,
-                    'rhf_position': rhf_position,
-                }
-
-                r = [returns, data]
+                # open the binary, attempt reading chunks
+                r = readdzt(f)
         except IOError as e: # the user has selected an inaccessible or nonexistent file
             print("i/o error: DZT file is inaccessable or does not exist")
             print('detail: ' + str(e) + '\n')
             print(HELP_TEXT)
             sys.exit(2)
     else:
-        print('an unknown error occurred')
+        print('error: no input file was specified')
+        print(HELP_TEXT)
         sys.exit(2)
 
     try:
         rhf_sps = r[0]['rhf_sps']
         rhf_spm = r[0]['rhf_spm']
         line_dur = r[1].shape[1]/rhf_sps
-        # if verbose, print some useful things to command line users from returned dictionary
-        if verbose:
-            print('input file:         %s' % r[0]['infile'])
-            print('system:             %s' % UNIT[r[0]['rh_system']])
-            print('antenna:            %s' % r[0]['rh_antname'])
-        if r[0]['antfreq']:
-            i = 1
-            if verbose:
-                if r[0]['rh_nchan'] > 1:
-                    for ar in ANT[r[0]['rh_antname']]:
-                        print('user ant frequency: %s' % ar + ' MHz')
-                else:
-                    print('user ant frequency: %s' % ANT[r[0]['rh_antname']] + ' MHz')
-            freq = r[0]['antfreq']
+        if antfreq != None:
+            freq = antfreq
+            print('user specified antenna frequency: %s' % antfreq)
         elif r[0]['rh_antname']:
             try:
                 freq = ANT[r[0]['rh_antname']]
-                if verbose:
-                    if r[0]['rh_nchan'] > 1:
-                        for ar in freq:
-                            print('antenna frequency:  %s' % ar + ' MHz')
-                    else:
-                        print('antenna frequency:  %s' % ANT[r[0]['rh_antname']] + ' MHz')
             except ValueError as e:
                 print('WARNING: could not read frequency for given antenna name.\nerror info: %s' % e)
                 print(HELP_TEXT)
@@ -429,45 +442,25 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             print('no frequency information could be read from the header.\nplease specify the frequency of the antenna in MHz using the -a flag.')
             print(HELP_TEXT)
             sys.exit(2)
-        if verbose:
-            print('date created:       %s' % r[0]['rhb_cdt'])
-            print('date modified:      %s' % r[0]['rhb_mdt'])
-            try:
-                print('gps-enabled file:   %s' % GPS[r[0]['rh_version']])
-            except (TypeError, KeyError) as e:
-                print('gps-enabled file:   %s' % 'unknown')
-            print('number of channels: %i' % r[0]['rh_nchan'])
-            print('samples per trace:  %i' % r[0]['rh_nsamp'])
-            print('bits per sample:    %s' % BPS[r[0]['rh_bits']])
-            print('traces per second:  %.1f' % rhf_sps)
-            print('traces per meter:   %.1f' % rhf_spm)
-            print('dilectric:          %.1f' % r[0]['rhf_epsr'])
-            print('speed of light:     %.2E m/sec (%.2f%% of vacuum)' % (r[0]['cr'], r[0]['cr'] / C * 100))
-            print('sampling depth:     %.1f m' % r[0]['rhf_depth'])
-            if r[1].shape[1] == int(r[1].shape[1]):
-                print('traces:             %i' % int(r[1].shape[1]/r[0]['rh_nchan']))
-            else:
-                print('traces:             %f' % int(r[1].shape[1]/r[0]['rh_nchan']))
-            print('seconds:            %.8f' % line_dur)
-            print('samp/m:             %.2f' % (float(rhf_spm)))
-        if r[0]['frmt']:
-            print('outputting to ' + r[0]['frmt'] + " . . .")
+    # an except should go here
 
-            fnoext = os.path.splitext(r[0]['infile'])[0]
+        if frmt != None:
+            print('outputting to %s . . .' % frmt)
+
+            fnoext = os.path.splitext(infile])[0]
             # is there an output filepath given?
-            if r[0]['outfile']: # if output is given
-                of = os.path.abspath(r[0]['outfile']) # set output to given location
+            if outfile: # if output is given
+                of = os.path.abspath(outfile) # set output to given location
             else: # if no output is given
                 # set output to the same dir as input file
-                of = os.path.abspath(fnoext + '.' + r[0]['frmt'])
+                of = os.path.abspath(fnoext + '.' + frmt)
 
             # what is the output format
-            if r[0]['frmt'] in 'csv':
+            if frmt in 'csv':
                 data = pd.DataFrame(r[1]) # using pandas to output csv
                 print('writing file to:    %s' % of)
                 data.to_csv(of) # write
-                del data
-            elif r[0]['frmt'] in 'h5':
+            elif frmt in 'h5':
                 '''
                 Now we gather gps data.
                 Full GPS data are in .DZG files of same name if they exist (see below).
@@ -546,7 +539,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     eg.attrs.create(gutx, gutx_str) # store utm gpscluster attribute
                     n += 1
                 f.close()
-            elif r[0]['frmt'] in 'segy':
+            elif frmt in 'segy':
                 '''
                 segy output is not yet available
                 '''
@@ -554,7 +547,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 print(help_text)
                 sys.exit(2)
             print('done exporting.')
-        if r[0]['plot']:
+        if plot:
             '''
             let's do some matplotlib
             '''
@@ -574,7 +567,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
 
             fi = 0
             for ar in img_arr:
-                j = r[0]['stack']
+                j = stack
                 if outfile:
                     outname = os.path.split(outfile)[-1].split('.')[:-1][0]
                 else:

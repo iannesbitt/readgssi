@@ -1,7 +1,7 @@
-# readgssi v0.0.6-1
+# readgssi v0.0.7
 *Copyleft 🄯 2017-2018*
 
-![Example Radargram](examples/1.png)
+![Example Radargram](https://github.com/iannesbitt/readgssi/raw/master/examples/1.png)
 
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.1439119.svg)](https://dx.doi.org/10.5281/zenodo.1439119)
 [![License](https://img.shields.io/badge/license-GNU%20Affero%203.0-lightgrey.svg)](https://github.com/iannesbitt/readgssi/blob/master/LICENSE)
@@ -11,6 +11,9 @@
 The file read parameters are based on GSSI's DZT file description, similar to the ones available on pages 55-57 of the [SIR-3000 manual](https://support.geophysical.com/gssiSupport/Products/Documents/Control%20Unit%20Manuals/GSSI%20-%20SIR-3000%20Operation%20Manual.pdf). File structure is, unfortunately, prone to change at any time, and although I've been able to test with files from several systems, I have not encountered every iteration of file header yet. If you run into trouble, please [create a github issue](https://github.com/iannesbitt/readgssi/issues), or contact me at the address below.
 
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com** (kindly provide the error, what you are attempting to do, and the file causing you trouble when you contact me)
+
+## changes since 0.0.6
+- added ability to install via PyPI
 
 ## changes since 0.0.5
 - now define time zero point manually (time zero is when the direct wave passes the receiver. previously, i used an unreliable calculation using header values to determine the time zero point)
@@ -102,36 +105,36 @@ Translates radar data array to CSV format, if that's your cup of tea. No header 
 python readgssi.py -i DZT__001.DZT -p 5 -s auto -c viridis
 ```
 The above command will cause `readgssi` to save and show a plot named "DZT__001_100MHz.png" with a y-size of 6 inches at 150 dpi (`-p 6`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing, approximately 2.5\*y (`-s auto`). The plot will be rendered in the viridis color scheme, which is the default for matplotlib.
-![Example 1a](examples/DZT__001_100MHz.png)
+![Example 1a](https://github.com/iannesbitt/readgssi/raw/master/examples/DZT__001_100MHz.png)
 
 #### example 1B
 ```bash
 python readgssi.py -i DZT__001.DZT -o 1b.png -p 5 -s auto -c viridis -g 50 -m -r -w
 ```
 This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. The `-m` flag will draw a histogram for each data channel. Finally, `readgssi` will run the background removal (`-r`) and dewow (`-w`) filters.
-![Example 1b](examples/1b.png)
-![Example 1b histogram](examples/1b-h.png)
+![Example 1b](https://github.com/iannesbitt/readgssi/raw/master/examples/1b.png)
+![Example 1b histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/1b-h.png)
 
 #### example 1C: gain can be tricky depending on your colormap
 ```bash
 python readgssi.py -i DZT__001.DZT -o 1c.png -p 5 -s auto -r -w -c seismic
 ```
 Here, background removal and dewow filters are applied, but no gain adjustments are made (equivalent to `-g 1`). The script uses matplotlib's "seismic" colormap (`-c seismic`) which is specifically designed for this type of waterfall array plotting. Even without gain, you will often be able to easily see very slight signal perturbations. It is not colorblind-friendly for either of the two most common types of human colorblindness, however, which is why it is not the default colormap.
-![Example 1c](examples/1c.png)
+![Example 1c](https://github.com/iannesbitt/readgssi/raw/master/examples/1c.png)
 
 #### example 2A: no background removal
 ```bash
 python readgssi.py -i DZT__002.DZT -o 2a.png -p 10 -s 3 -n
 ```
 Here `readgssi` will create a plot of size 10 and stack 3x (`-p 10 -s 3`). Matplotlib will use the default "Greys" colormap and save a PNG of the figure, but the script will suppress the matplotlib window (`-n`, useful for processing an entire directory full of DZTs at once).
-![Example 2a](examples/2a.png)
+![Example 2a](https://github.com/iannesbitt/readgssi/raw/master/examples/2a.png)
 
 #### example 2B: horizontal mean BGR algorithm applied
 ```bash
 python readgssi.py -i DZT__002.DZT -o 2b.png -p 10 -s 3 -n -r
 ```
 The script does the same thing, except it applies a background removal. Note the difference in ringing artifacts between examples 2a and 2b.
-![Example 2b](examples/2b.png)
+![Example 2b](https://github.com/iannesbitt/readgssi/raw/master/examples/2b.png)
 
 
 ## contributors
