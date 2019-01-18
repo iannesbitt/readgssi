@@ -1,5 +1,5 @@
 # readgssi v0.0.7
-*Copyleft 🄯 2017-2018*
+*Copyleft 🄯 2017-2019*
 
 ![Example Radargram](https://github.com/iannesbitt/readgssi/raw/master/examples/1.png)
 
@@ -12,35 +12,6 @@ The file read parameters are based on GSSI's DZT file description, similar to th
 
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com** (kindly provide the error, what you are attempting to do, and the file causing you trouble when you contact me)
 
-## changes since 0.0.6
-- added ability to install via PyPI
-
-## changes since 0.0.5
-- now define time zero point manually (time zero is when the direct wave passes the receiver. previously, i used an unreliable calculation using header values to determine the time zero point)
-  - in the future, i will add a signal processing algorithm to detect the time zero point automatically
-- added bandpass filter (requires [obspy](https://obspy.org/))
-- significantly optimized background removal and dewow algorithms
-- added example code and plots
-- fixed a bug that caused both plots of dual-channel radar files to be written out to one file
-- fixed a bug that caused manually-created output file names to be ignored when plotting
-- added basic background removal and dewow capability ([#5](https://github.com/iannesbitt/readgssi/pull/5) from [@fxsimon](https://github.com/fxsimon))
-- added support for the D50800/D50300 antenna
-  - added plotting support for dual-channel radar devices
-  - merged [#3](https://github.com/iannesbitt/readgssi/pull/3) from [@fxsimon](https://github.com/fxsimon) which fixed a bug that caused multi-channel file traces to be read in a 121212 sequence instead of 111222
-- updated the workings of the plotting algorithm's colormap
-- changed the way files are saved (bug in 0.0.5 mangled some filenames)
-- added the ability to specify colormap and whether to draw a colorbar and a histogram
-- added an automatic figsize option (leaves figsize up to Matplotlib)
-- added ability to apply gain
-- fixed bug that caused gain to be applied incorrectly
-- script now tries to automatically calculate timezero using (nsamp\*range)/position
-#### known bugs:
-- translation to anything but csv is broken (hope to have time to at least fix HDF5 output soon)
-  - csv translation does not work for dual-channel radar devices (exports to file but channels are merged end-to-end)
-- color bar shows up too large on some plots (no known fix yet)
-- dewow doesn't work on all files
-- histogram only shows pre-gain data distribution
-
 ## requirements
 Strongly recommended to install via [anaconda](https://www.anaconda.com/download)
 - [`obspy`](https://obspy.org/)
@@ -49,7 +20,29 @@ Strongly recommended to install via [anaconda](https://www.anaconda.com/download
 - [`pandas`](https://pandas.pydata.org/)
 - [`h5py`](https://www.h5py.org/)
 
+## installation
+
+Once you have [anaconda](https://www.anaconda.com/download) running, installing requirements is pretty easy.
+
+```bash
+conda config --add channels conda-forge
+conda create -n readgssi python==3.7
+conda activate readgssi
+conda install pandas h5py pytz pynmea2 obspy
+```
+
+Now, you can [download a working release of this software](https://dx.doi.org/10.5281/zenodo.1439119), unzip to your home folder, open a command line, then change directory into the folder containing this software:
+
+```bash
+cd [install folder]/readgssi
+```
+
+That should allow you to run the commands below.
+
 ## usage
+
+To display the help text:
+
 ```bash
 $ python readgssi.py -h
 
@@ -144,6 +137,36 @@ The script does the same thing, except it applies a background removal. Note the
 
 ### citation suggestion:
 Ian M. Nesbitt, Francois-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-source tool to read and plot GSSI ground-penetrating radar data. [doi:10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)
+
+## changes since 0.0.6
+- added ability to install via PyPI
+- broke out several routines into individual functions
+
+## changes since 0.0.5
+- now define time zero point manually (time zero is when the direct wave passes the receiver. previously, i used an unreliable calculation using header values to determine the time zero point)
+  - in the future, i will add a signal processing algorithm to detect the time zero point automatically
+- added bandpass filter (requires [obspy](https://obspy.org/))
+- significantly optimized background removal and dewow algorithms
+- added example code and plots
+- fixed a bug that caused both plots of dual-channel radar files to be written out to one file
+- fixed a bug that caused manually-created output file names to be ignored when plotting
+- added basic background removal and dewow capability ([#5](https://github.com/iannesbitt/readgssi/pull/5) from [@fxsimon](https://github.com/fxsimon))
+- added support for the D50800/D50300 antenna
+  - added plotting support for dual-channel radar devices
+  - merged [#3](https://github.com/iannesbitt/readgssi/pull/3) from [@fxsimon](https://github.com/fxsimon) which fixed a bug that caused multi-channel file traces to be read in a 121212 sequence instead of 111222
+- updated the workings of the plotting algorithm's colormap
+- changed the way files are saved (bug in 0.0.5 mangled some filenames)
+- added the ability to specify colormap and whether to draw a colorbar and a histogram
+- added an automatic figsize option (leaves figsize up to Matplotlib)
+- added ability to apply gain
+- fixed bug that caused gain to be applied incorrectly
+- script now tries to automatically calculate timezero using (nsamp\*range)/position
+#### known bugs:
+- translation to anything but csv is broken (hope to have time to at least fix HDF5 output soon)
+  - csv translation does not work for dual-channel radar devices (exports to file but channels are merged end-to-end)
+- color bar shows up too large on some plots (no known fix yet)
+- dewow doesn't work on all files
+- histogram only shows pre-gain data distribution
 
 ## future
 - GPS transcription (read from associated DZG file or CSV with fields like `mark name, lon, lat, elev, time`)
