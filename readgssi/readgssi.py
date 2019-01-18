@@ -289,52 +289,52 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
 def readdzt(infile):
     rh_antname = ''
 
-    rh_tag = struct.unpack('<h', f.read(2))[0] # 0x00ff if header, 0xfnff if old file format
-    rh_data = struct.unpack('<h', f.read(2))[0] # offset to data from beginning of file
-    rh_nsamp = struct.unpack('<h', f.read(2))[0] # samples per scan
-    rh_bits = struct.unpack('<h', f.read(2))[0] # bits per data word
-    rh_zero = struct.unpack('<h', f.read(2))[0] # if sir-30 or utilityscan df, then repeats per sample; otherwise 0x80 for 8bit and 0x8000 for 16bit
-    rhf_sps = struct.unpack('<f', f.read(4))[0] # scans per second
-    rhf_spm = struct.unpack('<f', f.read(4))[0] # scans per meter
-    rhf_mpm = struct.unpack('<f', f.read(4))[0] # meters per mark
-    rhf_position = struct.unpack('<f', f.read(4))[0] # position (ns)
-    rhf_range = struct.unpack('<f', f.read(4))[0] # range (ns)
-    rh_npass = struct.unpack('<h', f.read(2))[0] # number of passes for 2-D files
-    f.seek(31) # ensure correct read position for rfdatebyte
-    rhb_cdt = readtime(f.read(4)) # creation date and time in bits, structured as little endian u5u6u5u5u4u7
-    rhb_mdt = readtime(f.read(4)) # modification date and time in bits, structured as little endian u5u6u5u5u4u7
-    f.seek(44) # skip across some proprietary stuff
-    rh_text = struct.unpack('<h', f.read(2))[0] # offset to text
-    rh_ntext = struct.unpack('<h', f.read(2))[0] # size of text
-    rh_proc = struct.unpack('<h', f.read(2))[0] # offset to processing history
-    rh_nproc = struct.unpack('<h', f.read(2))[0] # size of processing history
-    rh_nchan = struct.unpack('<h', f.read(2))[0] # number of channels
-    rhf_epsr = struct.unpack('<f', f.read(4))[0] # average dilectric
-    rhf_top = struct.unpack('<f', f.read(4))[0] # position in meters (useless?)
-    rhf_depth = struct.unpack('<f', f.read(4))[0] # range in meters
-    #rhf_coordx = struct.unpack('<ff', f.read(8))[0] # this is definitely useless
-    f.seek(98) # start of antenna bit
-    rh_ant = f.read(14).decode('utf-8').split('\x00')[0]
+    rh_tag = struct.unpack('<h', infile.read(2))[0] # 0x00ff if header, 0xfnff if old file format
+    rh_data = struct.unpack('<h', infile.read(2))[0] # offset to data from beginning of file
+    rh_nsamp = struct.unpack('<h', infile.read(2))[0] # samples per scan
+    rh_bits = struct.unpack('<h', infile.read(2))[0] # bits per data word
+    rh_zero = struct.unpack('<h', infile.read(2))[0] # if sir-30 or utilityscan df, then repeats per sample; otherwise 0x80 for 8bit and 0x8000 for 16bit
+    rhf_sps = struct.unpack('<f', infile.read(4))[0] # scans per second
+    rhf_spm = struct.unpack('<f', infile.read(4))[0] # scans per meter
+    rhf_mpm = struct.unpack('<f', infile.read(4))[0] # meters per mark
+    rhf_position = struct.unpack('<f', infile.read(4))[0] # position (ns)
+    rhf_range = struct.unpack('<f', infile.read(4))[0] # range (ns)
+    rh_npass = struct.unpack('<h', infile.read(2))[0] # number of passes for 2-D files
+    infile.seek(31) # ensure correct read position for rfdatebyte
+    rhb_cdt = readtime(infile.read(4)) # creation date and time in bits, structured as little endian u5u6u5u5u4u7
+    rhb_mdt = readtime(infile.read(4)) # modification date and time in bits, structured as little endian u5u6u5u5u4u7
+    infile.seek(44) # skip across some proprietary stuff
+    rh_text = struct.unpack('<h', infile.read(2))[0] # offset to text
+    rh_ntext = struct.unpack('<h', infile.read(2))[0] # size of text
+    rh_proc = struct.unpack('<h', infile.read(2))[0] # offset to processing history
+    rh_nproc = struct.unpack('<h', infile.read(2))[0] # size of processing history
+    rh_nchan = struct.unpack('<h', infile.read(2))[0] # number of channels
+    rhf_epsr = struct.unpack('<f', infile.read(4))[0] # average dilectric
+    rhf_top = struct.unpack('<f', infile.read(4))[0] # position in meters (useless?)
+    rhf_depth = struct.unpack('<f', infile.read(4))[0] # range in meters
+    #rhf_coordx = struct.unpack('<ff', infile.read(8))[0] # this is definitely useless
+    infile.seek(98) # start of antenna bit
+    rh_ant = infile.read(14).decode('utf-8').split('\x00')[0]
     
     rh_antname = rh_ant
     
-    f.seek(113) # skip to something that matters
-    vsbyte = f.read(1) # byte containing versioning bits
+    infile.seek(113) # skip to something that matters
+    vsbyte = infile.read(1) # byte containing versioning bits
     rh_version = ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
     rh_system = ord(vsbyte) >> 3 # the system type (values in UNIT={...} dictionary above)
     del vsbyte
     
     if rh_data < MINHEADSIZE: # whether or not the header is normal or big-->determines offset to data array
-        f.seek(MINHEADSIZE * rh_data)
+        infile.seek(MINHEADSIZE * rh_data)
     else:
-        f.seek(MINHEADSIZE * rh_nchan)
+        infile.seek(MINHEADSIZE * rh_nchan)
 
     if rh_bits == 8:
-        data = np.fromfile(f, np.uint8).reshape(-1,(rh_nsamp*rh_nchan)).T # 8-bit
+        data = np.fromfile(infile, np.uint8).reshape(-1,(rh_nsamp*rh_nchan)).T # 8-bit
     elif rh_bits == 16:
-        data = np.fromfile(f, np.uint16).reshape(-1,(rh_nsamp*rh_nchan)).T # 16-bit
+        data = np.fromfile(infile, np.uint16).reshape(-1,(rh_nsamp*rh_nchan)).T # 16-bit
     else:
-        data = np.fromfile(f, np.int32).reshape(-1,(rh_nsamp*rh_nchan)).T # 32-bit
+        data = np.fromfile(infile, np.int32).reshape(-1,(rh_nsamp*rh_nchan)).T # 32-bit
 
     cr = 1 / math.sqrt(Mu_0 * Eps_0 * rhf_epsr)
 
@@ -360,6 +360,16 @@ def readdzt(infile):
     return [header, data]
 
 def header_info(header, data):
+    '''
+    function to unpack and return things we need from the header, and the data itself
+    currently unused but potentially useful lines:
+    # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s' # the structure of the bytewise header and "gps data" as I understand it - 1024 bytes
+    # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2) # the variable size of bytes in the header (most of the time) - 128 bytes
+    # print('total header structure size: '+str(calcsize(headerstruct)))
+    # packed_size = 0
+    # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
+    # print('fixed header size: '+str(packed_size)+'\n')
+    '''
     print('input file:         %s' % header['infile'])
     print('system:             %s' % UNIT[header['rh_system']])
     print('antenna:            %s' % header['rh_antname'])
@@ -447,7 +457,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
         if frmt != None:
             print('outputting to %s . . .' % frmt)
 
-            fnoext = os.path.splitext(infile])[0]
+            fnoext = os.path.splitext(infile)[0]
             # is there an output filepath given?
             if outfile: # if output is given
                 of = os.path.abspath(outfile) # set output to given location
@@ -682,7 +692,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 if colorbar:
                     fig.colorbar(img)
                 plt.title('%s - %s MHz - stacking: %s - gain: %s' % (os.path.split(infile)[-1], ANT[r[0]['rh_antname']][fi], j, gain))
-                plt.tight_layout()
+                plt.tight_layout(pad=figsize/2.)
                 if outfile:
                     if len(img_arr) > 1:
                         print('saving figure as %s_%sMHz.png' % (os.path.splitext(outfile)[0], ANT[r[0]['rh_antname']][fi]))
