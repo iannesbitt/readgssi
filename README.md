@@ -47,10 +47,10 @@ pip install ~/readgssi
 To display the help text:
 
 ```bash
-$ python readgssi.py -h
+$ readgssi -h
 
 usage:
-python readgssi.py -i input.DZT [OPTIONS]
+readgssi -i input.DZT [OPTIONS]
 
 optional flags:
      OPTION     |      ARGUMENT       |       FUNCTIONALITY
@@ -73,7 +73,7 @@ optional flags:
 
 From a unix command line:
 ```bash
-python readgssi.py -i DZT__001.DZT
+readgssi -i DZT__001.DZT
 ```
 Simply specifying an input DZT file like in the above command (`-i file`) will display a host of data about the file including:
 - name of GSSI control unit
@@ -91,21 +91,21 @@ Simply specifying an input DZT file like in the above command (`-i file`) will d
 ## basic functionality
 ### CSV output
 ```bash
-python readgssi.py -i DZT__001.DZT -o test.csv -f CSV
+readgssi -i DZT__001.DZT -o test.csv -f CSV
 ```
 Translates radar data array to CSV format, if that's your cup of tea. No header information is included in the CSV, however.
 
 ### plotting
 #### example 1A
 ```bash
-python readgssi.py -i DZT__001.DZT -p 5 -s auto -c viridis
+readgssi -i DZT__001.DZT -p 5 -s auto -c viridis
 ```
 The above command will cause `readgssi` to save and show a plot named "DZT__001_100MHz.png" with a y-size of 6 inches at 150 dpi (`-p 6`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing, approximately 2.5\*y (`-s auto`). The plot will be rendered in the viridis color scheme, which is the default for matplotlib.
 ![Example 1a](https://github.com/iannesbitt/readgssi/raw/master/examples/DZT__001_100MHz.png)
 
 #### example 1B
 ```bash
-python readgssi.py -i DZT__001.DZT -o 1b.png -p 5 -s auto -c viridis -g 50 -m -r -w
+readgssi -i DZT__001.DZT -o 1b.png -p 5 -s auto -c viridis -g 50 -m -r -w
 ```
 This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. The `-m` flag will draw a histogram for each data channel. Finally, `readgssi` will run the background removal (`-r`) and dewow (`-w`) filters.
 ![Example 1b](https://github.com/iannesbitt/readgssi/raw/master/examples/1b.png)
@@ -113,21 +113,21 @@ This will cause `readgssi` to create a plot from the same file, but matplotlib w
 
 #### example 1C: gain can be tricky depending on your colormap
 ```bash
-python readgssi.py -i DZT__001.DZT -o 1c.png -p 5 -s auto -r -w -c seismic
+readgssi -i DZT__001.DZT -o 1c.png -p 5 -s auto -r -w -c seismic
 ```
 Here, background removal and dewow filters are applied, but no gain adjustments are made (equivalent to `-g 1`). The script uses matplotlib's "seismic" colormap (`-c seismic`) which is specifically designed for this type of waterfall array plotting. Even without gain, you will often be able to easily see very slight signal perturbations. It is not colorblind-friendly for either of the two most common types of human colorblindness, however, which is why it is not the default colormap.
 ![Example 1c](https://github.com/iannesbitt/readgssi/raw/master/examples/1c.png)
 
 #### example 2A: no background removal
 ```bash
-python readgssi.py -i DZT__002.DZT -o 2a.png -p 10 -s 3 -n
+readgssi -i DZT__002.DZT -o 2a.png -p 10 -s 3 -n
 ```
 Here `readgssi` will create a plot of size 10 and stack 3x (`-p 10 -s 3`). Matplotlib will use the default "Greys" colormap and save a PNG of the figure, but the script will suppress the matplotlib window (`-n`, useful for processing an entire directory full of DZTs at once).
 ![Example 2a](https://github.com/iannesbitt/readgssi/raw/master/examples/2a.png)
 
 #### example 2B: horizontal mean BGR algorithm applied
 ```bash
-python readgssi.py -i DZT__002.DZT -o 2b.png -p 10 -s 3 -n -r
+readgssi -i DZT__002.DZT -o 2b.png -p 10 -s 3 -n -r
 ```
 The script does the same thing, except it applies a background removal. Note the difference in ringing artifacts between examples 2a and 2b.
 ![Example 2b](https://github.com/iannesbitt/readgssi/raw/master/examples/2b.png)
