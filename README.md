@@ -14,7 +14,7 @@ The file read parameters are based on GSSI's DZT file description, similar to th
 Questions, feature requests, and bugs: **ian * nesbitt at gmail * com** (kindly provide the error, what you are attempting to do, and the file causing you trouble when you contact me)
 
 ## requirements
-Strongly recommended to install via [anaconda](https://www.anaconda.com/download)
+Strongly recommended to install via [anaconda](https://www.anaconda.com/download):
 - [`obspy`](https://obspy.org/)
 - [`matplotlib`](https://matplotlib.org/)
 - [`numpy`](http://www.numpy.org/)
