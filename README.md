@@ -28,16 +28,19 @@ Once you have [anaconda](https://www.anaconda.com/download) running, installing 
 conda config --add channels conda-forge
 conda create -n readgssi python==3.7
 conda activate readgssi
-conda install pandas h5py pytz pynmea2 obspy
-```
-
-Now, you can [download a working release of this software](https://dx.doi.org/10.5281/zenodo.1439119), unzip to your home folder, open a command line, then change directory into the folder containing this software:
-
-```bash
-cd [install folder]/readgssi
+conda install pandas h5py pytz obspy
+pip install pynmea2 readgssi
 ```
 
 That should allow you to run the commands below.
+
+#### Note:
+
+If you choose to install a specific commit rather than the [latest working release of this software](https://dx.doi.org/10.5281/zenodo.1439119), you may download this package, unzip to your home folder, open a command line, then install in the following way:
+
+```bash
+pip install ~/readgssi
+```
 
 ## usage
 
