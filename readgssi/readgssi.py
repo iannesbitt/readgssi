@@ -721,10 +721,9 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
         print(e)
         sys.exit(2)
     
-
-if __name__ == "__main__":
+def main():
     '''
-    this is the direct command line call use case
+    gathers and parses arguments to create function calls
     '''
     print(NAME + ' ' + VERSION)
 
@@ -872,6 +871,12 @@ if __name__ == "__main__":
                  dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax)
     else:
         print(HELP_TEXT)
+
+if __name__ == "__main__":
+    '''
+    this is the command line call use case. can't directly put code of main here.
+    '''
+    main()
 
 elif __name__ == '__version__':
     print(VERSION)

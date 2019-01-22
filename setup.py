@@ -16,6 +16,10 @@ setuptools.setup(
     url="https://github.com/iannesbitt/readgssi",
     packages=setuptools.find_packages(),
     install_requires=['obspy', 'numpy', 'matplotlib', 'pandas', 'h5py', 'pynmea2', 'pytz'],
+    entry_points='''
+        [console_scripts]
+        readgssi=readgssi.readgssi:main
+    ''',
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU Affero General Public License v3",
