@@ -3,6 +3,7 @@
 
 ![Example Radargram](https://github.com/iannesbitt/readgssi/raw/master/examples/1.png)
 
+[![PyPI version](https://badge.fury.io/py/readgssi.svg)](https://badge.fury.io/py/readgssi)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.1439119.svg)](https://dx.doi.org/10.5281/zenodo.1439119)
 [![License](https://img.shields.io/badge/license-GNU%20Affero%203.0-lightgrey.svg)](https://github.com/iannesbitt/readgssi/blob/master/LICENSE)
 
