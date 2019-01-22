@@ -21,6 +21,9 @@ Strongly recommended to install via [anaconda](https://www.anaconda.com/download
 - [`pandas`](https://pandas.pydata.org/)
 - [`h5py`](https://www.h5py.org/)
 
+Install via `pip`:
+- [`pynmea2`](https://pypi.org/project/pynmea2/)
+
 ## installation
 
 Once you have [anaconda](https://www.anaconda.com/download) running, installing requirements is pretty easy.
