@@ -144,6 +144,7 @@ Ian M. Nesbitt, Francois-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-s
 
 ## changes since 0.0.6
 - added ability to install via PyPI
+  - setuptools integrated command line script creation (i.e. `readgssi` instead of `python readgssi.py`)
 - broke out several routines into individual functions
 
 ## changes since 0.0.5
