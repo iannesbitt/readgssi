@@ -20,7 +20,6 @@
 import sys, getopt, os
 import struct
 import numpy as np
-from obspy.signal.filter import bandpass
 from obspy.imaging.spectrogram import spectrogram
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -33,6 +32,7 @@ from datetime import datetime, timedelta
 import pytz
 import h5py
 import pynmea2
+from readgssi import filtering
 
 NAME = 'readgssi'
 VERSION = '0.0.7'
@@ -41,7 +41,7 @@ AUTHOR = 'Ian Nesbitt'
 AFFIL = 'School of Earth and Climate Sciences, University of Maine'
 
 HELP_TEXT = '''usage:
-python readgssi.py -i input.DZT [OPTIONS]
+readgssi -i input.DZT [OPTIONS]
 
 optional flags:
      OPTION     |      ARGUMENT       |       FUNCTIONALITY
@@ -424,6 +424,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             with open(infile, 'rb') as f:
                 # open the binary, attempt reading chunks
                 r = readdzt(f)
+                if verbose:
+                    print(r)
         except IOError as e: # the user has selected an inaccessible or nonexistent file
             print("i/o error: DZT file is inaccessable or does not exist")
             print('detail: ' + str(e) + '\n')
@@ -624,46 +626,20 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                         title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, r[0]['rh_antname'][fi], fq))
                 
                 if bgr:
-                    # Average Background Removal
-                    print('removing horizontal background...')
-                    i = 0
-                    for row in img_arr[ar]:          # each row
-                        mean = np.mean(row)
-                        img_arr[ar][i] = row - mean
-                        i += 1
+                    img_arr[ar] = filtering.bgr(img_arr[ar])
                 
                 if dewow:
-                    # Dewow filter
-                    print('dewowing data...')
-                    signal = list(zip(*img_arr[ar]))[10]
-                    model = np.polyfit(range(len(signal)), signal, 3)
-                    predicted = list(np.polyval(model, range(len(signal))))
-                    i = 0
-                    for column in img_arr[ar].T:      # each column
-                        img_arr[ar].T[i] = column + predicted
-                        i += 1
+                    img_arr[ar] = filtering.dewow(img_arr[ar])
 
                 if freqmin and freqmax:
-                    # Vertical FIR filter
-                    print('vertical FIR filtering...')
-                    fq = 1 / (r[0]['rhf_depth'] / r[0]['cr'] / r[0]['rh_nsamp'])
-                    freqmin = freqmin * 10 ** 6
-                    freqmax = freqmax * 10 ** 6
-                    
-                    print('Sampling frequency:       %.2E Hz' % fq)
-                    print('Minimum filter frequency: %.2E Hz' % freqmin)
-                    print('Maximum filter frequency: %.2E Hz' % freqmax)
-                    
-                    i = 0
-                    for t in img_arr[ar].T:
-                        f = bandpass(data=t, freqmin=freqmin, freqmax=freqmax, df=fq, corners=2, zerophase=False)
-                        img_arr[ar][:,i] = f
-                        i += 1
+                    img_arr[ar] = filtering.bp(arr=img_arr[ar], rhf_depth=r[0]['rhf_depth'],
+                                              cr=r[0]['cr'], rh_nsamp=r[0]['rh_nsamp'],
+                                              freqmin=freqmin, freqmax=freqmax)
 
                 std = np.std(img_arr[ar])
                 print('std:  %s' % std)
-                ll = -std * 3 # lower color limit (1/10 of a standard deviation works well for 100MHz in a lake)
-                ul = std * 3 # upper color limit (1/10 of a standard deviation works well for 100MHz in a lake)
+                ll = -std * 3 # lower color limit
+                ul = std * 3 # upper color limit
                 print('lower color limit: %s' % ll)
                 print('upper color limit: %s' % ul)
 
@@ -861,10 +837,6 @@ def main():
 
     # call the function with the values we just got
     if infile:
-        if outfile:
-            pass
-        else:
-            verbose = True
         readgssi(infile=infile, outfile=outfile, antfreq=antfreq, frmt=frmt, plot=plot,
                  figsize=figsize, stack=stack, verbose=verbose, histogram=histogram,
                  colormap=colormap, colorbar=colorbar, gain=gain, bgr=bgr, zero=zero,
