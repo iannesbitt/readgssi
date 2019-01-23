@@ -53,3 +53,4 @@ def bp(arr, rhf_depth, cr, rh_nsamp, freqmin, freqmax):
         f = bandpass(data=t, freqmin=freqmin, freqmax=freqmax, df=fq, corners=2, zerophase=False)
         arr[:,i] = f
         i += 1
+    return arr
