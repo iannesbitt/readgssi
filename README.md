@@ -139,11 +139,11 @@ The script does the same thing, except it applies a background removal. Note the
 
 ## contributors
 - Ian Nesbitt ([@iannesbitt](https://github.com/iannesbitt), author)
-- Francois-Xavier Simon ([@fxsimon](https://github.com/fxsimon))
+- François-Xavier Simon ([@fxsimon](https://github.com/fxsimon))
 - Thomas Paulin ([@thomaspaulin](https://github.com/thomaspaulin))
 
 ### citation suggestion:
-Ian M. Nesbitt, Francois-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-source tool to read and plot GSSI ground-penetrating radar data. [doi:10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)
+Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-source tool to read and plot GSSI ground-penetrating radar data. [doi:10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)
 
 ## changes since 0.0.6
 - added ability to install via PyPI
