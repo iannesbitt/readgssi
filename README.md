@@ -1,4 +1,4 @@
-# readgssi v0.0.7
+# readgssi
 *Copyleft 🄯 2017-2019*
 
 ![Example Radargram](https://github.com/iannesbitt/readgssi/raw/master/examples/1.png)
@@ -144,6 +144,9 @@ The script does the same thing, except it applies a background removal. Note the
 
 ### citation suggestion:
 Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-source tool to read and plot GSSI ground-penetrating radar data. [doi:10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)
+
+## changes since 0.0.7
+- moved filtering routines to new library `filtering.py`
 
 ## changes since 0.0.6
 - added ability to install via PyPI
