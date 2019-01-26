@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="readgssi",
-    version="0.0.7",
+    version="0.0.8-beta1",
     author="Ian Nesbitt",
     author_email="ian.nesbitt@gmail.com",
     license='AGPL',
@@ -15,7 +15,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/iannesbitt/readgssi",
     packages=setuptools.find_packages(),
-    install_requires=['obspy', 'numpy', 'matplotlib', 'pandas', 'h5py', 'pynmea2', 'pytz'],
+    install_requires=['obspy', 'numpy', 'matplotlib', 'pandas', 'h5py', 'pynmea2', 'pytz', 'bitstruct'],
     entry_points='''
         [console_scripts]
         readgssi=readgssi.readgssi:main

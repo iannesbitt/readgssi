@@ -23,6 +23,7 @@ Strongly recommended to install via [anaconda](https://www.anaconda.com/download
 
 Install via `pip`:
 - [`pynmea2`](https://pypi.org/project/pynmea2/)
+- [`bitstruct`](https://pypi.org/project/bitstruct/)
 
 ## installation
 
@@ -33,7 +34,7 @@ conda config --add channels conda-forge
 conda create -n readgssi python==3.7
 conda activate readgssi
 conda install pandas h5py pytz obspy
-pip install pynmea2 readgssi
+pip install pynmea2 bitstruct readgssi
 ```
 
 That should allow you to run the commands below.
