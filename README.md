@@ -133,7 +133,7 @@ Here `readgssi` will create a plot of size 10 and stack 3x (`-p 10 -s 3`). Matpl
 ```bash
 readgssi -i DZT__002.DZT -o 2b.png -p 10 -s 3 -n -r
 ```
-The script does the same thing, except it applies a background removal. Note the difference in ringing artifacts between examples 2a and 2b.
+The script does the same thing, except it applies horizontal mean background removal `-r`. Note the difference in ringing artifacts between examples 2a and 2b.
 ![Example 2b](https://github.com/iannesbitt/readgssi/raw/master/examples/2b.png)
 
 
@@ -146,7 +146,7 @@ The script does the same thing, except it applies a background removal. Note the
 Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-source tool to read and plot GSSI ground-penetrating radar data. [doi:10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)
 
 ## changes since 0.0.7
-- moved filtering routines to new library `filtering.py`
+- moved filtering routines to new module `filtering.py`
 
 ## changes since 0.0.6
 - added ability to install via PyPI
@@ -172,11 +172,11 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 - added ability to apply gain
 - fixed bug that caused gain to be applied incorrectly
 - script now tries to automatically calculate timezero using (nsamp\*range)/position
+
 #### known bugs:
 - translation to anything but csv is broken (hope to have time to at least fix HDF5 output soon)
   - csv translation does not work for dual-channel radar devices (exports to file but channels are merged end-to-end)
 - color bar shows up too large on some plots (no known fix yet)
-- dewow doesn't work on all files
 - histogram only shows pre-gain data distribution
 
 ## future
