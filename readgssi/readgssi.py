@@ -19,7 +19,6 @@
 
 import sys, getopt, os
 import struct
-import bitstruct
 from ctypes import c_uint, Structure, LittleEndianStructure
 import numpy as np
 from obspy.imaging.spectrogram import spectrogram
