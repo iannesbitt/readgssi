@@ -7,7 +7,7 @@ year = datetime.now().year
 author = 'Ian Nesbitt'
 affil = 'School of Earth and Climate Sciences, University of Maine'
 
-help_text = u'''
+help_text = u'''Help text:
 ############################################################
  readgssi version %s
 

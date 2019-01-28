@@ -34,6 +34,7 @@ import pytz
 import h5py
 import pynmea2
 from readgssi import filtering, config
+import readgssi.functions as fx
 
 #optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
 
@@ -124,7 +125,6 @@ def readtime(bytes):
     for bit in byte:                    # assemble the binary string
         for i in range(8):
             dtbits += str((bit >> i) & 1)
-    print(dtbits)
     dtbits = dtbits[::-1]               # flip the string
     sec2 = int(dtbits[27:32], 2) * 2
     mins = int(dtbits[21:27], 2)
@@ -189,16 +189,16 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
                         td = ts1 - ts0 # timedelta = datetime1 - datetime0
                     rowgga += 1
             if rowgga != rowrmc:
-                print("WARNING: GGA and RMC sentences are not recorded at the same rate! This could cause unforseen problems!")
-                print('rmc records: %i' % rowrmc)
-                print('gga records: %i' % rowgga)
+                fx.printmsg("WARNING: GGA and RMC sentences are not recorded at the same rate! This could cause unforseen problems!")
+                fx.printmsg('rmc records: %i' % rowrmc)
+                fx.printmsg('gga records: %i' % rowgga)
             gpssps = 1 / td.total_seconds() # GPS samples per second
             if verbose:
-                print('found %i GPS epochs at rate of %.1f Hz' % (rowrmc, gpssps))
+                fx.printmsg('found %i GPS epochs at rate of %.1f Hz' % (rowrmc, gpssps))
             dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('altitude', 'float32'), ('geoid_ht', 'float32'), ('qual', 'uint8'), ('num_sats', 'uint8'), ('hdop', 'float32'), ('gps_sec', 'float32'), ('timestamp', 'datetime64[us]')] # array columns
             arr = np.zeros((int(traces)+1000), dt) # numpy array with num rows = num gpr traces, and columns defined above
             if verbose:
-                print('creating array of %i interpolated gps locations...' % (traces))
+                fx.printmsg('creating array of %i interpolated gps locations...' % (traces))
             gf.seek(0) # back to beginning of file
             for ln in gf: # loop over file line by line
                 if rmc == True: # if there is RMC, we can use the full datestamp
@@ -223,9 +223,9 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
                         elapsedelta = timestamp - prevtime # t1 - t0 in timedelta format
                         elapsed = float((elapsedelta).total_seconds()) # seconds elapsed
                         if elapsed > 3600.0:
-                            print("WARNING: Time jumps by more than an hour in this GPS dataset and there are no RMC sentences to anchor the datestamp!")
-                            print("This dataset may cross over the UTC midnight dateline!\nprevious timestamp: %s\ncurrent timestamp:  %s" % (prevtime, timestamp))
-                            print("trace number:       %s" % trace)
+                            fx.printmsg("WARNING: Time jumps by more than an hour in this GPS dataset and there are no RMC sentences to anchor the datestamp!")
+                            fx.printmsg("         This dataset may cross over the UTC midnight dateline!\nprevious timestamp: %s\ncurrent timestamp:  %s" % (prevtime, timestamp))
+                            fx.printmsg("         trace number:       %s" % trace)
                         tracenum = round(elapsed * spu, 8) # calculate the increase in trace number, rounded to 5 decimals to eliminate machine error
                         trace += tracenum # increment to reflect current trace
                         resamp = np.arange(math.ceil(prevtrace), math.ceil(trace), 1) # make an array of integer values between t0 and t1
@@ -240,12 +240,12 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
                             rownp += 1
                     else: # we're on the very first row
                         if verbose:
-                            print('using %s and %s hemispheres' % (lonhem, lathem))
+                            fx.printmsg('using %s and %s hemispheres' % (lonhem, lathem))
                     x0, y0, z0, sec0 = x1, y1, z1, sec1 # set xyzs0 for next loop
                     prevtime = timestamp # set t0 for next loop
                     prevtrace = trace
             if verbose:
-                print('processed %i gps locations' % rownp)
+                fx.printmsg('processed %i gps locations' % rownp)
             diff = rownp - traces
             shift, endshift = 0, 0
             if diff > 0:
@@ -257,7 +257,7 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
             arrend = traces + endshift
             arr = arr[shift:arrend:1]
             if verbose:
-                print('cut %i rows from beginning and %s from end of gps array, new size %s' % (shift, endshift, arr.shape[0]))
+                fx.printmsg('cut %i rows from beginning and %s from end of gps array, new size %s' % (shift, endshift, arr.shape[0]))
             # if there's no need to use pandas, we shouldn't (library load speed mostly, also this line is old):
             #array = pd.DataFrame({ 'ts' : arr['ts'], 'lat' : arr['lat'], 'lon' : arr['lon'] }, index=arr['tracenum'])
         elif frmt == 'csv':
@@ -270,10 +270,10 @@ def readdzt(infile):
     currently unused but potentially useful lines:
     # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s' # the structure of the bytewise header and "gps data" as I understand it - 1024 bytes
     # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2) # the variable size of bytes in the header (most of the time) - 128 bytes
-    # print('total header structure size: '+str(calcsize(headerstruct)))
+    # fx.printmsg('total header structure size: '+str(calcsize(headerstruct)))
     # packed_size = 0
     # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
-    # print('fixed header size: '+str(packed_size)+'\n')
+    # fx.printmsg('fixed header size: '+str(packed_size)+'\n')
     '''
     rh_antname = ''
 
@@ -384,36 +384,36 @@ def header_info(header, data):
     '''
     function to print relevant header data
     '''
-    print('reading header information...')
-    print('input file:         %s' % header['infile'])
-    print('system:             %s' % UNIT[header['rh_system']])
-    print('antenna:            %s' % header['rh_antname'])
+    fx.printmsg('reading header information...')
+    fx.printmsg('input file:         %s' % header['infile'])
+    fx.printmsg('system:             %s' % UNIT[header['rh_system']])
+    fx.printmsg('antenna:            %s' % header['rh_antname'])
     if header['rh_nchan'] > 1:
         i = 1
         for ar in ANT[header['rh_antname']]:
-            print('ant %s frequency:   %s MHz' % (ar))
+            fx.printmsg('ant %s frequency:   %s MHz' % (ar))
     else:
-        print('antenna frequency:  %s MHz' % ANT[header['rh_antname']])
-    print('date created:       %s' % header['rhb_cdt'])
-    print('date modified:      %s' % header['rhb_mdt'])
+        fx.printmsg('antenna frequency:  %s MHz' % ANT[header['rh_antname']])
+    fx.printmsg('date created:       %s' % header['rhb_cdt'])
+    fx.printmsg('date modified:      %s' % header['rhb_mdt'])
     try:
-        print('gps-enabled file:   %s' % GPS[header['rh_version']])
+        fx.printmsg('gps-enabled file:   %s' % GPS[header['rh_version']])
     except (TypeError, KeyError) as e:
-        print('gps-enabled file:   %s' % 'unknown')
-    print('number of channels: %i' % header['rh_nchan'])
-    print('samples per trace:  %i' % header['rh_nsamp'])
-    print('bits per sample:    %s' % BPS[header['rh_bits']])
-    print('traces per second:  %.1f' % header['rhf_sps'])
-    print('traces per meter:   %.1f' % header['rhf_spm'])
-    print('dilectric:          %.1f' % header['rhf_epsr'])
-    print('speed of light:     %.2E m/sec (%.2f%% of vacuum)' % (header['cr'], header['cr'] / C * 100))
-    print('sampling depth:     %.1f m' % header['rhf_depth'])
+        fx.printmsg('gps-enabled file:   %s' % 'unknown')
+    fx.printmsg('number of channels: %i' % header['rh_nchan'])
+    fx.printmsg('samples per trace:  %i' % header['rh_nsamp'])
+    fx.printmsg('bits per sample:    %s' % BPS[header['rh_bits']])
+    fx.printmsg('traces per second:  %.1f' % header['rhf_sps'])
+    fx.printmsg('traces per meter:   %.1f' % header['rhf_spm'])
+    fx.printmsg('dilectric:          %.1f' % header['rhf_epsr'])
+    fx.printmsg('speed of light:     %.2E m/sec (%.2f%% of vacuum)' % (header['cr'], header['cr'] / C * 100))
+    fx.printmsg('sampling depth:     %.1f m' % header['rhf_depth'])
     if data.shape[1] == int(data.shape[1]):
-        print('traces:             %i' % int(data.shape[1]/header['rh_nchan']))
+        fx.printmsg('traces:             %i' % int(data.shape[1]/header['rh_nchan']))
     else:
-        print('traces:             %f' % int(data.shape[1]/header['rh_nchan']))
-    print('seconds:            %.8f' % (header['sec']))
-    print('samp/m:             %.2f (zero unless DMI present)' % (float(header['rhf_spm']))) # I think...
+        fx.printmsg('traces:             %f' % int(data.shape[1]/header['rh_nchan']))
+    fx.printmsg('seconds:            %.8f' % (header['sec']))
+    fx.printmsg('samp/m:             %.2f (zero unless DMI present)' % (float(header['rhf_spm']))) # I think...
 
 
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10,
@@ -425,10 +425,10 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
     currently unused but potentially useful lines:
     # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s' # the structure of the bytewise header and "gps data" as I understand it - 1024 bytes
     # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2) # the variable size of bytes in the header (most of the time) - 128 bytes
-    # print('total header structure size: '+str(calcsize(headerstruct)))
+    # fx.printmsg('total header structure size: '+str(calcsize(headerstruct)))
     # packed_size = 0
     # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
-    # print('fixed header size: '+str(packed_size)+'\n')
+    # fx.printmsg('fixed header size: '+str(packed_size)+'\n')
     '''
 
     if infile:
@@ -438,15 +438,15 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 # open the binary, attempt reading chunks
                 r = readdzt(f)
                 if verbose:
-                    print(header_info(r[0], r[1]))
+                    header_info(r[0], r[1])
         except IOError as e: # the user has selected an inaccessible or nonexistent file
-            print("i/o error: DZT file is inaccessable or does not exist")
-            print('detail: ' + str(e) + '\n')
-            print(config.help_text)
+            fx.printmsg("I/O ERROR: DZT file is inaccessable or does not exist")
+            fx.printmsg('detail: ' + str(e) + '\n')
+            fx.printmsg(config.help_text)
             sys.exit(2)
     else:
-        print('error: no input file was specified')
-        print(config.help_text)
+        fx.printmsg('ERROR: no input file was specified')
+        fx.printmsg(config.help_text)
         sys.exit(2)
 
     try:
@@ -455,22 +455,23 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
         line_dur = r[0]['sec']
         if antfreq != None:
             freq = antfreq
-            print('user specified antenna frequency: %s' % antfreq)
+            fx.printmsg('user specified antenna frequency: %s' % antfreq)
         elif r[0]['rh_antname']:
             try:
                 freq = ANT[r[0]['rh_antname']]
             except ValueError as e:
-                print('WARNING: could not read frequency for given antenna name.\nerror info: %s' % e)
-                print(config.help_text)
+                fx.printmsg('WARNING: could not read frequency for given antenna name.\nerror info: %s' % e)
+                fx.printmsg(config.help_text)
                 sys.exit(2)
         else:
-            print('no frequency information could be read from the header.\nplease specify the frequency of the antenna in MHz using the -a flag.')
-            print(config.help_text)
+            fx.printmsg('ERROR: no frequency information could be read from the header.\nplease specify the frequency of the antenna in MHz using the -a flag.')
+            fx.printmsg(config.help_text)
             sys.exit(2)
     # an except should go here
 
         if frmt != None:
-            print('outputting to %s . . .' % frmt)
+            if verbose:
+                fx.printmsg('outputting to %s . . .' % frmt)
 
             fnoext = os.path.splitext(infile)[0]
             # is there an output filepath given?
@@ -483,7 +484,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
             # what is the output format
             if frmt in 'csv':
                 data = pd.DataFrame(r[1]) # using pandas to output csv
-                print('writing file to:    %s' % of)
+                if verbose:
+                    fx.printmsg('writing file to:    %s' % of)
                 data.to_csv(of) # write
             elif frmt in 'h5':
                 '''
@@ -531,7 +533,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 # make data structure
                 n = 0 # line number, iteratively increased
                 f = h5py.File(of, 'w') # overwrite existing file
-                print('exporting to %s' % of)
+                if verbose:
+                    fx.printmsg('exporting to %s' % of)
 
                 try:
                     li = f.create_group('line_0') # create line zero
@@ -568,10 +571,9 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 '''
                 segy output is not yet available
                 '''
-                print('SEG-Y is not yet supported, please choose another format.')
-                print(config.help_text)
+                fx.printmsg('ERROR: SEG-Y is not yet supported, please choose another format.')
+                fx.printmsg(config.help_text)
                 sys.exit(2)
-            print('done exporting.')
         if plot:
             '''
             let's do some matplotlib
@@ -599,7 +601,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     outname = os.path.split(infile)[-1].split('.')[:-1][0]
 
                 if str(j).lower() in 'auto':
-                    print('attempting automatic stacking method...')
+                    if verbose:
+                        fx.printmsg('attempting automatic stacking method...')
                     ratio = (img_arr[ar].shape[1]/img_arr[ar].shape[0])/(7500/3000)
                     if ratio > 1:
                         j = int(ratio)
@@ -609,12 +612,13 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     try:
                         j = int(j)
                     except ValueError:
-                        print('error: stacking must be indicated with an integer greater than 1, "auto", or None.')
-                        print('a stacking value of 1 equates to None. "auto" will attempt to stack to about a 2.5:1 x to y axis ratio.')
-                        print('the result will not be stacked.')
+                        fx.printmsg('ERROR: stacking must be indicated with an integer greater than 1, "auto", or None.')
+                        fx.printmsg('a stacking value of 1 equates to None. "auto" will attempt to stack to about a 2.5:1 x to y axis ratio.')
+                        fx.printmsg('the result will not be stacked.')
                         j = 1
                 if j > 1:
-                    print('stacking %sx' % j)
+                    if verbose:
+                        fx.printmsg('stacking %sx' % j)
                     i = list(range(j))
                     l = list(range(int(img_arr[ar].shape[1]/j)))
                     stack = np.copy(img_arr[ar][:,::j])
@@ -626,88 +630,101 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                     if str(j).lower() in 'auto':
                         pass
                     else:
-                        print('no stacking applied. be warned: this can result in very large and awkwardly-shaped figures.')
+                        fx.printmsg('WARNING: no stacking applied. be warned: this can result in very large and awkwardly-shaped figures.')
 
                 mean = np.mean(img_arr[ar])
                 
                 if specgram:
                     tr = int(img_arr[ar].shape[1] / 2)
-                    print('making spectrogram of trace %s' % (tr))
+                    if verbose:
+                        fx.printmsg('making spectrogram of trace %s' % (tr))
                     fq = 1 / (r[0]['rhf_depth'] / r[0]['cr'] / r[0]['rh_nsamp'])
                     trace = img_arr[ar].T[tr]
                     spectrogram(trace, fq, wlen=fq/1000, per_lap = 0.99, dbscale=True,
                         title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, r[0]['rh_antname'][fi], fq))
                 
                 if bgr:
-                    img_arr[ar] = filtering.bgr(img_arr[ar])
+                    img_arr[ar] = filtering.bgr(img_arr[ar], verbose=verbose)
                 
                 if dewow:
-                    img_arr[ar] = filtering.dewow(img_arr[ar])
+                    img_arr[ar] = filtering.dewow(img_arr[ar], verbose=verbose)
 
                 if freqmin and freqmax:
                     img_arr[ar] = filtering.bp(arr=img_arr[ar], rhf_depth=r[0]['rhf_depth'],
                                               cr=r[0]['cr'], rh_nsamp=r[0]['rh_nsamp'],
-                                              freqmin=freqmin, freqmax=freqmax)
+                                              freqmin=freqmin, freqmax=freqmax, verbose=verbose)
 
                 std = np.std(img_arr[ar])
-                print('std:  %s' % std)
                 ll = -std * 3 # lower color limit
                 ul = std * 3 # upper color limit
-                print('lower color limit: %s' % ll)
-                print('upper color limit: %s' % ul)
+                if verbose:
+                    fx.printmsg('std:  %s' % std)
+                    fx.printmsg('lower color limit: %s' % ll)
+                    fx.printmsg('upper color limit: %s' % ul)
 
                 # having lots of trouble with this line not being friendly with figsize tuple (integer coercion-related errors)
                 # so we will force everything to be integers explicitly
 
                 if figsize != 'auto':
                     figx, figy = int(int(figsize)*int(int(img_arr[ar].shape[1])/int(img_arr[ar].shape[0]))), int(figsize) # force to integer instead of coerce
-                    print('plotting %sx%sin image with gain=%s...' % (figx, figy, gain))
+                    if verbose:
+                        fx.printmsg('plotting %sx%sin image with gain=%s...' % (figx, figy, gain))
                     fig = plt.figure(figsize=(figx, figy-1), dpi=150)
                 else:
-                    print('plotting with gain=%s...' % gain)
+                    if verbose:
+                        fx.printmsg('plotting with gain=%s...' % gain)
                     fig = plt.figure()
                 
                 try:
+                    if verbose:
+                        fx.printmsg('attempting to plot with colormap %s' % (colormap))
                     img = plt.imshow(img_arr[ar], cmap=colormap, clim=(ll, ul),
                                  norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                                         vmin=ll, vmax=ul),)
                 except:
-                    print('matplotlib did not accept colormap "%s", using viridis instead' % colormap)
-                    print('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
+                    fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using viridis instead' % colormap)
+                    fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
                     img = plt.imshow(img_arr[ar], cmap='viridis', clim=(ll, ul),
                                  norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                                         vmin=ll, vmax=ul),)
 
                 if colorbar:
                     fig.colorbar(img)
-                plt.title('%s - %s MHz - stacking: %s - gain: %s' % (os.path.split(infile)[-1], ANT[r[0]['rh_antname']][fi], j, gain))
+                if verbose:
+                    plt.title('%s - %s MHz - stacking: %s - gain: %s' % (os.path.split(infile)[-1], ANT[r[0]['rh_antname']][fi], j, gain))
                 plt.tight_layout(pad=figsize/2.)
                 if outfile:
                     if len(img_arr) > 1:
-                        print('saving figure as %s_%sMHz.png' % (os.path.splitext(outfile)[0], ANT[r[0]['rh_antname']][fi]))
+                        if verbose:
+                            fx.printmsg('saving figure as %s_%sMHz.png' % (os.path.splitext(outfile)[0], ANT[r[0]['rh_antname']][fi]))
                         plt.savefig(os.path.join(os.path.splitext(outfile)[0] + '_' + str(ANT[r[0]['rh_antname']][fi]) + 'MHz.png'))
                     else:
-                        print('saving figure as %s.png' % (os.path.splitext(outfile)[0]))
+                        if verbose:
+                            fx.printmsg('saving figure as %s.png' % (os.path.splitext(outfile)[0]))
                         plt.savefig(os.path.join(os.path.splitext(outfile)[0] + '.png'))
                 else:
-                    print('saving figure as %s_%sMHz.png' % (os.path.splitext(infile)[0], ANT[r[0]['rh_antname']][fi]))
+                    if verbose:
+                        fx.printmsg('saving figure as %s_%sMHz.png' % (os.path.splitext(infile)[0], ANT[r[0]['rh_antname']][fi]))
                     plt.savefig(os.path.join(os.path.splitext(infile)[0] + '_' + str(ANT[r[0]['rh_antname']][fi]) + 'MHz.png'))
                 if noshow:
-                    print('not showing matplotlib')
+                    if verbose:
+                        fx.printmsg('not showing matplotlib')
                     plt.close()
                 else:
-                    print('showing matplotlib figure...')
+                    if verbose:
+                        fx.printmsg('showing matplotlib figure...')
                     plt.show()
                 
                 if histogram:
-                    print('drawing histogram...')
+                    if verbose:
+                        fx.printmsg('drawing histogram...')
                     fig = plt.figure()
                     hst = plt.hist(img_arr[ar].ravel(), bins=256, range=(ll, ul), fc='k', ec='k')
                     plt.show()
                 fi += 1
 
     except TypeError as e: # shows up when the user selects an input file that doesn't exist
-        print(e)
+        fx.printmsg(e)
         sys.exit(2)
     
 def main():
@@ -715,7 +732,7 @@ def main():
     gathers and parses arguments to create function calls
     '''
 
-    verbose = False
+    verbose = True
     stack = 1
     infile, outfile, antfreq, frmt, plot, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
     freqmin, freqmax, specgram, zero = None, None, None, None
@@ -725,21 +742,21 @@ def main():
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plot=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hvdi:a:o:f:p:s:rwnmc:bg:z:t:',
-            ['help','verbose','dmi','input=','antfreq=','output=','format=','plot=','stack=','bgr',
+        opts, args = getopt.getopt(sys.argv[1:],'hqdi:a:o:f:p:s:rwnmc:bg:z:t:',
+            ['help','quiet','dmi','input=','antfreq=','output=','format=','plot=','stack=','bgr',
             'dewow','noshow','histogram','colormap=','colorbar','gain=','zero=','bandpass='])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
-        print('error: invalid argument(s) supplied')
-        print('error text: %s' % e)
-        print(config.help_text)
+        fx.printmsg('ERROR: invalid argument(s) supplied')
+        fx.printmsg('error text: %s' % e)
+        fx.printmsg(config.help_text)
         sys.exit(2)
     for opt, arg in opts: 
         if opt in ('-h', '--help'): # the help case
-            print(config.help_text)
+            fx.printmsg(config.help_text)
             sys.exit()
-        if opt in ('-v', '--verbose'):
-            verbose = True
+        if opt in ('-q', '--quiet'):
+            verbose = False
         if opt in ('-i', '--input'): # the input file
             if arg:
                 infile = arg
@@ -754,8 +771,8 @@ def main():
             try:
                 antfreq = round(float(abs(arg)),1)
             except:
-                print('error: %s is not a valid decimal or integer frequency value.' % arg)
-                print(config.help_text)
+                fx.printmsg('ERROR: %s is not a valid decimal or integer frequency value.' % arg)
+                fx.printmsg(config.help_text)
                 sys.exit(2)
         if opt in ('-f', '--format'): # the format string
             # check whether the string is a supported format
@@ -771,10 +788,10 @@ def main():
                     plot = True
                 else:
                     # else the user has given an invalid format
-                    print(config.help_text)
+                    fx.printmsg(config.help_text)
                     sys.exit(2)
             else:
-                print(config.help_text)
+                fx.printmsg(config.help_text)
                 sys.exit(2)
         if opt in ('-s', '--stack'):
             if arg:
@@ -784,8 +801,8 @@ def main():
                     try:
                         stack = abs(int(arg))
                     except ValueError:
-                        print('error: stacking argument must be a positive integer or "auto".')
-                        print(config.help_text)
+                        fx.printmsg('ERROR: stacking argument must be a positive integer or "auto".')
+                        fx.printmsg(config.help_text)
                         sys.exit(2)
         if opt in ('-r', '--bgr'):
             bgr = True
@@ -796,9 +813,9 @@ def main():
                 try:
                     zero = int(arg)
                 except:
-                    print('error: zero correction must be an integer')
+                    fx.printmsg('ERROR: zero correction must be an integer')
             else:
-                print('warning: no zero correction argument supplied')
+                fx.printmsg('WARNING: no zero correction argument supplied')
                 zero = None
         if opt in ('-t', '--bandpass'):
             if arg:
@@ -807,10 +824,10 @@ def main():
                     freqmin = int(freqmin)
                     freqmax = int(freqmax)
                 except:
-                    print('error: filter frequency must be integers separated by a dash (-)')
+                    fx.printmsg('ERROR: filter frequency must be integers separated by a dash (-)')
                     freqmin, freqmax = None, None
             else:
-                print('warning: no filter frequency argument supplied')
+                fx.printmsg('WARNING: no filter frequency argument supplied')
         if opt in ('-n', '--noshow'):
             noshow = True
         if opt in ('-p', '--plot'):
@@ -822,12 +839,12 @@ def main():
                     try:
                         figsize = abs(int(arg))
                     except ValueError:
-                        print('error: plot size argument must be a positive integer or "auto".')
-                        print(config.help_text)
+                        fx.printmsg('ERROR: plot size argument must be a positive integer or "auto".')
+                        fx.printmsg(config.help_text)
                         sys.exit(2)
         if opt in ('-d', '--dmi'):
             #dmi = True
-            print('DMI devices are not supported at the moment.')
+            fx.printmsg('ERROR: DMI devices are not supported at the moment.')
             pass # not doing anything with this at the moment
         if opt in ('-m', '--histogram'):
             histogram = True
@@ -841,19 +858,23 @@ def main():
                 try:
                     gain = abs(float(arg))
                 except:
-                    print('gain must be positive. defaulting to gain=1.')
+                    fx.printmsg('ERROR: gain must be positive. defaulting to gain=1.')
                     gain = 1
 
 
     # call the function with the values we just got
     if infile:
-        print(config.dist)
+        if verbose:
+            fx.printmsg(config.dist)
         readgssi(infile=infile, outfile=outfile, antfreq=antfreq, frmt=frmt, plot=plot,
                  figsize=figsize, stack=stack, verbose=verbose, histogram=histogram,
                  colormap=colormap, colorbar=colorbar, gain=gain, bgr=bgr, zero=zero,
                  dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax)
+        if verbose:
+            fx.printmsg('done with %s' % infile)
+        print('')
     else:
-        print(config.help_text)
+        fx.printmsg(config.help_text)
 
 if __name__ == "__main__":
     '''

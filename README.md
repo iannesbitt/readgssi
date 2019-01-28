@@ -31,10 +31,9 @@ Once you have [anaconda](https://www.anaconda.com/download) running, installing 
 
 ```bash
 conda config --add channels conda-forge
-conda create -n readgssi python==3.7
+conda create -n readgssi python==3.7 pandas h5py pytz obspy
 conda activate readgssi
-conda install pandas h5py pytz obspy
-pip install pynmea2 bitstruct readgssi
+pip install readgssi
 ```
 
 That should allow you to run the commands below.
@@ -59,7 +58,7 @@ readgssi -i input.DZT [OPTIONS]
 
 optional flags:
      OPTION     |      ARGUMENT       |       FUNCTIONALITY
--v, --verbose   |                     |  verbosity
+-q, --quiet     |                     |  quiet default verbosity
 -o, --output    | file:  /dir/f.ext   |  specify an output file
 -f, --format    | string, eg. "csv"   |  specify output format (csv is the only working format currently)
 -p, --plot      | +integer or "auto"  |  plot will be x inches high (dpi=150), or "auto". default: 10
@@ -151,6 +150,9 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 - added a way to call `readgssi.__version__`
 - moved some config stuff to `config.py`
 - bitwise datetime read works properly now!! this was a longstanding bug that took me forever to figure out. the bit structure was not at all intuitive and the script kind of ends up using brute force to decode them to datetime objects, but it works. dates and times of file creation and modification should now match those in RADAN.
+- changed to verbose by default and quiet if `-q` / `--quiet` flag is set
+- changed print statement to output date and timestamp (helpful for tracking date and time of things when, for example, processing a whole survey data folder full of radar files)
+
 
 ## changes since 0.0.6
 - added ability to install via PyPI
