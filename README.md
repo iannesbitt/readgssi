@@ -148,6 +148,9 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 
 ## changes since 0.0.7
 - moved filtering routines to new module `filtering.py`
+- added a way to call `readgssi.__version__`
+- moved some config stuff to `config.py`
+- bitwise datetime read works properly now!! this was a longstanding bug that took me forever to figure out. the bit structure was not at all intuitive and the script kind of ends up using brute force to decode them to datetime objects, but it works. dates and times of file creation and modification should now match those in RADAN.
 
 ## changes since 0.0.6
 - added ability to install via PyPI
