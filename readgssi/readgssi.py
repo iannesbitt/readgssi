@@ -289,8 +289,6 @@ def readdzt(infile):
     rhf_position = struct.unpack('<f', infile.read(4))[0] # position (ns)
     rhf_range = struct.unpack('<f', infile.read(4))[0] # range (ns)
     rh_npass = struct.unpack('<h', infile.read(2))[0] # number of passes for 2-D files
-
-    # this is hacked together with numpy for now. relying on numpy solution until the bitwise madness stops (maybe never)
     # bytes 32-36 and 36-40: creation and modification date and time in bits, structured as little endian u5u6u5u5u4u7
     infile.seek(32)
     try:
