@@ -9,10 +9,10 @@ Written in part by François-Xavier Simon (@fxsimon)
 '''
 
 def bgr(arr):
-	'''
-	Instrument background removal (BGR)
-	Subtracts off row averages
-	'''
+    '''
+    Instrument background removal (BGR)
+    Subtracts off row averages
+    '''
     print('removing horizontal background...')
     i = 0
     for row in arr:          # each row
@@ -22,9 +22,9 @@ def bgr(arr):
     return arr
 
 def dewow(arr):
-	'''
-	Polynomial dewow filter
-	'''
+    '''
+    Polynomial dewow filter
+    '''
     print('dewowing data...')
     signal = list(zip(*arr))[10]
     model = np.polyfit(range(len(signal)), signal, 3)
@@ -36,9 +36,9 @@ def dewow(arr):
     return arr
 
 def bp(arr, rhf_depth, cr, rh_nsamp, freqmin, freqmax):
-	'''
-	Vertical frequency domain bandpass
-	'''
+    '''
+    Vertical frequency domain bandpass
+    '''
     print('vertical frequency filtering...')
     fq = 1 / (rhf_depth / cr / rh_nsamp)
     freqmin = freqmin * 10 ** 6

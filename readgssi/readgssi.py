@@ -19,6 +19,8 @@
 
 import sys, getopt, os
 import struct
+import bitstruct
+from ctypes import c_uint, Structure, LittleEndianStructure
 import numpy as np
 from obspy.imaging.spectrogram import spectrogram
 import matplotlib as mpl
@@ -32,35 +34,7 @@ from datetime import datetime, timedelta
 import pytz
 import h5py
 import pynmea2
-from readgssi import filtering
-
-NAME = 'readgssi'
-VERSION = '0.0.7'
-YEAR = 2019
-AUTHOR = 'Ian Nesbitt'
-AFFIL = 'School of Earth and Climate Sciences, University of Maine'
-
-HELP_TEXT = '''usage:
-readgssi -i input.DZT [OPTIONS]
-
-optional flags:
-     OPTION     |      ARGUMENT       |       FUNCTIONALITY
--v, --verbose   |                     |  verbosity
--o, --output    | file:  /dir/f.ext   |  specify an output file
--f, --format    | string, eg. "csv"   |  specify output format (csv is the only working format currently)
--p, --plot      | +integer or "auto"  |  plot will be x inches high (dpi=150), or "auto". default: 10
--n, --noshow    |                     |  suppress matplotlib popup window and simply save a figure (useful for multiple file processing)
--c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
--g, --gain      | positive (+)integer |  gain value (higher=greater contrast, default: 1)
--r, --bgr       |                     |  horizontal background removal algorithm (useful to remove ringing)
--w, --dewow     |                     |  trinomial dewow algorithm
--t, --bandpass  | +int-+int (MHz)     |  butterworth bandpass filter (positive integer range in megahertz; ex. 100-145)
--b, --colorbar  |                     |  add a colorbar to the radar figure
--a, --antfreq   | positive integer    |  specify antenna frequency (read automatically if not given)
--s, --stack     | +integer or "auto"  |  specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
--m, --histogram |                     |  produce a histogram of data values
--z, --zero      | positive integer    |  skip this many samples from the top of the trace downward (useful for removing transceiver delay)
-'''
+from readgssi import filtering, config
 
 #optional flag: -d, denoting radar pulses triggered with a distance-measuring instrument (DMI) like a survey wheel' # help text string
 
@@ -138,23 +112,28 @@ BPS = {
     32: '32 signed'
 }
 
-def readtime(bits):
+def readtime(bytes):
     '''
-    function to read dates bitwise.
-    this is a colossally stupid way of storing dates.
-    I know I'm not unpacking them correctly, a fix is in the development queue
+    function to read dates
+    have i mentioned yet that this is a colossally stupid way of storing dates
+    
+    date values will come in as a 32 bit binary string (01001010111110011010011100101111)
+    or (seconds/2, min, hr, day, month, year-1980)
     '''
-    garbagedate = datetime(1980,1,1,0,0,0,0,tzinfo=pytz.UTC)
-    if bits == '\x00\x00\x00\x00':
-        return garbagedate # if there is no date information, return arbitrary datetime
-    else:
-        try:
-            sec2, mins, hr, day, mo, yr = bitstruct.unpack('<u5u6u5u5u4u7', bits) # if there is date info, try to unpack
-            # year+1980 should equal real year
-            # sec2 * 2 should equal real seconds
-            return datetime(yr+1980, mo, day, hr, mins, sec2*2, 0, tzinfo=pytz.UTC)
-        except:
-            return garbagedate # most of the time the info returned is garbage, so we return arbitrary datetime again
+    dtbits = ''
+    byte = (b for b in bytes)
+    for bit in byte:                    # assemble the binary string
+        for i in range(8):
+            dtbits += str((bit >> i) & 1)
+    print(dtbits)
+    dtbits = dtbits[::-1]               # flip the string
+    sec2 = int(dtbits[27:32], 2) * 2
+    mins = int(dtbits[21:27], 2)
+    hr = int(dtbits[16:21], 2)
+    day = int(dtbits[11:16], 2)
+    mo = int(dtbits[7:11], 2)
+    yr = int(dtbits[0:7], 2) + 1980
+    return datetime(yr, mo, day, hr, mins, sec2, 0, tzinfo=pytz.UTC)
 
 def readdzg(fi, frmt, spu, traces, verbose=False):
     '''
@@ -287,6 +266,16 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     return arr
 
 def readdzt(infile):
+    '''
+    function to unpack and return things we need from the header, and the data itself
+    currently unused but potentially useful lines:
+    # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s' # the structure of the bytewise header and "gps data" as I understand it - 1024 bytes
+    # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2) # the variable size of bytes in the header (most of the time) - 128 bytes
+    # print('total header structure size: '+str(calcsize(headerstruct)))
+    # packed_size = 0
+    # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
+    # print('fixed header size: '+str(packed_size)+'\n')
+    '''
     rh_antname = ''
 
     rh_tag = struct.unpack('<h', infile.read(2))[0] # 0x00ff if header, 0xfnff if old file format
@@ -300,10 +289,20 @@ def readdzt(infile):
     rhf_position = struct.unpack('<f', infile.read(4))[0] # position (ns)
     rhf_range = struct.unpack('<f', infile.read(4))[0] # range (ns)
     rh_npass = struct.unpack('<h', infile.read(2))[0] # number of passes for 2-D files
-    infile.seek(31) # ensure correct read position for rfdatebyte
-    rhb_cdt = readtime(infile.read(4)) # creation date and time in bits, structured as little endian u5u6u5u5u4u7
-    rhb_mdt = readtime(infile.read(4)) # modification date and time in bits, structured as little endian u5u6u5u5u4u7
-    infile.seek(44) # skip across some proprietary stuff
+
+    # this is hacked together with numpy for now. relying on numpy solution until the bitwise madness stops (maybe never)
+    # bytes 32-36 and 36-40: creation and modification date and time in bits, structured as little endian u5u6u5u5u4u7
+    infile.seek(32)
+    try:
+        rhb_cdt = readtime(infile.read(4))
+    except:
+        rhb_cdt = datetime(1980, 1, 1)
+    try:
+        rhb_mdt = readtime(infile.read(4))
+    except:
+        rhb_mdt = datetime(1980, 1, 1)
+    rh_rgain = struct.unpack('<h', infile.read(2))[0] # offset to range gain function
+    rh_nrgain = struct.unpack('<h', infile.read(2))[0] # size of range gain function
     rh_text = struct.unpack('<h', infile.read(2))[0] # offset to text
     rh_ntext = struct.unpack('<h', infile.read(2))[0] # size of text
     rh_proc = struct.unpack('<h', infile.read(2))[0] # offset to processing history
@@ -315,15 +314,18 @@ def readdzt(infile):
     #rhf_coordx = struct.unpack('<ff', infile.read(8))[0] # this is definitely useless
     infile.seek(98) # start of antenna bit
     rh_ant = infile.read(14).decode('utf-8').split('\x00')[0]
-    
-    rh_antname = rh_ant
-    
+    rh_antname = rh_ant.rsplit('x')[0]
     infile.seek(113) # skip to something that matters
     vsbyte = infile.read(1) # byte containing versioning bits
     rh_version = ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
     rh_system = ord(vsbyte) >> 3 # the system type (values in UNIT={...} dictionary above)
-    del vsbyte
-    
+
+    infile.seek(rh_rgain)
+    try:
+        rgain_bytes = infile.read(rh_nrgain)
+    except:
+        pass
+
     if rh_data < MINHEADSIZE: # whether or not the header is normal or big-->determines offset to data array
         infile.seek(MINHEADSIZE * rh_data)
     else:
@@ -338,9 +340,12 @@ def readdzt(infile):
 
     cr = 1 / math.sqrt(Mu_0 * Eps_0 * rhf_epsr)
 
+    sec = data.shape[1]/float(rhf_sps)
+
     # create dictionary
     header = {
-        'rh_antname': rh_antname.rsplit('x')[0],
+        # commonly used vars
+        'rh_antname': rh_antname,
         'rh_system': rh_system,
         'rh_version': rh_version,
         'rh_nchan': rh_nchan,
@@ -355,21 +360,34 @@ def readdzt(infile):
         'rhb_mdt': rhb_mdt,
         'rhf_depth': rhf_depth,
         'rhf_position': rhf_position,
+        'sec': sec,
+        # less frequently used vars
+        'rh_tag': rh_tag,
+        'rh_data': rh_data,
+        'rh_zero': rh_zero,
+        'rhf_mpm': rhf_mpm,
+        'rh_data': rh_data,
+        'rh_npass': rh_npass,
+        'rhb_cdt': rhb_cdt,
+        'rh_ntext': rh_ntext,
+        'rh_proc': rh_proc,
+        'rh_nproc': rh_nproc,
+        'rhf_top': rhf_top,
+        'rh_proc': rh_proc,
+        'rh_ant': rh_ant,
+        'rh_rgain': rh_rgain,
+        'rh_nrgain': rh_nrgain,
+        # passed vars
+        'infile': infile.name,
     }
 
     return [header, data]
 
 def header_info(header, data):
     '''
-    function to unpack and return things we need from the header, and the data itself
-    currently unused but potentially useful lines:
-    # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s' # the structure of the bytewise header and "gps data" as I understand it - 1024 bytes
-    # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2) # the variable size of bytes in the header (most of the time) - 128 bytes
-    # print('total header structure size: '+str(calcsize(headerstruct)))
-    # packed_size = 0
-    # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
-    # print('fixed header size: '+str(packed_size)+'\n')
+    function to print relevant header data
     '''
+    print('reading header information...')
     print('input file:         %s' % header['infile'])
     print('system:             %s' % UNIT[header['rh_system']])
     print('antenna:            %s' % header['rh_antname'])
@@ -397,8 +415,8 @@ def header_info(header, data):
         print('traces:             %i' % int(data.shape[1]/header['rh_nchan']))
     else:
         print('traces:             %f' % int(data.shape[1]/header['rh_nchan']))
-    print('seconds:            %.8f' % line_dur)
-    print('samp/m:             %.2f' % (float(rhf_spm)))
+    print('seconds:            %.8f' % (header['sec']))
+    print('samp/m:             %.2f (zero unless DMI present)' % (float(header['rhf_spm']))) # I think...
 
 
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=10,
@@ -418,28 +436,26 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
 
     if infile:
         # read the file
-        if verbose:
-            print('reading header information...')
         try:
             with open(infile, 'rb') as f:
                 # open the binary, attempt reading chunks
                 r = readdzt(f)
                 if verbose:
-                    print(r)
+                    print(header_info(r[0], r[1]))
         except IOError as e: # the user has selected an inaccessible or nonexistent file
             print("i/o error: DZT file is inaccessable or does not exist")
             print('detail: ' + str(e) + '\n')
-            print(HELP_TEXT)
+            print(config.help_text)
             sys.exit(2)
     else:
         print('error: no input file was specified')
-        print(HELP_TEXT)
+        print(config.help_text)
         sys.exit(2)
 
     try:
         rhf_sps = r[0]['rhf_sps']
         rhf_spm = r[0]['rhf_spm']
-        line_dur = r[1].shape[1]/rhf_sps
+        line_dur = r[0]['sec']
         if antfreq != None:
             freq = antfreq
             print('user specified antenna frequency: %s' % antfreq)
@@ -448,11 +464,11 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 freq = ANT[r[0]['rh_antname']]
             except ValueError as e:
                 print('WARNING: could not read frequency for given antenna name.\nerror info: %s' % e)
-                print(HELP_TEXT)
+                print(config.help_text)
                 sys.exit(2)
         else:
             print('no frequency information could be read from the header.\nplease specify the frequency of the antenna in MHz using the -a flag.')
-            print(HELP_TEXT)
+            print(config.help_text)
             sys.exit(2)
     # an except should go here
 
@@ -556,7 +572,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plot=False, figsize=
                 segy output is not yet available
                 '''
                 print('SEG-Y is not yet supported, please choose another format.')
-                print(help_text)
+                print(config.help_text)
                 sys.exit(2)
             print('done exporting.')
         if plot:
@@ -701,7 +717,6 @@ def main():
     '''
     gathers and parses arguments to create function calls
     '''
-    print(NAME + ' ' + VERSION)
 
     verbose = False
     stack = 1
@@ -720,13 +735,11 @@ def main():
     except getopt.GetoptError as e:
         print('error: invalid argument(s) supplied')
         print('error text: %s' % e)
-        print(HELP_TEXT)
+        print(config.help_text)
         sys.exit(2)
     for opt, arg in opts: 
         if opt in ('-h', '--help'): # the help case
-            print(u'Copyleft %s %s %s' % (u'\U0001F12F', AUTHOR, YEAR))
-            print(AFFIL + '\n')
-            print(HELP_TEXT)
+            print(config.help_text)
             sys.exit()
         if opt in ('-v', '--verbose'):
             verbose = True
@@ -745,7 +758,7 @@ def main():
                 antfreq = round(float(abs(arg)),1)
             except:
                 print('error: %s is not a valid decimal or integer frequency value.' % arg)
-                print(HELP_TEXT)
+                print(config.help_text)
                 sys.exit(2)
         if opt in ('-f', '--format'): # the format string
             # check whether the string is a supported format
@@ -761,10 +774,10 @@ def main():
                     plot = True
                 else:
                     # else the user has given an invalid format
-                    print(HELP_TEXT)
+                    print(config.help_text)
                     sys.exit(2)
             else:
-                print(HELP_TEXT)
+                print(config.help_text)
                 sys.exit(2)
         if opt in ('-s', '--stack'):
             if arg:
@@ -775,7 +788,7 @@ def main():
                         stack = abs(int(arg))
                     except ValueError:
                         print('error: stacking argument must be a positive integer or "auto".')
-                        print(HELP_TEXT)
+                        print(config.help_text)
                         sys.exit(2)
         if opt in ('-r', '--bgr'):
             bgr = True
@@ -813,7 +826,7 @@ def main():
                         figsize = abs(int(arg))
                     except ValueError:
                         print('error: plot size argument must be a positive integer or "auto".')
-                        print(HELP_TEXT)
+                        print(config.help_text)
                         sys.exit(2)
         if opt in ('-d', '--dmi'):
             #dmi = True
@@ -837,24 +850,16 @@ def main():
 
     # call the function with the values we just got
     if infile:
+        print(config.dist)
         readgssi(infile=infile, outfile=outfile, antfreq=antfreq, frmt=frmt, plot=plot,
                  figsize=figsize, stack=stack, verbose=verbose, histogram=histogram,
                  colormap=colormap, colorbar=colorbar, gain=gain, bgr=bgr, zero=zero,
                  dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax)
     else:
-        print(HELP_TEXT)
+        print(config.help_text)
 
 if __name__ == "__main__":
     '''
     this is the command line call use case. can't directly put code of main here.
     '''
     main()
-
-elif __name__ == '__version__':
-    print(VERSION)
-
-else:
-    '''
-    this is the module/import use case
-    '''
-    pass
