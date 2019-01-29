@@ -299,9 +299,13 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
                                        verbose=verbose)
 
         # name the output file
-        if outfile:
+        if outfile and (len(chans) > 1):
             outfile_ext = os.path.splitext(outfile)[1]
             outfile_basename = '%sMHz' % (os.path.join(os.path.splitext(outfile)[0] + '_' + str(ANT[r[0]['rh_antname']][ar])))
+            plot_outfile = outfile_basename
+        elif outfile and (len(chans) == 1):
+            outfile_ext = os.path.splitext(outfile)[1]
+            outfile_basename = '%s' % (os.path.join(os.path.splitext(outfile)[0]))
             plot_outfile = outfile_basename
         else:
             '''
