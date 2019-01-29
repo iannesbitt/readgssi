@@ -206,6 +206,7 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 - color bar shows up too large on some plots (matplotlib bug)
 
 ## future
+- automatic script testing for smoother dev
 - GPS transcription (read from associated DZG file or CSV with fields like `mark name, lon, lat, elev, time`)
 - GUI-based geologic/dilectric layer picking
   - layer velocity calculation (using minimum of clustered hyperbola tail angle measurements, or manual input)
