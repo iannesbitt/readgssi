@@ -284,9 +284,11 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
         '''
 
         # execute filtering functions if necessary
-        if stack:
+        if stack > 1:
             # horizontal stacking
             img_arr[ar], stack = filtering.stack(ar=img_arr[ar], stack=stack, verbose=verbose)
+        else:
+            stack = 1
         if bgr:
             # background removal
             img_arr[ar] = filtering.bgr(ar=img_arr[ar], verbose=verbose)
@@ -312,7 +314,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             ~~~ The Seth Campbell Honorary Naming Scheme ~~~
             '''
             outfile = '%sMHz' % (os.path.join(infile_basename + '_' + str(ANT[r[0]['rh_antname']][ar])))
-            if zero > 1:
+            if zero and (zero > 1):
                 outfile = '%sTZ' % (outfile)
             if stack > 1:
                 outfile = '%sS%s' % (outfile, stack)
