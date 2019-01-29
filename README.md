@@ -40,7 +40,7 @@ That should allow you to run the commands below.
 
 #### Note:
 
-If you choose to install a specific commit rather than the [latest working release of this software](https://dx.doi.org/10.5281/zenodo.1439119), you may download this package, unzip to your home folder, open a command line, then install in the following way:
+If you choose to install a specific commit rather than the [latest working release of this software](https://pypi.org/project/readgssi), you may download this package, unzip to your home folder, open a command line, then install in the following way:
 
 ```bash
 pip install ~/readgssi
@@ -202,10 +202,14 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 - script now tries to automatically calculate timezero using (nsamp\*range)/position
 
 #### known bugs:
-- translation to anything but csv is broken (hope to have time to at least fix HDF5 output soon)
+- translation to anything but csv is not successfully implemented yet (hope to have time to at least fix HDF5 output soon)
 - color bar shows up too large on some plots (matplotlib bug)
 
 ## future
 - GPS transcription (read from associated DZG file or CSV with fields like `mark name, lon, lat, elev, time`)
-- interactive geologic/dilectric layer picking, layer velocity calculation (using minimum of clustered hyperbola tail angle measurements, or manual input), velocity-based depth adjustments, velocity gradient/angle of incidence-based array migration
-- supplementing a flag indicating geophysical format (HDF5, SEGY, etc.) will write to that format
+- GUI-based geologic/dilectric layer picking
+  - layer velocity calculation (using minimum of clustered hyperbola tail angle measurements, or manual input)
+  - velocity-based depth adjustments
+  - ability to incorporate ground truth measurements
+- velocity gradient/angle of incidence-based array migration
+- translation to common geophysical formats (HDF5, SEGY, etc.)
