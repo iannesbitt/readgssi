@@ -2,6 +2,7 @@ from datetime import datetime
 from readgssi.__init__ import __version__, name
 import pkg_resources
 
+
 dist = pkg_resources.get_distribution(name)
 year = datetime.now().year
 author = 'Ian Nesbitt'

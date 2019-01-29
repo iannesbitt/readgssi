@@ -97,7 +97,12 @@ Simply specifying an input DZT file like in the above command (`-i file`) will d
 ```bash
 readgssi -i DZT__001.DZT -o test.csv -f CSV
 ```
-Translates radar data array to CSV format, if that's your cup of tea. No header information is included in the CSV, however.
+Translates radar data array to CSV format, if that's your cup of tea. One might use this to export to Matlab. One CSV will be written per channel. The script will rename the output to 'test_100MHz.csv' automatically. No header information is included in the CSV.
+
+```bash
+readgssi -i DZT__001.DZT -s 8 -w -r -o test.csv -f CSV
+```
+Applies 8x stacking, dewow, and background removal filters before exporting to CSV.
 
 ### plotting
 #### example 1A
@@ -145,6 +150,22 @@ The script does the same thing, except it applies horizontal mean background rem
 ### citation suggestion:
 Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-source tool to read and plot GSSI ground-penetrating radar data. [doi:10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)
 
+## changes since 0.0.8
+- moved plotting routines to new module `plot.py`
+- moved translations to new module `translate.py`
+- moved gps reading to new module `gps.py`
+- moved geophysical and GSSI constants to new module `constants.py`
+- moved stacking algorithm to `filtering.py`
+- significantly improved layout of main processing function `readgssi.readgssi()`
+  - script flow is *so much more natural now*
+  - made way for future additions like interactive picking
+- csv output improvements
+  - added the ability to filter prior to csv export (duh?)
+  - added the ability to export multiple csv files when more than one radar channel is present
+- improved histogram plotting
+- improved array handling when passing to functions
+- changed the way files are named if no output file is passed (the Seth Campbell Honorary Naming Scheme)
+
 ## changes since 0.0.7
 - moved filtering routines to new module `filtering.py`
 - added a way to call `readgssi.__version__`
@@ -181,12 +202,9 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 
 #### known bugs:
 - translation to anything but csv is broken (hope to have time to at least fix HDF5 output soon)
-  - csv translation does not work for dual-channel radar devices (exports to file but channels are merged end-to-end)
-- color bar shows up too large on some plots (no known fix yet)
-- histogram only shows pre-gain data distribution
+- color bar shows up too large on some plots (matplotlib bug)
 
 ## future
 - GPS transcription (read from associated DZG file or CSV with fields like `mark name, lon, lat, elev, time`)
 - interactive geologic/dilectric layer picking, layer velocity calculation (using minimum of clustered hyperbola tail angle measurements, or manual input), velocity-based depth adjustments, velocity gradient/angle of incidence-based array migration
 - supplementing a flag indicating geophysical format (HDF5, SEGY, etc.) will write to that format
-- break parts of script out into independent functions and supporting python files
