@@ -1,7 +1,7 @@
 # readgssi
 *Copyleft 🄯 2017-2019*
 
-![Example Radargram](https://github.com/iannesbitt/readgssi/raw/master/examples/1.png)
+![Example Radargram](https://github.com/iannesbitt/readgssi/raw/master/examples/main.png)
 
 [![PyPI version](https://img.shields.io/pypi/v/readgssi.svg?colorB=limegreen&label=pypi%20package)](https://badge.fury.io/py/readgssi)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.1439119.svg)](https://dx.doi.org/10.5281/zenodo.1439119)
@@ -107,16 +107,17 @@ Applies 8x stacking, dewow, and background removal filters before exporting to C
 ### plotting
 #### example 1A
 ```bash
-readgssi -i DZT__001.DZT -p 5 -s auto -c viridis
+readgssi -i DZT__001.DZT -p 5 -s auto -c viridis -m
 ```
-The above command will cause `readgssi` to save and show a plot named "DZT__001_100MHz.png" with a y-size of 6 inches at 150 dpi (`-p 6`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing, approximately 2.5\*y (`-s auto`). The plot will be rendered in the viridis color scheme, which is the default for matplotlib.
-![Example 1a](https://github.com/iannesbitt/readgssi/raw/master/examples/DZT__001_100MHz.png)
+The above command will cause `readgssi` to save and show a plot named "DZT__001_100MHz.png" with a y-size of 6 inches at 150 dpi (`-p 6`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing, approximately 2.5\*y (`-s auto`). The plot will be rendered in the viridis color scheme, which is the default for matplotlib. The `-m` flag will draw a histogram for each data channel.
+![Example 1a](https://github.com/iannesbitt/readgssi/raw/master/examples/1a.png)
+![Example 1a histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/1a-h.png)
 
 #### example 1B
 ```bash
 readgssi -i DZT__001.DZT -o 1b.png -p 5 -s auto -c viridis -g 50 -m -r -w
 ```
-This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. The `-m` flag will draw a histogram for each data channel. Finally, `readgssi` will run the background removal (`-r`) and dewow (`-w`) filters.
+This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. Next `readgssi` will run the background removal (`-r`) and dewow (`-w`) filters. Finally, the `-m` flag will draw a histogram for each data channel. Note how the histogram changes when filters are applied.
 ![Example 1b](https://github.com/iannesbitt/readgssi/raw/master/examples/1b.png)
 ![Example 1b histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/1b-h.png)
 
