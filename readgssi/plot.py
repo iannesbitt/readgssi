@@ -22,6 +22,8 @@ def histogram(ar, verbose=True):
 
     if verbose:
         fx.printmsg('drawing log histogram...')
+        fx.printmsg('mean:              %s (if high, use background removal)' % mean)
+        fx.printmsg('stdev:             %s' % std)
         fx.printmsg('lower limit:       %s [mean - (3 * stdev)]' % ll)
         fx.printmsg('upper limit:       %s [mean + (3 * stdev)]' % ul)
     fig = plt.figure()
@@ -98,7 +100,7 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack='aut
         fig.colorbar(img)
     if verbose:
         plt.title('%s - %s MHz - stacking: %s - gain: %s' % (os.path.basename(header['infile']), freq, stack, gain))
-    plt.tight_layout(pad=figsize/2.)
+    plt.tight_layout(pad=fig.get_size_inches()[1]/2.)
     if outfile != 'readgssi_plot':
         # if outfile doesn't match this then save fig with the outfile name
         if verbose:

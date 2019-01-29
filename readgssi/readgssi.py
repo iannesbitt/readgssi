@@ -319,11 +319,11 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             if bgr:
                 outfile = '%sBGR' % (outfile)
             if dewow:
-                outfile = '%sDEWOW' % (outfile)
+                outfile = '%sDW' % (outfile)
             if freqmin and freqmax:
                 outfile = '%sBP%s-%s' % (outfile, freqmin, freqmax)
             if plotting:
-                plot_outfile = '%sGAIN%s' % (outfile, gain)
+                plot_outfile = '%sG%s' % (outfile, int(gain))
 
         if frmt != None:
             if verbose:
@@ -462,7 +462,7 @@ def main():
             plotting = True
             if arg:
                 if 'auto' in arg.lower():
-                    figsize = str(arg).lower()
+                    figsize = 8
                 else:
                     try:
                         figsize = abs(int(arg))
