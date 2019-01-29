@@ -22,10 +22,10 @@ def histogram(ar, verbose=True):
 
     if verbose:
         fx.printmsg('drawing log histogram...')
-        fx.printmsg('mean:              %s (if high, use background removal)' % mean)
-        fx.printmsg('stdev:             %s' % std)
-        fx.printmsg('lower limit:       %s [mean - (3 * stdev)]' % ll)
-        fx.printmsg('upper limit:       %s [mean + (3 * stdev)]' % ul)
+        fx.printmsg('mean:               %s (if high, use background removal)' % mean)
+        fx.printmsg('stdev:              %s' % std)
+        fx.printmsg('lower limit:        %s [mean - (3 * stdev)]' % ll)
+        fx.printmsg('upper limit:        %s [mean + (3 * stdev)]' % ul)
     fig = plt.figure()
     hst = plt.hist(ar.ravel(), bins=256, range=(ll, ul), fc='k', ec='k')
     plt.yscale('log', nonposy='clip')
@@ -78,10 +78,10 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack='aut
     ul = mean + (std * 3) # upper color limit
     if verbose:
         fx.printmsg('image stats')
-        fx.printmsg('mean:              %s (if high, use background removal)' % mean)
-        fx.printmsg('stdev:             %s' % std)
-        fx.printmsg('lower color limit: %s [mean - (3 * stdev)]' % ll)
-        fx.printmsg('upper color limit: %s [mean + (3 * stdev)]' % ul)
+        fx.printmsg('mean:               %s (if high, use background removal)' % mean)
+        fx.printmsg('stdev:              %s' % std)
+        fx.printmsg('lower color limit:  %s [mean - (3 * stdev)]' % ll)
+        fx.printmsg('upper color limit:  %s [mean + (3 * stdev)]' % ul)
 
     try:
         if verbose:
