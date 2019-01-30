@@ -151,6 +151,15 @@ The script does the same thing, except it applies horizontal mean background rem
 ### citation suggestion:
 Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-source tool to read and plot GSSI ground-penetrating radar data. [doi:10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)
 
+## changes since 0.0.9
+- a patch was added that includes several important bug fixes
+  - added support for the `400MHz` antenna type
+  - fixed a bug that affected the stacking routine
+  - fixed a bug with the time zero variable not being available when implementing the naming scheme
+- fixed a bug with plotting that resulted from a key error in the header variable
+- moved dzt reading-related functions to `dzt.py`
+- changed tab spacing aesthetics in two plotting routines
+
 ## changes since 0.0.8
 - moved plotting routines to new module `plot.py`
 - moved translations to new module `translate.py`
