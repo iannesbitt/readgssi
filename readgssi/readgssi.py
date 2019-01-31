@@ -57,26 +57,28 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
     else:
         raise IOError('ERROR: no input file specified')
 
-        rhf_sps = r[0]['rhf_sps']
-        rhf_spm = r[0]['rhf_spm']
-        line_dur = r[0]['sec']
-        if r[0]['rh_antname']:
-            try:
-                freq = ANT[r[0]['rh_antname']]
-            except ValueError as e:
-                fx.printmsg('WARNING: could not read frequency for given antenna name.\nerror info: %s' % e)
-                if antfreq:
-                    fx.printmsg('using user-specified antenna frequency.')
-                    freq = antfreq
-                else:
-                    fx.printmsg('ERROR: no frequency information could be read from the header.')
-                    raise AttributeError('no valid frequency information is available in the header. please specify the frequency of the antenna in MHz using the -a flag.')
-            finally:
-                if e:
-                    fx.printmsg('error details: %s' % (e))
-                    fx.printmsg('more info: rh_ant=%s, rh_antname=%s' % (r[0]['rh_ant'], r[0]['rh_antname']))
-                    fx.printmsg("please submit a bug report with this error, the antenna name and frequency you're using, and if possible the offending DZT file at https://github.com/iannesbitt/readgssi/issues/new")
-                    fx.pringmst('or send via email to ian (dot) nesbitt (at) gmail (dot) com.')
+    rhf_sps = r[0]['rhf_sps']
+    rhf_spm = r[0]['rhf_spm']
+    line_dur = r[0]['sec']
+    for chan in list(range(r[0]['rh_nchan'])):
+        try:
+            ANT[r[0]['rh_antname'][chan]]
+        except KeyError as e:
+            print('--------------------WARNING - PLEASE READ---------------------')
+            fx.printmsg('WARNING: could not read frequency for antenna name %s' % e)
+            if antfreq:
+                fx.printmsg('using user-specified antenna frequency.')
+                r[0]['antfreq'] = antfreq
+            else:
+                fx.printmsg('WARNING: trying to use frequency of %s MHz (estimated)...' % (r[0]['antfreq'][chan]))
+            fx.printmsg('more info: rh_ant=%s' % (r[0]['rh_ant']))
+            fx.printmsg('           known_ant=%s' % (r[0]['known_ant']))
+            fx.printmsg("please submit a bug report with this warning, the antenna name and frequency")
+            fx.printmsg('at https://github.com/iannesbitt/readgssi/issues/new')
+            fx.printmsg('or send via email to ian (dot) nesbitt (at) gmail (dot) com.')
+            fx.printmsg('if possible, please attach a ZIP file with the offending DZT inside.')
+            print('--------------------------------------------------------------')
+
 
     # create a list of n arrays, where n is the number of channels
     arr = r[1].astype(np.int32)
@@ -98,6 +100,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
         filter and construct an output file or plot from the current channel's array
         '''
 
+        fx.printmsg('beginning processing for channel %s (antenna %s)' % (ar, r[0]['rh_antname'][ar]))
         # execute filtering functions if necessary
         if stack > 1:
             # horizontal stacking
@@ -116,9 +119,14 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
                                        verbose=verbose)
 
         # name the output file
+        if ar == 0:
+            orig_outfile = outfile # preserve the original
+        else:
+            outfile = orig_outfile
+
         if outfile and (len(chans) > 1):
             outfile_ext = os.path.splitext(outfile)[1]
-            outfile_basename = '%sMHz' % (os.path.join(os.path.splitext(outfile)[0] + '_' + str(ANT[r[0]['rh_antname']][ar])))
+            outfile_basename = '%sMHz' % (os.path.join(os.path.splitext(outfile)[0] + '_' + str(r[0]['antfreq'][ar])))
             plot_outfile = outfile_basename
         elif outfile and (len(chans) == 1):
             outfile_ext = os.path.splitext(outfile)[1]
@@ -128,7 +136,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             '''
             ~~~ The Seth Campbell Honorary Naming Scheme ~~~
             '''
-            outfile = '%sMHz' % (os.path.join(infile_basename + '_' + str(ANT[r[0]['rh_antname']][ar])))
+            outfile = '%sMHz' % (os.path.join(infile_basename + '_' + str(r[0]['antfreq'][ar])))
             if zero and (zero > 1):
                 outfile = '%sTZ' % (outfile)
             if stack > 1:
@@ -161,14 +169,14 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
                     translate.segy(ar=img_arr[ar], outfile_abspath=outfile_abspath, verbose=verbose)
 
         if plotting:
-            plot.radargram(ar=img_arr[ar], header=r[0], freq=ANT[r[0]['rh_antname']][ar], verbose=verbose, figsize=figsize, stack=stack,
+            plot.radargram(ar=img_arr[ar], header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose, figsize=figsize, stack=stack,
                            gain=gain, colormap=colormap, colorbar=colorbar, noshow=noshow, outfile=plot_outfile)
 
         if histogram:
             plot.histogram(ar=img_arr[ar], verbose=verbose)
 
         if specgram:
-            plot.spectrogram(ar=img_arr[ar], header=header, freq=ANT[r[0]['rh_antname']][ar], verbose=verbose)
+            plot.spectrogram(ar=img_arr[ar], header=header, freq=r[0]['antfreq'][ar], verbose=verbose)
 
     
 def main():

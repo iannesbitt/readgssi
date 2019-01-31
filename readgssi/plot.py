@@ -78,7 +78,7 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack='aut
     ul = mean + (std * 3) # upper color limit
     if verbose:
         fx.printmsg('image stats')
-        fx.printmsg('mean:               %s (if high, use background removal)' % mean)
+        fx.printmsg('mean:               %s' % mean)
         fx.printmsg('stdev:              %s' % std)
         fx.printmsg('lower color limit:  %s [mean - (3 * stdev)]' % ll)
         fx.printmsg('upper color limit:  %s [mean + (3 * stdev)]' % ul)
