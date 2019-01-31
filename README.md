@@ -159,6 +159,10 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 - fixed a bug with plotting that resulted from a key error in the header variable
 - moved dzt reading-related functions to `dzt.py`
 - changed tab spacing aesthetics in two plotting routines
+- fixed a bug that caused errors reading multi-channel files
+- script has more degrees of freedom while handling unknown antenna types
+  - script should handle unknown antennas gracefully
+  - script will try to extract frequency information from antenna name (harder than it sounds given GSSI naming inconsistency)
 
 ## changes since 0.0.8
 - moved plotting routines to new module `plot.py`
