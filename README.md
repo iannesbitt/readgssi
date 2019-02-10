@@ -165,6 +165,7 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
   - script will try to extract frequency information from antenna name (harder than it sounds given GSSI naming inconsistency)
 - added ability to reverse radargram (i.e. flip horizontal left to right)
 - fixed bug with command line autostack
+- changed command line verbose messages
 
 ## changes since 0.0.8
 - moved plotting routines to new module `plot.py`

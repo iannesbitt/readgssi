@@ -108,7 +108,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
         else:
             stack = 1
         if reverse:
-            img_arr[ar] = filtering.flip(img_arr[ar].T).T
+            img_arr[ar] = filtering.flip(img_arr[ar])
         if bgr:
             # background removal
             img_arr[ar] = filtering.bgr(ar=img_arr[ar], verbose=verbose)
@@ -264,7 +264,6 @@ def main():
         if opt in ('-w', '--dewow'):
             dewow = True
         if opt in ('-R', '--reverse'):
-            fx.printmsg('reverse flag set')
             reverse = True
         if opt in ('-z', '--zero'):
             if arg:

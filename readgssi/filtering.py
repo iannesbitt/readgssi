@@ -64,14 +64,14 @@ def stack(ar, stack='auto', verbose=False):
     stack='auto' results in an approximately 2.5:1 x:y axis ratio
     '''
     if str(stack).lower() in 'auto':
-        if verbose:
-            fx.printmsg('attempting automatic stacking method...')
+        am = '(automatic)'
         ratio = (ar.shape[1]/ar.shape[0])/(75/30)
         if ratio > 1:
             stack = int(ratio)
         else:
             stack = 1
     else:
+        am = '(manually set)'
         try:
             stack = int(stack)
         except ValueError:
@@ -81,7 +81,7 @@ def stack(ar, stack='auto', verbose=False):
             stack = 1
     if stack > 1:
         if verbose:
-            fx.printmsg('stacking %sx' % stack)
+            fx.printmsg('stacking %sx %s...' % (stack, am))
         i = list(range(stack))
         l = list(range(int(ar.shape[1]/stack)))
         arr = np.copy(ar[:,::stack])
@@ -95,5 +95,5 @@ def stack(ar, stack='auto', verbose=False):
     return arr, stack
 
 def flip(ar):
-	fx.printmsg('flipping radargram')
-	return ar[::-1]
+	fx.printmsg('flipping radargram...')
+	return ar.T[::-1].T
