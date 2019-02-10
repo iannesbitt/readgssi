@@ -29,6 +29,7 @@ optional flags:
 -c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
 -g, --gain      | positive (+)integer |  gain value (higher=greater contrast, default: 1)
 -r, --bgr       |                     |  horizontal background removal algorithm (useful to remove ringing)
+-R, --reverse   |                     |  reverse (flip radargram horizontally)
 -w, --dewow     |                     |  trinomial dewow algorithm
 -t, --bandpass  | +int-+int (MHz)     |  butterworth bandpass filter (positive integer range in megahertz; ex. 100-145)
 -b, --colorbar  |                     |  add a colorbar to the radar figure

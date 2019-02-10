@@ -93,3 +93,7 @@ def stack(ar, stack='auto', verbose=False):
         else:
             fx.printmsg('WARNING: no stacking applied. be warned: this can result in very large and awkwardly-shaped figures.')
     return arr, stack
+
+def flip(ar):
+	fx.printmsg('flipping radargram')
+	return ar[::-1]

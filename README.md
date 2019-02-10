@@ -163,6 +163,8 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 - script has more degrees of freedom while handling unknown antenna types
   - script should handle unknown antennas gracefully
   - script will try to extract frequency information from antenna name (harder than it sounds given GSSI naming inconsistency)
+- added ability to reverse radargram (i.e. flip horizontal left to right)
+- fixed bug with command line autostack
 
 ## changes since 0.0.8
 - moved plotting routines to new module `plot.py`
