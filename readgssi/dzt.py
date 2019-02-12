@@ -3,6 +3,7 @@ import math
 import numpy as np
 from datetime import datetime
 from itertools import takewhile
+from readgssi.gps import readdzg
 import readgssi.functions as fx
 from readgssi.constants import *
 
@@ -53,6 +54,7 @@ def readdzt(infile):
     # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
     # fx.printmsg('fixed header size: '+str(packed_size)+'\n')
     '''
+    infile_gps = os.path.splitext(infile)[0] + ".DZG"
     infile = open(infile, 'rb')
     header = {}
     header['infile'] = infile.name
@@ -146,7 +148,17 @@ def readdzt(infile):
 
     infile.close()
 
-    return [header, data]
+
+    try:
+        gps = readdzg(infile_gps)
+    except IOError:
+        if verbose:
+            fx.printmsg('no DZG file found')
+            gps = []
+        else:
+            pass
+
+    return [header, data, gps]
 
 def readdzt_gprpy(infile):
     r = readdzt(infile)

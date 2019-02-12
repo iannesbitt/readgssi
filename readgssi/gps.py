@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 import pynmea2
 import numpy as np
+from geopy.distance import geodesic
 import readgssi.functions as fx
+from math import sin, cos, sqrt, atan2, radians
 
 '''
 contains functions for reading gps data from various formats
@@ -12,7 +14,7 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     a parser to extract gps data from DZG file format
     DZG contains raw NMEA sentences, which should include RMC and GGA
     fi = file containing gps information
-    frmt = format ('dzg' = DZG file containing gps sentence strings (see below); 'csv' = comma separated file with)
+    frmt = format ('dzg' = DZG file containing gps sentence strings (see below); 'csv' = comma separated file with: lat,lon,elev,time)
     spu = samples per unit (second or meter)
     traces = the number of traces in the file
     Reading DZG
@@ -30,15 +32,20 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     rownp = 0 # array row number
     rowrmc = 0 # rmc record iterated through (gps file)
     rowgga = 0 # gga record
+    sec_elapsed = 0 # number of seconds since the start of the line
+    m = 0 # meters traveled over entire line
+    m0 = 0 # meters traveled as of last loop
     timestamp = False
     prevtime = False
     td = False
     prevtrace = False
     rmc = False
     antname = False
+    fill_prev_vel = False
     lathem = 'north'
     lonhem = 'east'
     x0, x1, y0, y1, z0, z1 = False, False, False, False, False, False # coordinates
+    x2, y2, z2, sec2 = 0, 0, 0, 0
     with open(fi, 'r') as gf:
         if frmt == 'dzg': # if we're working with DZG format
             for ln in gf: # loop through the first few sentences, check for RMC
@@ -68,7 +75,7 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
             gpssps = 1 / td.total_seconds() # GPS samples per second
             if verbose:
                 fx.printmsg('found %i GPS epochs at rate of %.1f Hz' % (rowrmc, gpssps))
-            dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('altitude', 'float32'), ('geoid_ht', 'float32'), ('qual', 'uint8'), ('num_sats', 'uint8'), ('hdop', 'float32'), ('gps_sec', 'float32'), ('timestamp', 'datetime64[us]')] # array columns
+            dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('altitude', 'float32'), ('velocity', 'float32'), ('geoid_ht', 'float32'), ('qual', 'uint8'), ('num_sats', 'uint8'), ('hdop', 'float32'), ('gps_sec', 'float32'), ('timestamp', 'datetime64[us]'), ('sec_elapsed', 'float32'), ('meters', 'float32')] # array columns
             arr = np.zeros((int(traces)+1000), dt) # numpy array with num rows = num gpr traces, and columns defined above
             if verbose:
                 fx.printmsg('creating array of %i interpolated gps locations...' % (traces))
@@ -78,7 +85,11 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
                     if ln.startswith('$GPRMC'):
                         msg = pynmea2.parse(ln.rstrip())
                         timestamp = TZ.localize(datetime.combine(msg.datestamp, msg.timestamp)) # set t1 for this loop
-                else: # if no RMC, we best hope there is no UTC 0:00:00 in the file.........
+                else: # if no RMC, we best hope there is no UTC 00:00:00 in the file.........
+                    fx.printmsg('WARNING: no RMC sentences found in GPS records. this could become an issue if your file goes through 00:00:00.')
+                    fx.printmsg("         if you get a time jump error please open a github issue at https://github.com/iannesbitt/readgssi/issues")
+                    fx.printmsg("         and attach the verbose output of this script plus a zip of the DZT and DZG files you're working with.")
+
                     if ln.startswith('$GPGGA'):
                         msg = pynmea2.parse(ln.rstrip())
                         timestamp = TZ.localize(msg.timestamp) # set t1 for this loop
@@ -107,9 +118,24 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
                             y = (y1 - y0) / (elapsed) * (t - prevtrace) + y0 # interpolate longitude
                             z = (z1 - z0) / (elapsed) * (t - prevtrace) + z0 # interpolate altitude
                             sec = (sec1 - sec0) / (elapsed) * (t - prevtrace) + sec0 # interpolate gps seconds
-                            tracetime = prevtime + timedelta(seconds=elapsedelta.total_seconds() * (t - prevtrace))
-                            tup = (t, x, y, z, gh, q, sats, dil, sec, tracetime)
+                            elapsed_resamp = elapsed * (t - prevtrace)
+                            tracetime = prevtime + elapsed_resamp
+                            if x2 > 0:
+                                m += geodesic((x, y, z), (x2, y2, z2)).meters
+                            else:
+                                m += geodesic((x1, y1, z1), (x0, y0, z0)).meters
+                            if m0 > 0:
+                                velocity = float((m0 - m) / (sec2 - sec))
+                                if fill_prev_vel == True:
+                                    arr[rownp-1]['velocity'] = velocity
+                                    fill_prev_vel = False
+                            else:
+                                velocity = 0
+                                fill_prev_vel = True
+                            tup = (t, x, y, z, velocity, gh, q, sats, dil, sec, tracetime, elapsed_resamp, m)
                             arr[rownp] = tup
+                            m0 = m
+                            x2, y2, z2, sec2 = x, y, z, sec
                             rownp += 1
                     else: # we're on the very first row
                         if verbose:
@@ -118,7 +144,7 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
                     prevtime = timestamp # set t0 for next loop
                     prevtrace = trace
             if verbose:
-                fx.printmsg('processed %i gps locations' % rownp)
+                fx.printmsg('processed %i gps locations' % (rownp))
             diff = rownp - traces
             shift, endshift = 0, 0
             if diff > 0:

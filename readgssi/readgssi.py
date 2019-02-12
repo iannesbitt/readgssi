@@ -24,6 +24,7 @@ import readgssi.functions as fx
 import readgssi.plot as plot
 from readgssi import translate
 from readgssi import filtering
+from readgssi import arrayops
 from readgssi import config
 from readgssi.constants import *
 from readgssi.dzt import *
@@ -104,11 +105,11 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
         # execute filtering functions if necessary
         if stack != 1:
            # horizontal stacking
-            img_arr[ar], stack = filtering.stack(ar=img_arr[ar], stack=stack, verbose=verbose)
+            img_arr[ar], stack = arrayops.stack(ar=img_arr[ar], stack=stack, verbose=verbose)
         else:
             stack = 1
         if reverse:
-            img_arr[ar] = filtering.flip(img_arr[ar])
+            img_arr[ar] = arrayops.flip(img_arr[ar], verbose=verbose)
         if bgr:
             # background removal
             img_arr[ar] = filtering.bgr(ar=img_arr[ar], verbose=verbose)
