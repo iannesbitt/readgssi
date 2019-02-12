@@ -21,7 +21,6 @@ readgssi -i input.DZT [OPTIONS]
 
 optional flags:
      OPTION     |      ARGUMENT       |       FUNCTIONALITY
--v, --verbose   |                     |  verbosity
 -o, --output    | file:  /dir/f.ext   |  specify an output file
 -f, --format    | string, eg. "csv"   |  specify output format (csv is the only working format currently)
 -p, --plot      | +integer or "auto"  |  plot will be x inches high (dpi=150), or "auto". default: 10
@@ -35,6 +34,7 @@ optional flags:
 -b, --colorbar  |                     |  add a colorbar to the radar figure
 -a, --antfreq   | positive integer    |  specify antenna frequency (read automatically if not given)
 -s, --stack     | +integer or "auto"  |  specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
+-N, --normalize | "auto" or .csv file |  if "auto", use DZG GPS file; otherwise must point at a csv file with lat, lon, and time fields to distance normalize with
 -m, --histogram |                     |  produce a histogram of data values
 -z, --zero      | positive integer    |  skip this many samples from the top of the trace downward (useful for removing transceiver delay)
 ''' % (__version__, u'\U0001F12F', author, year, affil)
