@@ -47,13 +47,12 @@ def reduce(ar, by=1, verbose=False):
     return ar[::by]
 
 def distance_normalize(ar, verbose=False):
-    if ar[2] == []
+    if ar[2] == []:
         if verbose:
             fx.printmsg('no gps information for distance normalization')
-        continue
-    norm_vel = ar[0]['rhf_sps'] * (ar[2]['sec_elapsed']/ar[2]['meters']) # should end up as array of samples per meter
-    # takes (array, [transform values to broadcast], axis)
-    ar[1] = np.repeat(ar[1], norm_vel, axis=1)
-    ar[1] = reduce(ar[1], by=np.max(norm_vel))
-
+    else:
+        norm_vel = ar[0]['rhf_sps'] * (ar[2]['sec_elapsed']/ar[2]['meters']) # should end up as array of samples per meter
+        # takes (array, [transform values to broadcast], axis)
+        ar[1] = np.repeat(ar[1], norm_vel, axis=1)
+        ar[1] = reduce(ar[1], by=np.max(norm_vel))
     return ar

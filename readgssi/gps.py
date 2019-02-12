@@ -9,7 +9,7 @@ from math import sin, cos, sqrt, atan2, radians
 contains functions for reading gps data from various formats
 '''
 
-def readdzg(fi, frmt, spu, traces, verbose=False):
+def readdzg(fi, frmt, header, verbose=False):
     '''
     a parser to extract gps data from DZG file format
     DZG contains raw NMEA sentences, which should include RMC and GGA
@@ -27,6 +27,11 @@ def readdzg(fi, frmt, spu, traces, verbose=False):
     RMC strings may also be useful for SOG and COG,
     ...but let's keep it simple for now.
     '''
+    traces = header['traces']
+    if header['rhf_spm'] == 0:
+        spu = header['rhf_sps']
+    else:
+        spu = header['rhf_spm']
     trace = 0 # the elapsed number of traces iterated through
     tracenum = 0 # the sequential increase in trace number
     rownp = 0 # array row number

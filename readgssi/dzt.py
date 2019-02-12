@@ -1,5 +1,6 @@
 import struct
 import math
+import os
 import numpy as np
 from datetime import datetime
 from itertools import takewhile
@@ -145,15 +146,20 @@ def readdzt(infile):
 
     header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
     header['sec'] = data.shape[1]/float(header['rhf_sps'])
+    header['traces'] = int(data.shape[1]/header['rh_nchan'])
 
     infile.close()
 
 
     try:
-        gps = readdzg(infile_gps)
+        gps = readdzg(infile_gps, 'dzg', header)
     except IOError:
         if verbose:
             fx.printmsg('no DZG file found')
+        try:
+            gps = readdzg(infile_gps, 'csv', header)
+        except Exception as e:
+            fx.printmsg('ERROR reading GPS CSV: %s' % e)
             gps = []
         else:
             pass

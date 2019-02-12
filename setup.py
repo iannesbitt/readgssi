@@ -15,7 +15,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/iannesbitt/readgssi",
     packages=setuptools.find_packages(),
-    install_requires=['obspy', 'numpy', 'matplotlib', 'pandas', 'h5py', 'pynmea2', 'pytz'],
+    install_requires=['obspy', 'numpy', 'geopy', 'matplotlib', 'pandas', 'h5py', 'pynmea2', 'pytz'],
     entry_points='''
         [console_scripts]
         readgssi=readgssi.readgssi:main
