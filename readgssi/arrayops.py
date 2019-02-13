@@ -1,4 +1,5 @@
 import readgssi.functions as fx
+import numpy as np
 
 def flip(ar, verbose=False):
     if verbose:

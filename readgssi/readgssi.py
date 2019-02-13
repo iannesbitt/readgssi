@@ -33,7 +33,7 @@ from readgssi.dzt import *
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figsize=10,
              stack=1, verbose=False, histogram=False, colormap='Greys', colorbar=False,
              zero=1, gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, dewow=False,
-             specgram=False, noshow=False):
+             normalize=False, specgram=False, noshow=False):
     '''
     primary radar processing function
 
@@ -46,7 +46,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             if verbose:
                 fx.printmsg('reading...')
                 fx.printmsg('input file:         %s' % (infile))
-            r = readdzt(infile)
+            r = readdzt(infile, gps=normalize, verbose=verbose)
             if verbose:
                 fx.printmsg('success. header values:')
                 header_info(r[0], r[1])
@@ -190,16 +190,17 @@ def main():
     verbose = True
     stack = 1
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
-    reverse, freqmin, freqmax, specgram, zero = None, None, None, None, None
+    reverse, freqmin, freqmax, specgram, zero, normalize = None, None, None, None, None, None
     colormap = 'Greys'
     gain = 1
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plotting=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hqdi:a:o:f:p:s:rRwnmc:bg:z:t:',
+        opts, args = getopt.getopt(sys.argv[1:],'hqdi:a:o:f:p:s:rRNwnmc:bg:z:t:',
             ['help','quiet','dmi','input=','antfreq=','output=','format=','plot=','stack=','bgr',
-            'reverse', 'dewow','noshow','histogram','colormap=','colorbar','gain=','zero=','bandpass='])
+            'reverse', 'normalize','dewow','noshow','histogram','colormap=','colorbar','gain=',
+            'zero=','bandpass='])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
         fx.printmsg('ERROR: invalid argument(s) supplied')
@@ -266,6 +267,8 @@ def main():
             dewow = True
         if opt in ('-R', '--reverse'):
             reverse = True
+        if opt in ('-N', '--normalize'):
+            normalize = True
         if opt in ('-z', '--zero'):
             if arg:
                 try:
@@ -327,7 +330,7 @@ def main():
         readgssi(infile=infile, outfile=outfile, antfreq=antfreq, frmt=frmt, plotting=plotting,
                  figsize=figsize, stack=stack, verbose=verbose, histogram=histogram,
                  colormap=colormap, colorbar=colorbar, reverse=reverse, gain=gain, bgr=bgr, zero=zero,
-                 dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax)
+                 normalize=normalize, dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax)
         if verbose:
             fx.printmsg('done with %s' % infile)
         print('')
@@ -338,6 +341,6 @@ def main():
 
 if __name__ == "__main__":
     '''
-    this is the command line call use case. can't directly put code of main here.
+    directs the command line call to the main argument parsing function.
     '''
     main()

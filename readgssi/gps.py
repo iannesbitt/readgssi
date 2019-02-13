@@ -1,8 +1,11 @@
 from datetime import datetime, timedelta
 import pynmea2
+import math
 import numpy as np
+import pandas as pd
 from geopy.distance import geodesic
 import readgssi.functions as fx
+from readgssi.constants import TZ
 from math import sin, cos, sqrt, atan2, radians
 
 '''
@@ -32,6 +35,9 @@ def readdzg(fi, frmt, header, verbose=False):
         spu = header['rhf_sps']
     else:
         spu = header['rhf_spm']
+    array = pd.DataFrame(columns=['datetimeutc', 'trace', 'longitude', 'latitude', # our dataframe
+                                  'altitude', 'velocity', 'sec_elapsed', 'meters'])
+
     trace = 0 # the elapsed number of traces iterated through
     tracenum = 0 # the sequential increase in trace number
     rownp = 0 # array row number
@@ -39,58 +45,58 @@ def readdzg(fi, frmt, header, verbose=False):
     rowgga = 0 # gga record
     sec_elapsed = 0 # number of seconds since the start of the line
     m = 0 # meters traveled over entire line
-    m0 = 0 # meters traveled as of last loop
+    m0, m1 = 0, 0 # meters traveled as of last, current loop
+    u = 0 # velocity
+    u0 = 0 # velocity on last loop
     timestamp = False
     prevtime = False
+    init_time = False
     td = False
     prevtrace = False
     rmc = False
-    antname = False
-    fill_prev_vel = False
     lathem = 'north'
     lonhem = 'east'
     x0, x1, y0, y1, z0, z1 = False, False, False, False, False, False # coordinates
     x2, y2, z2, sec2 = 0, 0, 0, 0
     with open(fi, 'r') as gf:
+        if verbose:
+            fx.printmsg('using gps file:     %s' % (fi))
         if frmt == 'dzg': # if we're working with DZG format
             for ln in gf: # loop through the first few sentences, check for RMC
                 if ln.startswith('$GPRMC'): # check to see if RMC sentence (should occur before GGA)
                     rmc = True
-                    if rowrmc == 10: # we'll assume that 10 samples is a safe distance into the file to measure frequency
-                        msg = pynmea2.parse(ln.rstrip()) # convert gps sentence to pynmea2 named tuple
-                        ts0 = datetime.combine(msg.datestamp, msg.timestamp) # row 0's timestamp
-                    if rowrmc == 11:
-                        msg = pynmea2.parse(ln.rstrip())
-                        ts1 = datetime.combine(msg.datestamp, msg.timestamp) # row 1's timestamp
-                        td = ts1 - ts0 # timedelta = datetime1 - datetime0
                     rowrmc += 1
                 if ln.startswith('$GPGGA'):
-                    if rowgga == 10:
+                    if rowgga == 0:
                         msg = pynmea2.parse(ln.rstrip()) # convert gps sentence to pynmea2 named tuple
-                        ts0 = datetime.combine(datetime(1980, 1, 1), msg.timestamp) # row 0's timestamp (not ideal)
-                    if rowgga == 11:
+                        ts0 = TZ.localize(datetime.combine(datetime(1980, 1, 1), msg.timestamp)) # row 0's timestamp (not ideal)
+                    if rowgga == 1:
                         msg = pynmea2.parse(ln.rstrip())
-                        ts1 = datetime.combine(datetime(1980, 1, 1), msg.timestamp) # row 1's timestamp (not ideal)
+                        ts1 = TZ.localize(datetime.combine(datetime(1980, 1, 1), msg.timestamp)) # row 1's timestamp (not ideal)
                         td = ts1 - ts0 # timedelta = datetime1 - datetime0
                     rowgga += 1
+            gpssps = 1 / td.total_seconds() # GPS samples per second
             if rowgga != rowrmc:
                 fx.printmsg("WARNING: GGA and RMC sentences are not recorded at the same rate! This could cause unforseen problems!")
-                fx.printmsg('rmc records: %i' % rowrmc)
-                fx.printmsg('gga records: %i' % rowgga)
-            gpssps = 1 / td.total_seconds() # GPS samples per second
+                fx.printmsg('    rmc: %i records' % rowrmc)
+                fx.printmsg('    gga: %i records' % rowgga)
             if verbose:
-                fx.printmsg('found %i GPS epochs at rate of %.1f Hz' % (rowrmc, gpssps))
-            dt = [('tracenum', 'float32'), ('lat', 'float32'), ('lon', 'float32'), ('altitude', 'float32'), ('velocity', 'float32'), ('geoid_ht', 'float32'), ('qual', 'uint8'), ('num_sats', 'uint8'), ('hdop', 'float32'), ('gps_sec', 'float32'), ('timestamp', 'datetime64[us]'), ('sec_elapsed', 'float32'), ('meters', 'float32')] # array columns
+                fx.printmsg('found %i GPS epochs at rate of ~%.1f Hz' % (rowrmc, gpssps))
+            dt = [('tracenum', 'float32'), ('lon', 'float32'), ('lat', 'float32'), ('altitude', 'float32'), ('velocity', 'float32'), ('timestamp', 'datetime64[us]'), ('sec_elapsed', 'float32'), ('meters', 'float32')] # array columns
             arr = np.zeros((int(traces)+1000), dt) # numpy array with num rows = num gpr traces, and columns defined above
             if verbose:
-                fx.printmsg('creating array of %i interpolated gps locations...' % (traces))
+                fx.printmsg('reading gps locations to array...')
             gf.seek(0) # back to beginning of file
+            rowgga = 0
             for ln in gf: # loop over file line by line
+                if ln.startswith('$GSSIS'):
+                    trace = int(ln.split(',')[1])
                 if rmc == True: # if there is RMC, we can use the full datestamp
                     if ln.startswith('$GPRMC'):
                         msg = pynmea2.parse(ln.rstrip())
                         timestamp = TZ.localize(datetime.combine(msg.datestamp, msg.timestamp)) # set t1 for this loop
-                else: # if no RMC, we best hope there is no UTC 00:00:00 in the file.........
+                        u = msg.spd_over_grnd * 0.514444444 # convert from knots to m/s
+                else: # if no RMC, we hope there is no UTC 00:00:00 in the file.........
                     fx.printmsg('WARNING: no RMC sentences found in GPS records. this could become an issue if your file goes through 00:00:00.')
                     fx.printmsg("         if you get a time jump error please open a github issue at https://github.com/iannesbitt/readgssi/issues")
                     fx.printmsg("         and attach the verbose output of this script plus a zip of the DZT and DZG files you're working with.")
@@ -99,71 +105,49 @@ def readdzg(fi, frmt, header, verbose=False):
                         msg = pynmea2.parse(ln.rstrip())
                         timestamp = TZ.localize(msg.timestamp) # set t1 for this loop
                 if ln.startswith('$GPGGA'):
-                    sec1 = float(ln.split(',')[1])
+                    sec1 = timestamp.timestamp()
                     msg = pynmea2.parse(ln.rstrip())
-                    x1, y1, z1, gh, q, sats, dil = float(msg.lon), float(msg.lat), float(msg.altitude), float(msg.geo_sep), int(msg.gps_qual), int(msg.num_sats), float(msg.horizontal_dil)
+                    x1, y1, z1 = float(msg.longitude), float(msg.latitude), float(msg.altitude)
                     if msg.lon_dir in 'W':
                         lonhem = 'west'
-                        x1 = -x1
                     if msg.lat_dir in 'S':
                         lathem = 'south'
-                        y1 = -y1
-                    if prevtime: # if this is our second or more GPS epoch, calculate delta trace and current trace
+                    if rowgga != 0:
+                        m += geodesic((y1, x1, z1), (y0, x0, z0)).meters
+                        if rmc == False:
+                            u = float((m - m0) / (sec1 - sec0))
                         elapsedelta = timestamp - prevtime # t1 - t0 in timedelta format
-                        elapsed = float((elapsedelta).total_seconds()) # seconds elapsed
+                        elapsed = float((timestamp-init_time).total_seconds()) # seconds elapsed
                         if elapsed > 3600.0:
                             fx.printmsg("WARNING: Time jumps by more than an hour in this GPS dataset and there are no RMC sentences to anchor the datestamp!")
                             fx.printmsg("         This dataset may cross over the UTC midnight dateline!\nprevious timestamp: %s\ncurrent timestamp:  %s" % (prevtime, timestamp))
                             fx.printmsg("         trace number:       %s" % trace)
-                        tracenum = round(elapsed * spu, 8) # calculate the increase in trace number, rounded to 5 decimals to eliminate machine error
-                        trace += tracenum # increment to reflect current trace
-                        resamp = np.arange(math.ceil(prevtrace), math.ceil(trace), 1) # make an array of integer values between t0 and t1
-                        for t in resamp:
-                            x = (x1 - x0) / (elapsed) * (t - prevtrace) + x0 # interpolate latitude
-                            y = (y1 - y0) / (elapsed) * (t - prevtrace) + y0 # interpolate longitude
-                            z = (z1 - z0) / (elapsed) * (t - prevtrace) + z0 # interpolate altitude
-                            sec = (sec1 - sec0) / (elapsed) * (t - prevtrace) + sec0 # interpolate gps seconds
-                            elapsed_resamp = elapsed * (t - prevtrace)
-                            tracetime = prevtime + elapsed_resamp
-                            if x2 > 0:
-                                m += geodesic((x, y, z), (x2, y2, z2)).meters
-                            else:
-                                m += geodesic((x1, y1, z1), (x0, y0, z0)).meters
-                            if m0 > 0:
-                                velocity = float((m0 - m) / (sec2 - sec))
-                                if fill_prev_vel == True:
-                                    arr[rownp-1]['velocity'] = velocity
-                                    fill_prev_vel = False
-                            else:
-                                velocity = 0
-                                fill_prev_vel = True
-                            tup = (t, x, y, z, velocity, gh, q, sats, dil, sec, tracetime, elapsed_resamp, m)
-                            arr[rownp] = tup
-                            m0 = m
-                            x2, y2, z2, sec2 = x, y, z, sec
-                            rownp += 1
-                    else: # we're on the very first row
+                    else:
+                        u = 0
+                        m = 0
+                        elapsed = 0
                         if verbose:
-                            fx.printmsg('using %s and %s hemispheres' % (lonhem, lathem))
-                    x0, y0, z0, sec0 = x1, y1, z1, sec1 # set xyzs0 for next loop
+                            fx.printmsg('record starts in %s and %s hemispheres' % (lonhem, lathem))
+                    x0, y0, z0, sec0, m0 = x1, y1, z1, sec1, m # set xyzs0 for next loop
                     prevtime = timestamp # set t0 for next loop
+                    if rowgga == 0:
+                        init_time = timestamp
                     prevtrace = trace
+                    array = array.append({'datetimeutc':timestamp.strftime('%Y-%m-%d %H:%M:%S.%f %z'),
+                                          'trace':trace, 'longitude':x1, 'latitude':y1, 'altitude':z1,
+                                          'velocity':u, 'sec_elapsed':elapsed, 'meters':m}, ignore_index=True)
+                    rowgga += 1
+
             if verbose:
-                fx.printmsg('processed %i gps locations' % (rownp))
-            diff = rownp - traces
-            shift, endshift = 0, 0
-            if diff > 0:
-                shift = diff / 2
-                if diff / 2 == diff / 2.:
-                    endshift = shift
-                else:
-                    endshift = shift - 1
-            arrend = traces + endshift
-            arr = arr[shift:arrend:1]
-            if verbose:
-                fx.printmsg('cut %i rows from beginning and %s from end of gps array, new size %s' % (shift, endshift, arr.shape[0]))
-            # if there's no need to use pandas, we shouldn't (library load speed mostly, also this line is old):
-            #array = pd.DataFrame({ 'ts' : arr['ts'], 'lat' : arr['lat'], 'lon' : arr['lon'] }, index=arr['tracenum'])
+                fx.printmsg('processed %i gps epochs' % (rowgga))
         elif frmt == 'csv':
-            arr = ''
-    return arr
+            with open(fi, 'r') as f:
+                gps = np.fromfile(f)
+    array['datetimeutc'] = pd.to_datetime(array['datetimeutc'], format='%Y-%m-%d %H:%M:%S.%f +0000', utc=True)
+    array.set_index('datetimeutc', inplace=True)
+    ## testing purposes
+    # if True:
+    #     if verbose:
+    #         fx.printmsg('writing GPS to %s-gps.csv' % (fi))
+    #     array.to_csv('%s-gps.csv' % (fi))
+    return array

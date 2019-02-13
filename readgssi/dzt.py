@@ -44,7 +44,7 @@ def readtime(bytes):
     yr = int(dtbits[0:7], 2) + 1980
     return datetime(yr, mo, day, hr, mins, sec2, 0, tzinfo=pytz.UTC)
 
-def readdzt(infile):
+def readdzt(infile, gps=False, verbose=False):
     '''
     function to unpack and return things we need from the header, and the data itself
     currently unused but potentially useful lines:
@@ -150,19 +150,28 @@ def readdzt(infile):
 
     infile.close()
 
-
-    try:
-        gps = readdzg(infile_gps, 'dzg', header)
-    except IOError:
-        if verbose:
-            fx.printmsg('no DZG file found')
+    if gps:
         try:
-            gps = readdzg(infile_gps, 'csv', header)
-        except Exception as e:
-            fx.printmsg('ERROR reading GPS CSV: %s' % e)
-            gps = []
-        else:
-            pass
+            if verbose:
+                fx.printmsg('reading GPS file...')
+            gps = readdzg(infile_gps, 'dzg', header, verbose=verbose)
+        except IOError as e0:
+            fx.printmsg('WARNING: no DZG file found')
+            try:
+                infile_gps = os.path.splitext(infile_gps)[0] + ".csv"
+                gps = readdzg(infile_gps, 'csv', header, verbose=verbose)
+            except Exception as e1:
+                try:
+                    infile_gps = os.path.splitext(infile_gps)[0] + ".CSV"
+                    gps = readdzg(infile_gps, 'csv', header, verbose=verbose)
+                except Exception as e2:
+                    fx.printmsg('ERROR reading GPS. distance normalization will not be possible.')
+                    fx.printmsg('   details: %s' % e0)
+                    fx.printmsg('            %s' % e1)
+                    fx.printmsg('            %s' % e2)
+                    gps = []
+    else:
+        pass
 
     return [header, data, gps]
 
