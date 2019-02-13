@@ -71,7 +71,7 @@ optional flags:
 -b, --colorbar  |                     |  add a colorbar to the radar figure
 -a, --antfreq   | positive integer    |  specify antenna frequency (read automatically if not given)
 -s, --stack     | +integer or "auto"  |  specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
--N, --normalize | "auto" or .csv file |  if "auto", use DZG GPS file; otherwise must point at a csv file with lat, lon, and time fields to distance normalize with
+-N, --normalize |                     |  reads a .DZG NMEA data if it exists; otherwise tries to read a csv file with lat, lon, and time fields to distance normalize with
 -m, --histogram |                     |  produce a histogram of data values
 -z, --zero      | positive integer    |  skip this many samples from the top of the trace downward (useful for removing transceiver delay)
 ```
