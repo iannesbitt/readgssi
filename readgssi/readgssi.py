@@ -142,11 +142,11 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             '''
             ~~~ The Seth Campbell Honorary Naming Scheme ~~~
             '''
-            outfile = '%sMHz' % (os.path.join(infile_basename + '_' + str(r[0]['antfreq'][ar])))
+            outfile = '%sc%s' % (os.path.join(infile_basename), ar)
             if normalize:
                 outfile = '%sDn' % (outfile)
-            if zero and (zero > 1):
-                outfile = '%sTz' % (outfile)
+            if zero and (zero > 0):
+                outfile = '%sTz%s' % (outfile, zero)
             if stack > 1:
                 outfile = '%sS%s' % (outfile, stack)
             if reverse:
@@ -156,7 +156,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             if dewow:
                 outfile = '%sDw' % (outfile)
             if freqmin and freqmax:
-                outfile = '%sBp%s-%s' % (outfile, freqmin, freqmax)
+                outfile = '%sB%s-%s' % (outfile, freqmin, freqmax)
             if plotting:
                 plot_outfile = '%sG%s' % (outfile, int(gain))
 
