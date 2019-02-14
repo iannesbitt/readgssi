@@ -38,7 +38,7 @@ optional flags:
 -m, --histogram |                     |  produce a histogram of data values
 -z, --zero      | positive integer    |  skip this many samples from the top of the trace downward (useful for removing transceiver delay)
 
-naming scheme:
+naming scheme for exports:
    CHARACTERS   |      MEANING
     c0          |  Profile from channel 0 (can range from 0 - 3)
     Dn          |  Distance normalization
