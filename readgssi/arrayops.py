@@ -47,7 +47,7 @@ def stack(ar, stack='auto', verbose=False):
 
 def reducex(ar, by=1, verbose=False):
     if verbose:
-        fx.printmsg('reducing number of array columns by a factor of %s' % (by))
+        fx.printmsg('reducing array by a factor of %s' % (by))
     return ar[:,::by]
 
 def distance_normalize(header, ar, gps, verbose=False):
@@ -74,6 +74,8 @@ def distance_normalize(header, ar, gps, verbose=False):
             norm_vel = pd.concat([norm_vel, s])
 
         # takes (array, [transform values to broadcast], axis)
+        fx.printmsg('expanding array...' % (by))
         ar = np.repeat(ar, norm_vel['normalized'].astype(int, casting='unsafe').values, axis=1)
-        ar = reducex(ar, by=norm_vel['normalized'].max())
+        ar = reducex(ar, by=int(round(norm_vel['normalized'].mean())), verbose=verbose)
+
     return header, ar, gps
