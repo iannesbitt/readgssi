@@ -1,5 +1,6 @@
 import readgssi.functions as fx
 import numpy as np
+import pandas as pd
 
 def flip(ar, verbose=False):
     if verbose:
@@ -11,11 +12,12 @@ def stack(ar, stack='auto', verbose=False):
     stacking algorithm
     stack='auto' results in an approximately 2.5:1 x:y axis ratio
     '''
+    stack0 = stack
     if str(stack).lower() in 'auto':
         am = '(automatic)'
         ratio = (ar.shape[1]/ar.shape[0])/(75/30)
         if ratio > 1:
-            stack = int(ratio)
+            stack = int(round(ratio))
         else:
             stack = 1
     else:
@@ -36,24 +38,42 @@ def stack(ar, stack='auto', verbose=False):
         for s in l:
             arr[:,s] = arr[:,s] + ar[:,s*stack+1:s*stack+stack].sum(axis=1)
     else:
-        if str(stack).lower() in 'auto':
+        arr = ar
+        if str(stack0).lower() in 'auto': # this happens when distance normalization reduces the file
             pass
         else:
             fx.printmsg('WARNING: no stacking applied. be warned: this can result in very large and awkwardly-shaped figures.')
     return arr, stack
 
-def reduce(ar, by=1, verbose=False):
+def reducex(ar, by=1, verbose=False):
     if verbose:
         fx.printmsg('reducing number of array columns by a factor of %s' % (by))
-    return ar[::by]
+    return ar[:,::by]
 
-def distance_normalize(ar, verbose=False):
+def distance_normalize(header, ar, gps, verbose=False):
     if ar[2] == []:
         if verbose:
             fx.printmsg('no gps information for distance normalization')
     else:
-        norm_vel = ar[0]['rhf_sps'] * (ar[2]['sec_elapsed']/ar[2]['meters']) # should end up as array of samples per meter
+        if verbose:
+            fx.printmsg('normalizing distance...')
+        while gps['velocity'].min() < 0.02: # fix zero and negative velocity values
+            gps['velocity'].replace(gps['velocity'].min(), 0.02, inplace=True)
+        norm_vel = (gps['velocity'] * (1/gps['velocity'].max())*100).to_frame('normalized') # should end up as dataframe with one column
+        # upsample to match radar array shape
+        nanosec_samp_rate = int((1/header['rhf_sps'])*10**9) # nanoseconds
+        start = np.datetime64(str(norm_vel.index[0])) - np.timedelta64(nanosec_samp_rate*(gps.iloc[0,0]), 'ns')
+        newdf = pd.DataFrame(index=pd.date_range(start=start, periods=ar.shape[1], freq=str(nanosec_samp_rate)+'N', tz='UTC'))
+        norm_vel = pd.concat([norm_vel, newdf], axis=1).interpolate('time').bfill()
+        norm_vel = norm_vel.round().astype(int, casting='unsafe')
+
+        rm = round(ar.shape[1] / (norm_vel.shape[0] - ar.shape[1]))
+        norm_vel = norm_vel.drop(norm_vel.index[::rm])
+        for i in range(0,abs(norm_vel.shape[0]-ar.shape[1])):
+            s = pd.DataFrame({'normalized':[norm_vel['normalized'].iloc[-1]]}) # hacky, but necessary
+            norm_vel = pd.concat([norm_vel, s])
+
         # takes (array, [transform values to broadcast], axis)
-        ar[1] = np.repeat(ar[1], norm_vel, axis=1)
-        ar[1] = reduce(ar[1], by=np.max(norm_vel))
-    return ar
+        ar = np.repeat(ar, norm_vel['normalized'].astype(int, casting='unsafe').values, axis=1)
+        ar = reducex(ar, by=norm_vel['normalized'].max())
+    return header, ar, gps

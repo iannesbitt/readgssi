@@ -103,8 +103,11 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
 
         fx.printmsg('beginning processing for channel %s (antenna %s)' % (ar, r[0]['rh_antname'][ar]))
         # execute filtering functions if necessary
+        if normalize:
+            r[0], img_arr[ar], r[2] = arrayops.distance_normalize(header=r[0], ar=img_arr[ar], gps=r[2],
+                                                                  verbose=verbose)
         if stack != 1:
-           # horizontal stacking
+            # horizontal stacking
             img_arr[ar], stack = arrayops.stack(ar=img_arr[ar], stack=stack, verbose=verbose)
         else:
             stack = 1
@@ -140,16 +143,20 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             ~~~ The Seth Campbell Honorary Naming Scheme ~~~
             '''
             outfile = '%sMHz' % (os.path.join(infile_basename + '_' + str(r[0]['antfreq'][ar])))
+            if normalize:
+                outfile = '%sDn' % (outfile)
             if zero and (zero > 1):
-                outfile = '%sTZ' % (outfile)
+                outfile = '%sTz' % (outfile)
             if stack > 1:
                 outfile = '%sS%s' % (outfile, stack)
+            if reverse:
+                outfile = '%sRv' % (outfile)
             if bgr:
-                outfile = '%sBGR' % (outfile)
+                outfile = '%sBgr' % (outfile)
             if dewow:
-                outfile = '%sDW' % (outfile)
+                outfile = '%sDw' % (outfile)
             if freqmin and freqmax:
-                outfile = '%sBP%s-%s' % (outfile, freqmin, freqmax)
+                outfile = '%sBp%s-%s' % (outfile, freqmin, freqmax)
             if plotting:
                 plot_outfile = '%sG%s' % (outfile, int(gain))
 
