@@ -23,7 +23,8 @@ Strongly recommended to install via [anaconda](https://www.anaconda.com/download
 
 Install via `pip`:
 - [`pynmea2`](https://pypi.org/project/pynmea2/)
-- [`bitstruct`](https://pypi.org/project/bitstruct/)
+- [`geopy`](https://pypi.org/project/geopy/)
+- [`pytz`](https://pypi.org/project/pytz/)
 
 ## installation
 
