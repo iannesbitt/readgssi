@@ -74,6 +74,18 @@ optional flags:
 -N, --normalize |                     |  reads a .DZG NMEA data if it exists; otherwise tries to read a csv file with lat, lon, and time fields to distance normalize with
 -m, --histogram |                     |  produce a histogram of data values
 -z, --zero      | positive integer    |  skip this many samples from the top of the trace downward (useful for removing transceiver delay)
+
+naming scheme for exports:
+   CHARACTERS   |      MEANING
+    c0          |  Profile from channel 0 (can range from 0 - 3)
+    Dn          |  Distance normalization
+    Tz233       |  Time zero at 233 samples
+    S8          |  Stacked 8 times
+    Rv          |  Profile read in reverse (flipped horizontally)
+    Bgr         |  Background removal filter
+    Dw          |  Dewow filter
+    Bp100-145   |  2-corner bandpass filter applied from 100 to 145 MHz
+    G30         |  30x contrast gain
 ```
 
 From a unix command line:
