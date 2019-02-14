@@ -184,6 +184,8 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
   - currently can read .DZG GPS records only, but plan to add ability to read .csv (lat, long, time) and NMEA GGA/RMC textfiles
 - changed naming scheme to be "more readable"
   - changed filename differentiator from frequency to channel number (makes sense because theoretically, a user can have the same frequency antenna on two different channels, which would result in a naming conflict)
+- fixed a bug in normalization caused by an errant format string
+- stacking algorithm now uses reduce function to create copy array
 
 ## changes since 0.0.8
 - moved plotting routines to new module `plot.py`

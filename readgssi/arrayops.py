@@ -7,6 +7,11 @@ def flip(ar, verbose=False):
         fx.printmsg('flipping radargram...')
     return ar.T[::-1].T
 
+def reducex(ar, by=1, verbose=False):
+    if verbose:
+        fx.printmsg('reducing array by a factor of %s...' % (by))
+    return ar[:,::by]
+
 def stack(ar, stack='auto', verbose=False):
     '''
     stacking algorithm
@@ -34,7 +39,7 @@ def stack(ar, stack='auto', verbose=False):
             fx.printmsg('stacking %sx %s...' % (stack, am))
         i = list(range(stack))
         l = list(range(int(ar.shape[1]/stack)))
-        arr = np.copy(ar[:,::stack])
+        arr = np.copy(reducex(ar=ar, by=stack, verbose=verbose))
         for s in l:
             arr[:,s] = arr[:,s] + ar[:,s*stack+1:s*stack+stack].sum(axis=1)
     else:
@@ -45,18 +50,13 @@ def stack(ar, stack='auto', verbose=False):
             fx.printmsg('WARNING: no stacking applied. be warned: this can result in very large and awkwardly-shaped figures.')
     return arr, stack
 
-def reducex(ar, by=1, verbose=False):
-    if verbose:
-        fx.printmsg('reducing array by a factor of %s' % (by))
-    return ar[:,::by]
-
 def distance_normalize(header, ar, gps, verbose=False):
     if ar[2] == []:
         if verbose:
             fx.printmsg('no gps information for distance normalization')
     else:
         if verbose:
-            fx.printmsg('normalizing distance...')
+            fx.printmsg('normalizing GPS velocity records...')
         while gps['velocity'].min() < 0.02: # fix zero and negative velocity values
             gps['velocity'].replace(gps['velocity'].min(), 0.02, inplace=True)
         norm_vel = (gps['velocity'] * (1/gps['velocity'].max())*100).to_frame('normalized') # should end up as dataframe with one column
@@ -72,9 +72,10 @@ def distance_normalize(header, ar, gps, verbose=False):
         for i in range(0,abs(norm_vel.shape[0]-ar.shape[1])):
             s = pd.DataFrame({'normalized':[norm_vel['normalized'].iloc[-1]]}) # hacky, but necessary
             norm_vel = pd.concat([norm_vel, s])
-
+        if verbose:
+            fx.printmsg('mean of normalized velocity is %.2f' % (norm_vel['normalized'].mean()))
+            fx.printmsg('expanding array using normalized GPS velocity...')
         # takes (array, [transform values to broadcast], axis)
-        fx.printmsg('expanding array...' % (by))
         ar = np.repeat(ar, norm_vel['normalized'].astype(int, casting='unsafe').values, axis=1)
         ar = reducex(ar, by=int(round(norm_vel['normalized'].mean())), verbose=verbose)
 
