@@ -167,6 +167,10 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 - added ability to reverse radargram (i.e. flip horizontal left to right)
 - fixed bug with command line autostack
 - changed command line verbose messages
+- added ability to distance-normalize profile using GPS records
+  - currently can read .DZG GPS records only, but plan to add ability to read .csv (lat, long, time) and NMEA GGA/RMC textfiles
+- changed naming scheme to be "more readable"
+  - changed filename differentiator from frequency to channel number (makes sense because theoretically, a user can have the same frequency antenna on two different channels, which would result in a naming conflict)
 
 ## changes since 0.0.8
 - moved plotting routines to new module `plot.py`
