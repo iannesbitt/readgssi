@@ -248,6 +248,7 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 ## future
 - automatic script testing for smoother dev
 - GPS transcription from CSV with fields like `mark name, lon, lat, elev, time`
+- Use GPS altitude to adjust z position across profile
 - GUI-based geologic/dilectric layer picking
   - layer velocity calculation (using minimum of clustered hyperbola tail angle measurements, or manual input)
   - velocity-based depth adjustments
