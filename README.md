@@ -186,6 +186,10 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
   - changed filename differentiator from frequency to channel number (makes sense because theoretically, a user can have the same frequency antenna on two different channels, which would result in a naming conflict)
 - fixed a bug in normalization caused by an errant format string
 - stacking algorithm now uses reduce function to create copy array
+- normalization will now automatically set traces per meter value of `header['rhf_spm']`
+- added export numpy binary file (.npy)
+- added header export to json
+- added export to gprpy (.npy & .json) per [this discussion](https://github.com/NSGeophysics/GPRPy/issues/3)
 
 ## changes since 0.0.8
 - moved plotting routines to new module `plot.py`
@@ -243,7 +247,7 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 
 ## future
 - automatic script testing for smoother dev
-- GPS transcription (read from associated DZG file or CSV with fields like `mark name, lon, lat, elev, time`)
+- GPS transcription from CSV with fields like `mark name, lon, lat, elev, time`
 - GUI-based geologic/dilectric layer picking
   - layer velocity calculation (using minimum of clustered hyperbola tail angle measurements, or manual input)
   - velocity-based depth adjustments

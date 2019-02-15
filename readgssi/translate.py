@@ -1,22 +1,59 @@
 import h5py
 import pandas as pd
+import numpy as np
+import json
 from readgssi.gps import readdzg
 import readgssi.functions as fx
 
 '''
-contains translations
+contains translations to common formats
 '''
 
-def csv(ar, outfile_abspath, verbose=False):
+def json_header(header, outfile_abspath, verbose=False):
+    '''
+    save header values as a .json so another script can take what it needs
+    '''
+    with open('%s.json' % (outfile_abspath), 'w') as f:
+        if verbose:
+            fx.printmsg('serializing header as %s' % (f.name))
+        json.dump(obj=header, fp=f, indent=4, sort_keys=True, default=str)
+
+def csv(ar, outfile_abspath, header=None, verbose=False):
     '''
     outputting to csv is simple. we read into a dataframe, then use pandas' to_csv() builtin function.
     '''
     if verbose:
-        fx.printmsg('output format is csv. writing file to: %s.csv' % outfile_abspath)
+        t = ''
+        if header:
+            t = ' with json header'
+        fx.printmsg('output format is csv%s. writing data to: %s.csv' % (t, outfile_abspath))
     data = pd.DataFrame(ar) # using pandas to output csv
     data.to_csv('%s.csv' % (outfile_abspath)) # write
+    if header:
+        json_header(header=header, outfile_abspath=outfile_abspath, verbose=verbose)
+
+def numpy(ar, outfile_abspath, header=None, verbose=False):
+    '''
+    save as .npy binary numpy file
+    '''
     if verbose:
-        fx.printmsg('done exporting csv.')
+        t = ''
+        if header:
+            t = ' with json header (compatible with GPRPy)'
+        fx.printmsg('output format is numpy binary%s' % t)
+        fx.printmsg('writing data to %s.npy' % outfile_abspath)
+    np.save('%s.npy' % outfile_abspath, ar, allow_pickle=False)
+    if header:
+        json_header(header=header, outfile_abspath=outfile_abspath, verbose=verbose)
+
+def gprpy(ar, header, outfile_abspath, verbose=False):
+    '''
+    save in a format GPRPy (https://github.com/NSGeophysics/GPRPy) can open
+
+    currently, that's numpy binary .npy and a .json formatted header file
+    (https://github.com/NSGeophysics/GPRPy/issues/3#issuecomment-460462612)
+    '''
+    numpy(ar=ar, header=header, outfile_abspath=outfile_abspath, verbose=verbose)
 
 def segy(ar, outfile_abspath, verbose=False):
     '''

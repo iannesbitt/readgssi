@@ -78,5 +78,8 @@ def distance_normalize(header, ar, gps, verbose=False):
         # takes (array, [transform values to broadcast], axis)
         ar = np.repeat(ar, norm_vel['normalized'].astype(int, casting='unsafe').values, axis=1)
         ar = reducex(ar, by=int(round(norm_vel['normalized'].mean())), verbose=verbose)
-
+        if verbose:
+            fx.printmsg('replacing traces per meter value of %s with %s' % (header['rhf_spm'],
+                                                                                   ar.shape[1] / gps['meters'].iloc[-1]))
+        header['rhf_spm'] = ar.shape[1] / gps['meters'].iloc[-1]
     return header, ar, gps

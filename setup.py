@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="readgssi",
-    version="0.0.9-4",
+    version="0.0.10",
     author="Ian Nesbitt",
     author_email="ian.nesbitt@gmail.com",
     license='AGPL',

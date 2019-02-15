@@ -32,7 +32,7 @@ from readgssi.dzt import *
 
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figsize=10,
              stack=1, verbose=False, histogram=False, colormap='Greys', colorbar=False,
-             zero=1, gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, dewow=False,
+             zero=0, gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, dewow=False,
              normalize=False, specgram=False, noshow=False):
     '''
     primary radar processing function
@@ -84,7 +84,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
     # create a list of n arrays, where n is the number of channels
     arr = r[1].astype(np.int32)
     chans = list(range(r[0]['rh_nchan']))
-    timezero = 1
+    timezero = 0
     #timezero = abs(round(float(r[0]['rh_nsamp'])/float(r[0]['rhf_range'])*float(r[0]['rhf_position'])))
     img_arr = arr[timezero:r[0]['rh_nchan']*r[0]['rh_nsamp']]
     new_arr = {}
@@ -100,8 +100,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
         '''
         filter and construct an output file or plot from the current channel's array
         '''
-
-        fx.printmsg('beginning processing for channel %s (antenna %s)' % (ar, r[0]['rh_antname'][ar]))
+        if verbose:
+            fx.printmsg('beginning processing for channel %s (antenna %s)' % (ar, r[0]['rh_antname'][ar]))
         # execute filtering functions if necessary
         if normalize:
             r[0], img_arr[ar], r[2] = arrayops.distance_normalize(header=r[0], ar=img_arr[ar], gps=r[2],
@@ -125,19 +125,16 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
                                        verbose=verbose)
 
         # name the output file
-        if ar == 0:
+        if ar == 0: # first channel?
             orig_outfile = outfile # preserve the original
         else:
-            outfile = orig_outfile
+            outfile = orig_outfile # recover the original
 
-        if outfile and (len(chans) > 1):
+        if outfile:
             outfile_ext = os.path.splitext(outfile)[1]
-            outfile_basename = '%sMHz' % (os.path.join(os.path.splitext(outfile)[0] + '_' + str(r[0]['antfreq'][ar])))
-            plot_outfile = outfile_basename
-        elif outfile and (len(chans) == 1):
-            outfile_ext = os.path.splitext(outfile)[1]
-            outfile_basename = '%s' % (os.path.join(os.path.splitext(outfile)[0]))
-            plot_outfile = outfile_basename
+            outfile = '%s' % (os.path.join(os.path.splitext(outfile)[0]))
+            if len(chans) > 1:
+                outfile = '%sc%s' % (outfile, ar) # avoid naming conflicts
         else:
             '''
             ~~~ The Seth Campbell Honorary Naming Scheme ~~~
@@ -158,29 +155,35 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             if freqmin and freqmax:
                 outfile = '%sB%s-%s' % (outfile, freqmin, freqmax)
             if plotting:
-                plot_outfile = '%sG%s' % (outfile, int(gain))
+                outfile = '%sG%s' % (outfile, int(gain))
 
         if frmt != None:
             if verbose:
-                fx.printmsg('outputting to %s . . .' % frmt)
+                fx.printmsg('outputting to %s...' % frmt)
             for ar in img_arr:
                 # is there an output filepath given?
-                outfile_abspath = os.path.abspath(outfile_basename) # set output to given location
+                outfile_abspath = os.path.abspath(outfile) # set output to given location
 
                 # what is the output format
                 if frmt in 'csv':
-                    translate.csv(ar=img_arr[ar], outfile_abspath=outfile_abspath, verbose=verbose)
-
+                    translate.csv(ar=img_arr[ar], outfile_abspath=outfile_abspath,
+                                  header=r[0], verbose=verbose)
                 elif frmt in 'h5':
                     translate.h5(ar=img_arr[ar], infile_basename=infile_basename,
-                              outfile_abspath=outfile_abspath, verbose=verbose)
-
+                                 outfile_abspath=outfile_abspath, verbose=verbose)
                 elif frmt in 'segy':
-                    translate.segy(ar=img_arr[ar], outfile_abspath=outfile_abspath, verbose=verbose)
+                    translate.segy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
+                                   verbose=verbose)
+                elif frmt in 'numpy':
+                    translate.numpy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
+                                    verbose=verbose)
+                elif frmt in 'gprpy':
+                    translate.gprpy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
+                                    header=r[0], verbose=verbose)
 
         if plotting:
             plot.radargram(ar=img_arr[ar], header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose, figsize=figsize, stack=stack,
-                           gain=gain, colormap=colormap, colorbar=colorbar, noshow=noshow, outfile=plot_outfile)
+                           gain=gain, colormap=colormap, colorbar=colorbar, noshow=noshow, outfile=outfile)
 
         if histogram:
             plot.histogram(ar=img_arr[ar], verbose=verbose)
@@ -248,6 +251,10 @@ def main():
                     frmt = 'segy'
                 elif arg in ('h5', 'hdf5', '.h5', '.hdf5'):
                     frmt = 'h5'
+                elif arg in ('numpy', 'npy', '.npy'):
+                    frmt = 'numpy'
+                elif arg in ('gprpy'):
+                    frmt = 'gprpy'
                 elif arg in ('plot'):
                     plotting = True
                 else:
