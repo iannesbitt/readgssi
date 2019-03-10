@@ -36,10 +36,20 @@ UNIT = {
 # a dictionary of standard gssi antenna codes and frequencies
 # unsure of what they all look like in code, however
 ANT = {
+    '100MHz': 100,
+    '200MHz': 200,
+    '270MHz': 270,
+    '350MHz': 350,
+    '400MHz': 400,
+    '500MHz': 500,
+    '800MHz': 800,
+    '900MHz': 900,
+    '1600MHz': 1600,
+    '2000MHz': 2000,
+    '2300MHz': 2300,
+    '2600MHz': 2600,
     '3200': 'adjustable',
     '3200MLF': 'adjustable',
-    '500MHz': 500,
-    '400MHz': 400,
     '3207': 100,
     '3207AP': 100,
     '5106': 200,
