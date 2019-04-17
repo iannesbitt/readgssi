@@ -50,6 +50,7 @@ ANT = {
     '2600MHz': 2600,
     '3200': 'adjustable',
     '3200MLF': 'adjustable',
+    'gprMa': 'adjustable',      # gprMax support
     '3207': 100,
     '3207AP': 100,
     '5106': 200,
