@@ -9,7 +9,7 @@ PAREASIZE = 128 # fixed info header size
 
 TZ = pytz.timezone('UTC')
 
-# some physical constants for Maxwell's equation for speed of light in a dilectric
+# some physical constants for Maxwell's equation for speed of light in a dielectric medium
 C = 299792458                   # speed of light in a vacuum
 Eps_0 = 8.8541878 * 10**(-12)   # epsilon naught (vacuum permittivity)
 Mu_0 = 1.257 * 10**(-6)         # mu naught (vacuum permeability)
@@ -17,7 +17,7 @@ Mu_0 = 1.257 * 10**(-6)         # mu naught (vacuum permeability)
 
 # the GSSI field unit used
 UNIT = {
-    0: 'unknown system type',
+    0: 'synthetic/gprMax',
     1: 'unknown system type',
     2: 'SIR 2000',
     3: 'SIR 3000',

@@ -45,7 +45,8 @@ def spectrogram(ar, header, freq, verbose=True):
     sg.spectrogram(data=trace, samp_rate=samp_rate, wlen=samp_rate/1000, per_lap = 0.99, dbscale=True,
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
 
-def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack='auto', colormap='Greys', colorbar=False, noshow=False, outfile='readgssi_plot'):
+def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack='auto', x=None, z=None,
+              colormap='Greys', colorbar=False, noshow=False, outfile='readgssi_plot'):
     '''
     let's do some matplotlib
 
@@ -64,6 +65,10 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack='aut
     # so we will force everything to be integers explicitly
     if figsize != 'auto':
         figx, figy = int(int(figsize)*int(int(ar.shape[1])/int(ar.shape[0]))), int(figsize) # force to integer instead of coerce
+        if figy <= 1:
+            figy += 1 # avoid zero height error in y dimension
+        if figx <= 1:
+            figx += 1 # avoid zero height error in x dimension
         if verbose:
             fx.printmsg('plotting %sx%sin image with gain=%s...' % (figx, figy, gain))
         fig = plt.figure(figsize=(figx, figy-1), dpi=150)
@@ -86,13 +91,13 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack='aut
     try:
         if verbose:
             fx.printmsg('attempting to plot with colormap %s' % (colormap))
-        img = plt.imshow(ar, cmap=colormap, clim=(ll, ul),
+        img = plt.imshow(ar, cmap=colormap, clim=(ll, ul), interpolation='bicubic',
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                             vmin=ll, vmax=ul),)
     except:
         fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using viridis instead' % colormap)
         fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
-        img = plt.imshow(ar, cmap='viridis', clim=(ll, ul),
+        img = plt.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic',
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                             vmin=ll, vmax=ul),)
 
@@ -100,7 +105,10 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack='aut
         fig.colorbar(img)
     if verbose:
         plt.title('%s - %s MHz - stacking: %s - gain: %s' % (os.path.basename(header['infile']), freq, stack, gain))
-    plt.tight_layout(pad=fig.get_size_inches()[1]/2.)
+    if figx / figy >=1: # if x is longer than y (avoids plotting error where data disappears for some reason)
+        plt.tight_layout(pad=fig.get_size_inches()[1]/2.) # then it's ok to call tight_layout()
+    else:
+        fx.printmsg('WARNING: not calling tight_layout() because axis lengths are funky. please adjust manually in matplotlib gui.')
     if outfile != 'readgssi_plot':
         # if outfile doesn't match this then save fig with the outfile name
         if verbose:

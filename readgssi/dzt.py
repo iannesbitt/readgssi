@@ -44,7 +44,7 @@ def readtime(bytes):
     yr = int(dtbits[0:7], 2) + 1980
     return datetime(yr, mo, day, hr, mins, sec2, 0, tzinfo=pytz.UTC)
 
-def readdzt(infile, gps=False, verbose=False):
+def readdzt(infile, gps=False, epsr=None, verbose=False):
     '''
     function to unpack and return things we need from the header, and the data itself
     currently unused but potentially useful lines:
@@ -95,9 +95,15 @@ def readdzt(infile, gps=False, verbose=False):
     header['rh_proc'] = struct.unpack('<h', infile.read(2))[0] # offset to processing history
     header['rh_nproc'] = struct.unpack('<h', infile.read(2))[0] # size of processing history
     header['rh_nchan'] = struct.unpack('<h', infile.read(2))[0] # number of channels
-    header['rhf_epsr'] = struct.unpack('<f', infile.read(4))[0] # average dilectric
+    if epsr != None:
+        header['dzt_epsr'] = struct.unpack('<f', infile.read(4))[0]
+        header['rhf_epsr'] = epsr
+    else:
+        header['rhf_epsr'] = struct.unpack('<f', infile.read(4))[0] # epsr (sometimes referred to as "dielectric permittivity")
+        header['dzt_epsr'] = header['rhf_epsr']
     header['rhf_top'] = struct.unpack('<f', infile.read(4))[0] # position in meters (useless?)
-    header['rhf_depth'] = struct.unpack('<f', infile.read(4))[0] # range in meters
+    header['dzt_depth'] = struct.unpack('<f', infile.read(4))[0] # range in meters based on DZT rhf_epsr
+    header['rhf_depth'] = header['dzt_depth'] * (math.sqrt(header['dzt_epsr']) / math.sqrt(header['rhf_epsr'])) # range based on user epsr
     #rhf_coordx = struct.unpack('<ff', infile.read(8))[0] # this is definitely useless
 
     # read frequencies for multiple antennae
@@ -145,7 +151,10 @@ def readdzt(infile, gps=False, verbose=False):
     data = np.fromfile(infile, dtype).reshape(-1,(header['rh_nsamp']*header['rh_nchan'])).T
 
     header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
-    header['sec'] = data.shape[1]/float(header['rhf_sps'])
+    try:
+        header['sec'] = data.shape[1]/float(header['rhf_sps'])
+    except ZeroDivisionError:
+        header['sec'] = 1.
     header['traces'] = int(data.shape[1]/header['rh_nchan'])
 
     infile.close()
@@ -192,7 +201,7 @@ def header_info(header, data):
     '''
     function to print relevant header data
     '''
-    fx.printmsg('system:             %s' % UNIT[header['rh_system']])
+    fx.printmsg('system:             %s (system code %s)' % (UNIT[header['rh_system']], header['rh_system']))
     fx.printmsg('antennas:           %s' % header['rh_antname'])
 
     for i in range(header['rh_nchan']):
@@ -216,9 +225,16 @@ def header_info(header, data):
     fx.printmsg('bits per sample:    %s' % BPS[header['rh_bits']])
     fx.printmsg('traces per second:  %.1f' % header['rhf_sps'])
     fx.printmsg('traces per meter:   %.1f' % header['rhf_spm'])
-    fx.printmsg('dilectric:          %.1f' % header['rhf_epsr'])
+    if header['dzt_epsr'] != header['rhf_epsr']:
+        fx.printmsg('user epsr:          %.1f (value from DZT: %.1f)' % (header['rhf_epsr'], header['dzt_epsr']))
+    else:
+        fx.printmsg('epsr:               %.1f' % header['rhf_epsr'])
     fx.printmsg('speed of light:     %.2E m/sec (%.2f%% of vacuum)' % (header['cr'], header['cr'] / C * 100))
-    fx.printmsg('sampling depth:     %.1f m' % header['rhf_depth'])
+    if header['dzt_depth'] != header['rhf_depth']:
+        fx.printmsg('sampling depth:     %.1f m (value from DZT: %.1f)' % (header['rhf_depth'], header['dzt_depth']))
+    else:
+        fx.printmsg('sampling depth:     %.1f m' % (header['rhf_depth']))
+    fx.printmsg('"rhf_top":          %.1f m' % header['rhf_top'])
     fx.printmsg('offset to data:     %i bytes' % header['data_offset'])
     if data.shape[1] == int(data.shape[1]):
         fx.printmsg('traces:             %i' % int(data.shape[1]/header['rh_nchan']))

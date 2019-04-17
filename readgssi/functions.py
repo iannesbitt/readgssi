@@ -1,4 +1,6 @@
+import math
 from datetime import datetime
+from readgssi.constants import *
 
 def printmsg(msg):
     '''Prints with date/timestamp.'''

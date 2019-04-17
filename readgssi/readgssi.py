@@ -31,9 +31,9 @@ from readgssi.dzt import *
 
 
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figsize=10,
-             stack=1, verbose=False, histogram=False, colormap='Greys', colorbar=False,
+             stack=1, x='seconds', z='nanoseconds', verbose=False, histogram=False, colormap='Greys', colorbar=False,
              zero=0, gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, dewow=False,
-             normalize=False, specgram=False, noshow=False):
+             normalize=False, specgram=False, noshow=False, epsr=None):
     '''
     primary radar processing function
 
@@ -46,7 +46,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             if verbose:
                 fx.printmsg('reading...')
                 fx.printmsg('input file:         %s' % (infile))
-            r = readdzt(infile, gps=normalize, verbose=verbose)
+            r = readdzt(infile, gps=normalize, epsr=epsr, verbose=verbose)
             if verbose:
                 fx.printmsg('success. header values:')
                 header_info(r[0], r[1])
@@ -183,7 +183,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
 
         if plotting:
             plot.radargram(ar=img_arr[ar], header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose, figsize=figsize, stack=stack,
-                           gain=gain, colormap=colormap, colorbar=colorbar, noshow=noshow, outfile=outfile)
+                           x=x, z=z, gain=gain, colormap=colormap, colorbar=colorbar, noshow=noshow, outfile=outfile)
 
         if histogram:
             plot.histogram(ar=img_arr[ar], verbose=verbose)
@@ -200,17 +200,18 @@ def main():
     verbose = True
     stack = 1
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
-    reverse, freqmin, freqmax, specgram, zero, normalize = None, None, None, None, None, None
+    reverse, freqmin, freqmax, specgram, zero, normalize, epsr = None, None, None, None, None, None, None
     colormap = 'Greys'
+    x, z = 'time', 'time'
     gain = 1
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plotting=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hqdi:a:o:f:p:s:rRNwnmc:bg:z:t:',
+        opts, args = getopt.getopt(sys.argv[1:],'hqdi:a:o:f:p:s:rRNwnmc:bg:z:E:t:x:z:',
             ['help','quiet','dmi','input=','antfreq=','output=','format=','plot=','stack=','bgr',
             'reverse', 'normalize','dewow','noshow','histogram','colormap=','colorbar','gain=',
-            'zero=','bandpass='])
+            'zero=','epsr=','bandpass=', 'xscale=', 'zscale='])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
         fx.printmsg('ERROR: invalid argument(s) supplied')
@@ -233,11 +234,11 @@ def main():
                 outfile = arg
                 if '~' in outfile:
                     outfile = os.path.expanduser(outfile) # expand tilde, see above
-        if opt in ('-a', '--freq'):
+        if opt in ('-a', '--antfreq'):
             try:
-                antfreq = round(float(abs(arg)),1)
+                antfreq = round(abs(float(arg)),1)
                 fx.printmsg('user specified frequency value of %s MHz will be overwritten if DZT header has valid antenna information.' % antfreq)
-            except:
+            except ValueError:
                 fx.printmsg('ERROR: %s is not a valid decimal or integer frequency value.' % arg)
                 fx.printmsg(config.help_text)
                 sys.exit(2)
@@ -321,6 +322,50 @@ def main():
             #dmi = True
             fx.printmsg('ERROR: DMI devices are not supported at the moment.')
             pass # not doing anything with this at the moment
+        if opt in ('-x', '--xscale'):
+            if arg:
+                if arg in ('temporal', 'time', 'seconds', 'second', 's'):
+                    x = 'seconds'
+                elif arg in ('spatial', 'distance', 'dist', 'length', 'meter', 'meters', 'm'):
+                    x = 'm'
+                elif arg in ('centimeter', 'centimeters', 'cm'):
+                    x = 'cm'
+                elif arg in ('kilometer', 'kilometers', 'km'):
+                    x = 'km'
+                elif arg in ('trace', 'traces', 'samples', 'pulses', 'columns'):
+                    x = 'traces'
+                else:
+                    fx.printmsg('WARNING: invalid xscale type specified. defaulting to --xscale="seconds"')
+                    x = 'seconds'
+            else:
+                fx.printmsg('WARNING: no xscale type specified. defaulting to --xscale="seconds"')
+                x = 'seconds'
+        if opt in ('-z', '--zscale'):
+            if arg:
+                if arg in ('temporal', 'time', 'nanoseconds', 'nanosecond', 'ns'):
+                    z = 'nanoseconds'
+                elif arg in ('spatial', 'distance', 'depth', 'length', 'meter', 'meters', 'm'):
+                    z = 'm'
+                elif arg in ('centimeter', 'centimeters', 'cm'):
+                    z = 'cm'
+                elif arg in ('millimeter', 'millimeters', 'mm'):
+                    z = 'mm'
+                elif arg in ('samples', 'rows'):
+                    x = 'samples'
+                else:
+                    fx.printmsg('WARNING: invalid zscale type specified. defaulting to --zscale="nanoseconds"')
+                    z = 'nanoseconds'
+            else:
+                fx.printmsg('WARNING: no zscale type specified. defaulting to --zscale="nanoseconds"')
+                z = 'nanoseconds'
+        if opt in ('-E', '--epsr'):
+            try:
+                epsr = float(arg)
+                if epsr <= 1:
+                    raise Exception
+            except:
+                print('ERROR: invalid value for epsr (epsilon sub r "dielectric permittivity"). using DZT value instead.')
+                epsr = None
         if opt in ('-m', '--histogram'):
             histogram = True
         if opt in ('-c', '--colormap'):
@@ -342,9 +387,10 @@ def main():
         if verbose:
             fx.printmsg(config.dist)
         readgssi(infile=infile, outfile=outfile, antfreq=antfreq, frmt=frmt, plotting=plotting,
-                 figsize=figsize, stack=stack, verbose=verbose, histogram=histogram,
+                 figsize=figsize, stack=stack, verbose=verbose, histogram=histogram, x=x, z=z,
                  colormap=colormap, colorbar=colorbar, reverse=reverse, gain=gain, bgr=bgr, zero=zero,
-                 normalize=normalize, dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax)
+                 normalize=normalize, dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax,
+                 epsr=epsr)
         if verbose:
             fx.printmsg('done with %s' % infile)
         print('')
