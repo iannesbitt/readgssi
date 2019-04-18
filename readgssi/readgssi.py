@@ -324,15 +324,15 @@ def main():
             pass # not doing anything with this at the moment
         if opt in ('-x', '--xscale'):
             if arg:
-                if arg in ('temporal', 'time', 'seconds', 'second', 's'):
+                if arg in ('temporal', 'time', 'seconds', 's'):
                     x = 'seconds'
-                elif arg in ('spatial', 'distance', 'dist', 'length', 'meter', 'meters', 'm'):
+                elif arg in ('spatial', 'distance', 'dist', 'length', 'meters', 'm'):
                     x = 'm'
-                elif arg in ('centimeter', 'centimeters', 'cm'):
+                elif arg in ('centimeters', 'cm'):
                     x = 'cm'
-                elif arg in ('kilometer', 'kilometers', 'km'):
+                elif arg in ('kilometers', 'km'):
                     x = 'km'
-                elif arg in ('trace', 'traces', 'samples', 'pulses', 'columns'):
+                elif arg in ('traces', 'samples', 'pulses', 'columns'):
                     x = 'traces'
                 else:
                     fx.printmsg('WARNING: invalid xscale type specified. defaulting to --xscale="seconds"')
@@ -342,16 +342,16 @@ def main():
                 x = 'seconds'
         if opt in ('-z', '--zscale'):
             if arg:
-                if arg in ('temporal', 'time', 'nanoseconds', 'nanosecond', 'ns'):
+                if arg in ('temporal', 'time', 'nanoseconds', 'ns'):
                     z = 'nanoseconds'
-                elif arg in ('spatial', 'distance', 'depth', 'length', 'meter', 'meters', 'm'):
+                elif arg in ('spatial', 'distance', 'depth', 'length', 'meters', 'm'):
                     z = 'm'
-                elif arg in ('centimeter', 'centimeters', 'cm'):
+                elif arg in ('centimeters', 'cm'):
                     z = 'cm'
-                elif arg in ('millimeter', 'millimeters', 'mm'):
+                elif arg in ('millimeters', 'mm'):
                     z = 'mm'
                 elif arg in ('samples', 'rows'):
-                    x = 'samples'
+                    z = 'samples'
                 else:
                     fx.printmsg('WARNING: invalid zscale type specified. defaulting to --zscale="nanoseconds"')
                     z = 'nanoseconds'

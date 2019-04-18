@@ -45,20 +45,20 @@ def spectrogram(ar, header, freq, verbose=True):
     sg.spectrogram(data=trace, samp_rate=samp_rate, wlen=samp_rate/1000, per_lap = 0.99, dbscale=True,
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
 
-def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack='auto', x=None, z=None,
+def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x=None, z=None,
               colormap='Greys', colorbar=False, noshow=False, outfile='readgssi_plot'):
     '''
     let's do some matplotlib
 
     requirements:
-    ar   - a radar array
-    verbose   - boolean, whether to print progress. defaults to True
-    plotsize  - the size of the plot in inches
-    stack     - number of times to stack horizontally
-    colormap  - the matplotlib colormap to use, defaults to 'Greys' which is to say: the same as the default RADAN colormap
-    colorbar  - boolean, whether to draw the colorbar. defaults to False
-    noshow    - boolean, whether to bring up the matplotlib figure dialog when drawing. defaults to False, meaning the dialog will be displayed.
-    outfile   - name of the output file. defaults to 'readgssi_plot.png' in the current directory.
+    ar          - a radar array
+    verbose     - boolean, whether to print progress. defaults to True
+    plotsize    - the size of the plot in inches
+    stack       - number of times to stack horizontally
+    colormap    - the matplotlib colormap to use, defaults to 'Greys' which is to say: the same as the default RADAN colormap
+    colorbar    - boolean, whether to draw the colorbar. defaults to False
+    noshow      - boolean, whether to bring up the matplotlib figure dialog when drawing. defaults to False, meaning the dialog will be displayed.
+    outfile     - name of the output file. defaults to 'readgssi_plot.png' in the current directory.
     '''
 
     # having lots of trouble with this line not being friendly with figsize tuple (integer coercion-related errors)
@@ -71,11 +71,11 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack='aut
             figx += 1 # avoid zero height error in x dimension
         if verbose:
             fx.printmsg('plotting %sx%sin image with gain=%s...' % (figx, figy, gain))
-        fig = plt.figure(figsize=(figx, figy-1), dpi=150)
+        fig, ax = plt.subplots(figsize=(figx, figy-1), dpi=150)
     else:
         if verbose:
             fx.printmsg('plotting with gain=%s...' % gain)
-        fig = plt.figure()
+        fig, ax = plt.subplots()
 
     mean = np.mean(ar)
     std = np.std(ar)
@@ -100,6 +100,41 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack='aut
         img = plt.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic',
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                             vmin=ll, vmax=ul),)
+    if (x == None) or (x in 'seconds'):
+        xmax = header['sec']
+        xlabel = 'Time (s)'
+    else:
+        if x in ('cm', 'm', 'km'):
+            xmax = header['rhf_spm'] * ar.shape[1] * float(stack)
+            if 'cm' in x:
+                xmax = xmax * 100.
+            if 'km' in x:
+                xmax = xmax / 1000.
+            xlabel = 'Distance (%s)' % (x)
+        else: # x in 'traces'
+            xmax = ar.shape[1] * float(stack)
+            xlabel = 'Trace (before stacking)'
+
+    if (z == None) or (z in 'nanoseconds'):
+        zmax = header['ns_per_zsample'] * ar.shape[0] * 10**9
+        zlabel = 'Time (ns)'
+    else:
+        if z in ('mm', 'cm', 'm'):
+            zmax = header['rhf_depth']
+            if 'cm' in z:
+                zmax = zmax * 100.
+            if 'mm' in z:
+                zmax = zmax * 1000.
+            zlabel = 'Depth (%s)' % (z)
+        else: # z in 'samples'
+            zmax = ar.shape[0]
+            zlabel = 'Trace (before stacking)'
+
+    '''
+    # coming soon
+    ax.set_xticklabels()
+    ax.set_yticklabels()
+    '''
 
     if colorbar:
         fig.colorbar(img)
