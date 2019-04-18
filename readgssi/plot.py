@@ -88,24 +88,12 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
         fx.printmsg('lower color limit:  %s [mean - (3 * stdev)]' % ll)
         fx.printmsg('upper color limit:  %s [mean + (3 * stdev)]' % ul)
 
-    try:
-        if verbose:
-            fx.printmsg('attempting to plot with colormap %s' % (colormap))
-        img = plt.imshow(ar, cmap=colormap, clim=(ll, ul), interpolation='bicubic',
-                     norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
-                                            vmin=ll, vmax=ul),)
-    except:
-        fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using viridis instead' % colormap)
-        fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
-        img = plt.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic',
-                     norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
-                                            vmin=ll, vmax=ul),)
     if (x == None) or (x in 'seconds'):
         xmax = header['sec']
         xlabel = 'Time (s)'
     else:
         if x in ('cm', 'm', 'km'):
-            xmax = header['rhf_spm'] * ar.shape[1] * float(stack)
+            xmax = (ar.shape[1] * float(stack)) / header['rhf_spm']
             if 'cm' in x:
                 xmax = xmax * 100.
             if 'km' in x:
@@ -125,23 +113,36 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
                 zmax = zmax * 100.
             if 'mm' in z:
                 zmax = zmax * 1000.
-            zlabel = 'Depth (%s)' % (z)
+            zlabel = r'Depth at $\epsilon_r$=%s (%s)' % (header['rhf_epsr'], z)
         else: # z in 'samples'
             zmax = ar.shape[0]
             zlabel = 'Trace (before stacking)'
 
-    '''
-    # coming soon
-    ax.set_xticklabels()
-    ax.set_yticklabels()
-    '''
+    if verbose:
+        fx.printmsg('xmax: %s %s, zmax: %s %s' % (xmax, xlabel, zmax, zlabel))
+
+    try:
+        if verbose:
+            fx.printmsg('attempting to plot with colormap %s' % (colormap))
+        img = ax.imshow(ar, cmap=colormap, clim=(ll, ul), interpolation='bicubic', aspect='auto',
+                     norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
+                                            vmin=ll, vmax=ul), extent=[0,xmax,zmax,0])
+    except:
+        fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using viridis instead' % colormap)
+        fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
+        img = ax.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic', aspect='auto',
+                     norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
+                                            vmin=ll, vmax=ul), extent=[0,xmax,zmax,0])
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(zlabel)
 
     if colorbar:
         fig.colorbar(img)
     if verbose:
         plt.title('%s - %s MHz - stacking: %s - gain: %s' % (os.path.basename(header['infile']), freq, stack, gain))
     if figx / figy >=1: # if x is longer than y (avoids plotting error where data disappears for some reason)
-        plt.tight_layout(pad=fig.get_size_inches()[1]/2.) # then it's ok to call tight_layout()
+        plt.tight_layout(pad=fig.get_size_inches()[1]) # then it's ok to call tight_layout()
     else:
         fx.printmsg('WARNING: not calling tight_layout() because axis lengths are funky. please adjust manually in matplotlib gui.')
     if outfile != 'readgssi_plot':

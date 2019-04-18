@@ -151,6 +151,8 @@ def readdzt(infile, gps=False, epsr=None, verbose=False):
     data = np.fromfile(infile, dtype).reshape(-1,(header['rh_nsamp']*header['rh_nchan'])).T
 
     header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
+    header['ns_per_zsample'] = header['rhf_depth'] / (data.shape[0] * header['cr'])
+
     try:
         header['sec'] = data.shape[1]/float(header['rhf_sps'])
     except ZeroDivisionError:

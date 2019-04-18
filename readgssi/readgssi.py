@@ -208,7 +208,7 @@ def main():
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plotting=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hqdi:a:o:f:p:s:rRNwnmc:bg:z:E:t:x:z:',
+        opts, args = getopt.getopt(sys.argv[1:],'hqdi:a:o:f:p:s:rRNwnmc:bg:Z:E:t:x:z:',
             ['help','quiet','dmi','input=','antfreq=','output=','format=','plot=','stack=','bgr',
             'reverse', 'normalize','dewow','noshow','histogram','colormap=','colorbar','gain=',
             'zero=','epsr=','bandpass=', 'xscale=', 'zscale='])
@@ -284,7 +284,7 @@ def main():
             reverse = True
         if opt in ('-N', '--normalize'):
             normalize = True
-        if opt in ('-z', '--zero'):
+        if opt in ('-Z', '--zero'):
             if arg:
                 try:
                     zero = int(arg)
