@@ -105,7 +105,7 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
 
     if (z == None) or (z in 'nanoseconds'):
         zmax = header['ns_per_zsample'] * ar.shape[0] * 10**9
-        zlabel = 'Time (ns)'
+        zlabel = 'Two-way travel time (ns)'
     else:
         if z in ('mm', 'cm', 'm'):
             zmax = header['rhf_depth']
