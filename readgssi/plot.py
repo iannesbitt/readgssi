@@ -45,8 +45,8 @@ def spectrogram(ar, header, freq, verbose=True):
     sg.spectrogram(data=trace, samp_rate=samp_rate, wlen=samp_rate/1000, per_lap = 0.99, dbscale=True,
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
 
-def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x=None, z=None,
-              colormap='Greys', colorbar=False, noshow=False, outfile='readgssi_plot'):
+def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds',
+              colormap='Greys', colorbar=False, noshow=False, outfile='readgssi_plot', aspect='auto'):
     '''
     let's do some matplotlib
 
@@ -116,7 +116,7 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
             zlabel = r'Depth at $\epsilon_r$=%s (%s)' % (header['rhf_epsr'], z)
         else: # z in 'samples'
             zmax = ar.shape[0]
-            zlabel = 'Trace (before stacking)'
+            zlabel = 'Sample'
 
     if verbose:
         fx.printmsg('xmax: %s %s, zmax: %s %s' % (xmax, xlabel, zmax, zlabel))
@@ -124,13 +124,13 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
     try:
         if verbose:
             fx.printmsg('attempting to plot with colormap %s' % (colormap))
-        img = ax.imshow(ar, cmap=colormap, clim=(ll, ul), interpolation='bicubic', aspect='auto',
+        img = ax.imshow(ar, cmap=colormap, clim=(ll, ul), interpolation='bicubic', aspect=float(figy)/float(figx),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                             vmin=ll, vmax=ul), extent=[0,xmax,zmax,0])
     except:
         fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using viridis instead' % colormap)
         fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
-        img = ax.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic', aspect='auto',
+        img = ax.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic', aspect=float(figy)/float(figx),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                             vmin=ll, vmax=ul), extent=[0,xmax,zmax,0])
 

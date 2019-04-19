@@ -202,7 +202,7 @@ def main():
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
     reverse, freqmin, freqmax, specgram, zero, normalize, epsr = None, None, None, None, None, None, None
     colormap = 'Greys'
-    x, z = 'time', 'time'
+    x, z = 'seconds', 'nanoseconds'
     gain = 1
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
