@@ -42,7 +42,7 @@ icu=58.2=hf484d3e_1000
 idna=2.8=py37_1000
 intel-openmp=2019.1=144
 itsdangerous=1.1.0=pypi_0
-jinja2=2.10.1=pypi_0
+jinja2=2.10=pypi_0
 jpeg=9c=h14c3975_1001
 kiwisolver=1.0.1=py37h6bb024c_1002
 libffi=3.2.1=hf484d3e_1005
@@ -100,7 +100,7 @@ tinydb=3.12.2=pypi_0
 tinyrecord=0.1.5=pypi_0
 tk=8.6.9=h84994c4_1000
 tornado=5.1.1=py37h14c3975_1000
-urllib3=1.24.1=py37_1000
+urllib3=1.24.2=py37_0
 werkzeug=0.14.1=pypi_0
 wheel=0.32.3=py37_0
 xorg-libxau=1.0.8=h14c3975_1006
