@@ -88,35 +88,41 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
         fx.printmsg('lower color limit:  %s [mean - (3 * stdev)]' % ll)
         fx.printmsg('upper color limit:  %s [mean + (3 * stdev)]' % ul)
 
-    if (x == None) or (x in 'seconds'):
+    # X scaling routine
+    if (x == None) or (x in 'seconds'): # plot x as time by default
         xmax = header['sec']
         xlabel = 'Time (s)'
     else:
-        if x in ('cm', 'm', 'km'):
+        if x in ('cm', 'm', 'km'): # plot as distance based on unit
             xmax = (ar.shape[1] * float(stack)) / header['rhf_spm']
             if 'cm' in x:
                 xmax = xmax * 100.
             if 'km' in x:
                 xmax = xmax / 1000.
             xlabel = 'Distance (%s)' % (x)
-        else: # x in 'traces'
-            xmax = ar.shape[1] * float(stack)
-            xlabel = 'Trace (before stacking)'
+        else: # else we plot in units of stacked traces
+            xmax = ar.shape[1] # * float(stack)
+            xlabel = 'Trace (after stacking)'
+    # finally, relate max scale value back to array shape in order to set matplotlib axis scaling
+    xscale = ar.shape[1]/xmax
 
-    if (z == None) or (z in 'nanoseconds'):
+    # Z scaling routine
+    if (z == None) or (z in 'nanoseconds'): # plot z as time by default
         zmax = header['ns_per_zsample'] * ar.shape[0] * 10**9
         zlabel = 'Two-way travel time (ns)'
     else:
-        if z in ('mm', 'cm', 'm'):
+        if z in ('mm', 'cm', 'm'): # plot z as TWTT based on unit and cr/rhf_epsr value
             zmax = header['rhf_depth']
             if 'cm' in z:
                 zmax = zmax * 100.
             if 'mm' in z:
                 zmax = zmax * 1000.
             zlabel = r'Depth at $\epsilon_r$=%s (%s)' % (header['rhf_epsr'], z)
-        else: # z in 'samples'
+        else: # else we plot in units of samples
             zmax = ar.shape[0]
             zlabel = 'Sample'
+    # finally, relate max scale value back to array shape in order to set matplotlib axis scaling
+    zscale = ar.shape[0]/zmax
 
     if verbose:
         fx.printmsg('xmax: %s %s, zmax: %s %s' % (xmax, xlabel, zmax, zlabel))
@@ -124,13 +130,13 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
     try:
         if verbose:
             fx.printmsg('attempting to plot with colormap %s' % (colormap))
-        img = ax.imshow(ar, cmap=colormap, clim=(ll, ul), interpolation='bicubic', aspect=float(figy)/float(figx),
+        img = ax.imshow(ar, cmap=colormap, clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                             vmin=ll, vmax=ul), extent=[0,xmax,zmax,0])
     except:
         fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using viridis instead' % colormap)
         fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
-        img = ax.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic', aspect=float(figy)/float(figx),
+        img = ax.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                             vmin=ll, vmax=ul), extent=[0,xmax,zmax,0])
 
