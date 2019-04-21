@@ -1,7 +1,7 @@
 # Changelog
 
 ## changes since 0.0.10
-- added support for DZT files created with gprMax
+- addresses [#7](https://github.com/iannesbitt/readgssi/issues/7) to add support for DZT files created with gprMax 
 - added explicit support several antenna codes specific to SIR-3000 units and before
 - added the ability to label radargram axes with distance and time units
 

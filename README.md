@@ -7,11 +7,11 @@
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.1439119.svg)](https://dx.doi.org/10.5281/zenodo.1439119)
 [![License](https://img.shields.io/badge/license-GNU%20Affero%203.0-lightgrey.svg)](https://github.com/iannesbitt/readgssi/blob/master/LICENSE)
 
-`readgssi` is a tool intended for use as an open-source reader and preprocessing module for subsurface data collected with Geophysical Survey Systems Incorporated (GSSI) ground-penetrating georadar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and plot the data contained in those files. `readgssi` is also currently able to translate most DZT files to CSV and will be able to translate to multiple other output formats including HDF5 and SEG-Y, though not all formats are available yet (see [future](#future)). Matlab code donated by [Gabe Lewis](https://earthsciences.dartmouth.edu/people/gabriel-lewis), Dartmouth College Department of Earth Sciences. Python adaptation of Matlab code written with permission by Ian Nesbitt, University of Maine School of Earth and Climate Sciences.
+`readgssi` is a tool intended for use as an open-source reader and preprocessing module for subsurface data collected with Geophysical Survey Systems Incorporated (GSSI) ground-penetrating georadar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and plot the data contained in those files. `readgssi` is also currently able to translate most DZT files to CSV and will be able to translate to other output formats including HDF5  (see [future](#future)). Matlab code donated by [Gabe Lewis](https://earthsciences.dartmouth.edu/people/gabriel-lewis), Dartmouth College Department of Earth Sciences. Python adaptation written with permission by Ian Nesbitt, University of Maine School of Earth and Climate Sciences.
 
-The file read parameters are based on GSSI's DZT file description, similar to the ones available on pages 55-57 of the [SIR-3000 manual](https://support.geophysical.com/gssiSupport/Products/Documents/Control%20Unit%20Manuals/GSSI%20-%20SIR-3000%20Operation%20Manual.pdf). File structure is, unfortunately, prone to change at any time, and although I've been able to test with files from several systems, I have not encountered every iteration of file header yet. If you run into trouble, please [create a github issue](https://github.com/iannesbitt/readgssi/issues), or contact me at the address below.
+The file read parameters are based on GSSI's DZT file description, similar to the ones available on pages 55-57 of the [SIR-3000 manual](https://support.geophysical.com/gssiSupport/Products/Documents/Control%20Unit%20Manuals/GSSI%20-%20SIR-3000%20Operation%20Manual.pdf). File structure is, unfortunately, prone to change at any time, and although I've been able to test with files from several systems, I have not encountered every iteration of file header yet. If you run into trouble, please [create a github issue](https://github.com/iannesbitt/readgssi/issues).
 
-Questions, feature requests, and bugs: **ian * nesbitt at gmail * com** (kindly provide the error, what you are attempting to do, and the file causing you trouble when you contact me)
+Questions, feature requests, and bugs: please [open a github issue](https://github.com/iannesbitt/readgssi/issues). Kindly provide the error output, describe what you are attempting to do, and attach the DZT/DZG file(s) causing you trouble.
 
 ## requirements
 Strongly recommended to install via [anaconda](https://www.anaconda.com/download):
@@ -77,7 +77,7 @@ optional flags:
 -N, --normalize |                     |  reads a .DZG NMEA data if it exists; otherwise tries to read a csv file with lat, lon, and time fields to distance normalize with
 -m, --histogram |                     |  produce a histogram of data values
 -E, --epsr      | float > 1.0         |  user-defined epsilon sub r (sometimes referred to as "dielectric"; ignores value in DZT header)
--z, --zero      | positive integer    |  skip this many samples from the top of the trace downward (useful for removing transceiver delay)
+-Z, --zero      | positive integer    |  skip this many samples from the top of the trace downward (useful for removing transceiver delay)
 
 naming scheme for exports:
    CHARACTERS   |      MEANING
@@ -103,9 +103,9 @@ Simply specifying an input DZT file like in the above command (`-i file`) will d
 - samples per trace
 - bits per sample
 - traces per second
-- L1 dilectric
+- L1 dielectric as entered during survey
 - sampling depth
-- speed of light at given dilectric
+- speed of light at given dielectric
 - number of traces
 - number of seconds
 
@@ -126,7 +126,7 @@ Applies 8x stacking, dewow, and background removal filters before exporting to C
 ```bash
 readgssi -i DZT__001.DZT -p 5 -s auto -c viridis -m
 ```
-The above command will cause `readgssi` to save and show a plot named "DZT__001_100MHz.png" with a y-size of 6 inches at 150 dpi (`-p 6`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing, approximately 2.5\*y (`-s auto`). The plot will be rendered in the viridis color scheme, which is the default for matplotlib. The `-m` flag will draw a histogram for each data channel.
+The above command will cause `readgssi` to save and show a plot named "DZT__001_100MHz.png" with a y-size of 6 inches at 150 dpi (`-p 6`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing on a monitor, approximately 2.5\*y (`-s auto`). The plot will be rendered in the viridis color scheme, which is the default for matplotlib. The `-m` flag will draw a histogram for each data channel.
 ![Example 1a](https://github.com/iannesbitt/readgssi/raw/master/examples/1a.png)
 ![Example 1a histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/1a-h.png)
 
@@ -172,11 +172,12 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 - color bar shows up too large on some plots (matplotlib bug)
 
 ## future
+- explicit documentation
 - automatic script testing for smoother dev
 - create a class for surveyline objects, similar to [`obspy.core.trace.Trace`](https://docs.obspy.org/packages/autogen/obspy.core.trace.Trace.html)
 - GPS transcription from CSV with fields like `mark name, lon, lat, elev, time`
 - Use GPS altitude to adjust z position across profile
-- GUI-based geologic/dilectric layer picking
+- GUI-based geologic/dielectric layer picking
   - layer velocity calculation (using minimum of clustered hyperbola tail angle measurements, or manual input)
   - velocity-based depth adjustments
   - ability to incorporate ground truth measurements
