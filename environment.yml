@@ -1,4 +1,4 @@
-name: readgssi
+name: radar
 channels:
   - conda-forge
   - defaults
@@ -84,4 +84,3 @@ dependencies:
     - geopy==1.18.1
     - pynmea2==1.12.0
     - readgssi==0.0.11
-
