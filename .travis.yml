@@ -26,3 +26,6 @@ install:
 
   - pip install pynmea2 geopy pytz
   - pip install .
+
+script:
+  - readgssi --help
