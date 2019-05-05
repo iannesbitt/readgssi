@@ -4,19 +4,14 @@ before_install:
 
   # Here we just install Miniconda, which you shouldn't have to change.
 
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b
-  - export PATH=/home/travis/miniconda/bin:$PATH
-  - conda update --yes conda
+  - wget "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh" -O miniconda.sh;
+  - chmod +x miniconda.sh;
+  - ./miniconda.sh -b  -p /home/travis/miniconda;
+  - export PATH=/home/travis/miniconda/bin:$PATH;
+  - echo $PATH;
+  - ls /home/travis/miniconda/bin;
 
 install:
-
-  # We just set up a conda environment with the right Python version. This
-  # should not need changing.
-
-  - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
-  - source activate test
 
   # Below, include the dependencies you want to install with conda, optionally
   # specifying versions used in the matrix above. If you split this into
@@ -24,7 +19,7 @@ install:
   # the first package to install (for every conda install command) otherwise
   # numpy may be automatically upgraded.
 
-  - conda install --yes numpy=$NUMPY scipy=$SCIPY obspy pandas h5py matplotlib pytest pip
+  - conda install --yes numpy scipy obspy pandas h5py matplotlib pytest pip
 
   # You can also install some dependencies with pip if not available in conda
 
