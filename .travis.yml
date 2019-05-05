@@ -19,6 +19,7 @@ install:
   # the first package to install (for every conda install command) otherwise
   # numpy may be automatically upgraded.
 
+  - conda config --add channels conda-forge
   - conda install --yes numpy scipy obspy pandas h5py matplotlib pytest pip
 
   # You can also install some dependencies with pip if not available in conda
