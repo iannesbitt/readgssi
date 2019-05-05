@@ -1,5 +1,8 @@
 # Changelog
 
+## changes since 0.0.11
+- added support and badge for travis-ci in anticipation of test suite
+
 ## changes since 0.0.10
 - addresses [#7](https://github.com/iannesbitt/readgssi/issues/7) to add support for DZT files created with gprMax 
 - added explicit support several antenna codes specific to SIR-3000 units and before
