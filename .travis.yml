@@ -24,4 +24,5 @@ install:
 
   # You can also install some dependencies with pip if not available in conda
 
-  - pip install pynmea2 geopy pytz readgssi
+  - pip install pynmea2 geopy pytz
+  - pip install .
