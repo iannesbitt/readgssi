@@ -184,4 +184,4 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
   - ability to incorporate ground truth measurements
 - velocity gradient/angle of incidence-based array migration
 - translation to common geophysical formats (HDF5, SEGY, etc.)
-- integration with [`vtki`](https://docs.vtki.org) for 3D visualization of location-aware arrays
+- integration with [`vista`](https://docs.pyvista.org) for 3D visualization of location-aware arrays
