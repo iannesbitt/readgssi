@@ -208,8 +208,8 @@ def main():
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plotting=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hqdi:a:o:f:p:s:rRNwnmc:bg:Z:E:t:x:z:',
-            ['help','quiet','dmi','input=','antfreq=','output=','format=','plot=','stack=','bgr',
+        opts, args = getopt.getopt(sys.argv[1:],'hVqdi:a:o:f:p:s:rRNwnmc:bg:Z:E:t:x:z:',
+            ['help', 'version', 'quiet','dmi','input=','antfreq=','output=','format=','plot=','stack=','bgr',
             'reverse', 'normalize','dewow','noshow','histogram','colormap=','colorbar','gain=',
             'zero=','epsr=','bandpass=', 'xscale=', 'zscale='])
     # the 'no option supplied' error
@@ -221,6 +221,9 @@ def main():
     for opt, arg in opts: 
         if opt in ('-h', '--help'): # the help case
             fx.printmsg(config.help_text)
+            sys.exit()
+        if opt in ('-V', '--version'): # the help case
+            print(config.version_text)
             sys.exit()
         if opt in ('-q', '--quiet'):
             verbose = False

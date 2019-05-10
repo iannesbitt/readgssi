@@ -53,3 +53,5 @@ naming scheme for exports:
     Bp100-145   |  2-corner bandpass filter applied from 100 to 145 MHz
     G30         |  30x contrast gain
 ''' % (__version__, u'\U0001F12F', author, year, affil)
+
+version_text = '%s %s' % (name, __version__)
