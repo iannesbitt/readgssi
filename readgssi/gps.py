@@ -109,7 +109,11 @@ def readdzg(fi, frmt, header, verbose=False):
                         timestamp = TZ.localize(datetime.combine(header['rhb_cdt'], msg.timestamp)) # set t1 for this loop
                 if 'GGA' in ln:
                     sec1 = timestamp.timestamp()
-                    x1, y1, z1 = float(msg.longitude), float(msg.latitude), float(msg.altitude)
+                    x1, y1 = float(msg.longitude), float(msg.latitude)
+                    try:
+                        z1 = float(msg.altitude)
+                    except AttributeError:
+                        z1 = 0
                     if msg.lon_dir in 'W':
                         lonhem = 'west'
                     if msg.lat_dir in 'S':
