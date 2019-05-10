@@ -54,6 +54,7 @@ def readdzg(fi, frmt, header, verbose=False):
     td = False
     prevtrace = False
     rmc = False
+    rmcwarn = True
     lathem = 'north'
     lonhem = 'east'
     x0, x1, y0, y1, z0, z1 = False, False, False, False, False, False # coordinates
@@ -63,10 +64,10 @@ def readdzg(fi, frmt, header, verbose=False):
             fx.printmsg('using gps file:     %s' % (fi))
         if frmt == 'dzg': # if we're working with DZG format
             for ln in gf: # loop through the first few sentences, check for RMC
-                if ln.startswith('$GPRMC'): # check to see if RMC sentence (should occur before GGA)
+                if 'RMC' in ln: # check to see if RMC sentence (should occur before GGA)
                     rmc = True
                     rowrmc += 1
-                if ln.startswith('$GPGGA'):
+                if 'GGA' in ln:
                     if rowgga == 0:
                         msg = pynmea2.parse(ln.rstrip()) # convert gps sentence to pynmea2 named tuple
                         ts0 = TZ.localize(datetime.combine(datetime(1980, 1, 1), msg.timestamp)) # row 0's timestamp (not ideal)
@@ -89,24 +90,25 @@ def readdzg(fi, frmt, header, verbose=False):
             gf.seek(0) # back to beginning of file
             rowgga = 0
             for ln in gf: # loop over file line by line
-                if ln.startswith('$GSSIS'):
+                if '$GSSIS' in ln:
                     trace = int(ln.split(',')[1])
                 if rmc == True: # if there is RMC, we can use the full datestamp
-                    if ln.startswith('$GPRMC'):
+                    if 'RMC' in ln:
                         msg = pynmea2.parse(ln.rstrip())
                         timestamp = TZ.localize(datetime.combine(msg.datestamp, msg.timestamp)) # set t1 for this loop
                         u = msg.spd_over_grnd * 0.514444444 # convert from knots to m/s
                 else: # if no RMC, we hope there is no UTC 00:00:00 in the file.........
-                    fx.printmsg('WARNING: no RMC sentences found in GPS records. this could become an issue if your file goes through 00:00:00.')
-                    fx.printmsg("         if you get a time jump error please open a github issue at https://github.com/iannesbitt/readgssi/issues")
-                    fx.printmsg("         and attach the verbose output of this script plus a zip of the DZT and DZG files you're working with.")
+                    if rmcwarn:
+                        fx.printmsg('WARNING: no RMC sentences found in GPS records. this could become an issue if your file goes through 00:00:00.')
+                        fx.printmsg("         if you get a time jump error please open a github issue at https://github.com/iannesbitt/readgssi/issues")
+                        fx.printmsg("         and attach the verbose output of this script plus a zip of the DZT and DZG files you're working with.")
+                        rmcwarn = False
 
-                    if ln.startswith('$GPGGA'):
+                    if 'GGA' in ln:
                         msg = pynmea2.parse(ln.rstrip())
-                        timestamp = TZ.localize(msg.timestamp) # set t1 for this loop
-                if ln.startswith('$GPGGA'):
+                        timestamp = TZ.localize(datetime.combine(header['rhb_cdt'], msg.timestamp)) # set t1 for this loop
+                if 'GGA' in ln:
                     sec1 = timestamp.timestamp()
-                    msg = pynmea2.parse(ln.rstrip())
                     x1, y1, z1 = float(msg.longitude), float(msg.latitude), float(msg.altitude)
                     if msg.lon_dir in 'W':
                         lonhem = 'west'
