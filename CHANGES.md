@@ -2,6 +2,8 @@
 
 ## changes since 0.0.11
 - added support and badge for travis-ci in anticipation of test suite
+- `-V` or `--version` outputs version string
+- fixed bug ([#10](https://github.com/iannesbitt/readgssi/issues/10)) which read NMEA GGA strings incorrectly from DZGs that don't contain NMEA RMC
 
 ## changes since 0.0.10
 - addresses [#7](https://github.com/iannesbitt/readgssi/issues/7) to add support for DZT files created with gprMax 
