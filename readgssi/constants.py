@@ -51,6 +51,7 @@ ANT = {
     '3200': 'adjustable',
     '3200MLF': 'adjustable',
     'gprMa': 'adjustable',      # gprMax support
+    'GSSI': 'adjustable',       # support for issue #11
     '3207': 100,
     '3207AP': 100,
     '5106': 200,
