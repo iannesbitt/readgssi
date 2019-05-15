@@ -104,7 +104,13 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
             xmax = ar.shape[1] # * float(stack)
             xlabel = 'Trace (after stacking)'
     # finally, relate max scale value back to array shape in order to set matplotlib axis scaling
-    xscale = ar.shape[1]/xmax
+    try:
+        xscale = ar.shape[1]/xmax
+    except ZeroDivisionError:
+        fx.printmsg('ERROR: cannot plot x-axis in "%s" mode; header value is zero. using time instead.' % (x))
+        xmax = header['sec']
+        xlabel = 'Time (s)'
+        xscale = ar.shape[1]/xmax
 
     # Z scaling routine
     if (z == None) or (z in 'nanoseconds'): # plot z as time by default
@@ -122,7 +128,13 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
             zmax = ar.shape[0]
             zlabel = 'Sample'
     # finally, relate max scale value back to array shape in order to set matplotlib axis scaling
-    zscale = ar.shape[0]/zmax
+    try:
+        zscale = ar.shape[0]/zmax
+    except ZeroDivisionError: # apparently this can happen even in genuine GSSI files
+        fx.printmsg('ERROR: cannot plot z-axis in "%s" mode; header max value is zero. using samples instead.' % (z))
+        zmax = ar.shape[0]
+        zlabel = 'Sample'
+        zscale = ar.shape[0]/zmax
 
     if verbose:
         fx.printmsg('xmax: %s %s, zmax: %s %s' % (xmax, xlabel, zmax, zlabel))
