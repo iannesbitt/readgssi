@@ -33,7 +33,7 @@ from readgssi.dzt import *
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figsize=10,
              stack=1, x='seconds', z='nanoseconds', verbose=False, histogram=False, colormap='Greys', colorbar=False,
              zero=0, gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, dewow=False,
-             normalize=False, specgram=False, noshow=False, epsr=None):
+             normalize=False, specgram=False, noshow=False, spm=None, epsr=None):
     '''
     primary radar processing function
 
@@ -46,7 +46,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             if verbose:
                 fx.printmsg('reading...')
                 fx.printmsg('input file:         %s' % (infile))
-            r = readdzt(infile, gps=normalize, epsr=epsr, verbose=verbose)
+            r = readdzt(infile, gps=normalize, spm=spm, epsr=epsr, verbose=verbose)
             if verbose:
                 fx.printmsg('success. header values:')
                 header_info(r[0], r[1])
@@ -200,7 +200,7 @@ def main():
     verbose = True
     stack = 1
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
-    reverse, freqmin, freqmax, specgram, zero, normalize, epsr = None, None, None, None, None, None, None
+    reverse, freqmin, freqmax, specgram, zero, normalize, spm, epsr = None, None, None, None, None, None, None, None
     colormap = 'Greys'
     x, z = 'seconds', 'nanoseconds'
     gain = 1
@@ -208,8 +208,8 @@ def main():
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plotting=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hVqdi:a:o:f:p:s:rRNwnmc:bg:Z:E:t:x:z:',
-            ['help', 'version', 'quiet','dmi','input=','antfreq=','output=','format=','plot=','stack=','bgr',
+        opts, args = getopt.getopt(sys.argv[1:],'hVqd:i:a:o:f:p:s:rRNwnmc:bg:Z:E:t:x:z:',
+            ['help', 'version', 'quiet','spm=','input=','antfreq=','output=','format=','plot=','stack=','bgr',
             'reverse', 'normalize','dewow','noshow','histogram','colormap=','colorbar','gain=',
             'zero=','epsr=','bandpass=', 'xscale=', 'zscale='])
     # the 'no option supplied' error
@@ -321,10 +321,15 @@ def main():
                         fx.printmsg('ERROR: plot size argument must be a positive integer or "auto".')
                         fx.printmsg(config.help_text)
                         sys.exit(2)
-        if opt in ('-d', '--dmi'):
-            #dmi = True
-            fx.printmsg('ERROR: DMI devices are not supported at the moment.')
-            pass # not doing anything with this at the moment
+        if opt in ('-d', '--spm'):
+            if arg:
+                try:
+                    spm = float(arg)
+                    assert spm < 0
+                except:
+                    fx.printmsg('ERROR: samples per meter must be positive')
+            else:
+                fx.printmsg('WARNING: no samples per meter value given')
         if opt in ('-x', '--xscale'):
             if arg:
                 if arg in ('temporal', 'time', 'seconds', 's'):
@@ -393,7 +398,7 @@ def main():
                  figsize=figsize, stack=stack, verbose=verbose, histogram=histogram, x=x, z=z,
                  colormap=colormap, colorbar=colorbar, reverse=reverse, gain=gain, bgr=bgr, zero=zero,
                  normalize=normalize, dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax,
-                 epsr=epsr)
+                 spm=spm, epsr=epsr)
         if verbose:
             fx.printmsg('done with %s' % infile)
         print('')

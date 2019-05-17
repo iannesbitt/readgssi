@@ -44,7 +44,7 @@ def readtime(bytes):
     yr = int(dtbits[0:7], 2) + 1980
     return datetime(yr, mo, day, hr, mins, sec2, 0, tzinfo=pytz.UTC)
 
-def readdzt(infile, gps=False, epsr=None, verbose=False):
+def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
     '''
     function to unpack and return things we need from the header, and the data itself
     currently unused but potentially useful lines:
@@ -73,6 +73,10 @@ def readdzt(infile, gps=False, epsr=None, verbose=False):
     header['rh_zero'] = struct.unpack('<h', infile.read(2))[0] # if sir-30 or utilityscan df, then repeats per sample; otherwise 0x80 for 8bit and 0x8000 for 16bit
     header['rhf_sps'] = struct.unpack('<f', infile.read(4))[0] # scans per second
     header['rhf_spm'] = struct.unpack('<f', infile.read(4))[0] # scans per meter
+    header['dzt_spm'] = header['rhf_spm']
+    if spm:
+        header['rhf_spm'] = spm
+
     header['rhf_mpm'] = struct.unpack('<f', infile.read(4))[0] # meters per mark
     header['rhf_position'] = struct.unpack('<f', infile.read(4))[0] # position (ns)
     header['rhf_range'] = struct.unpack('<f', infile.read(4))[0] # range (ns)
@@ -226,14 +230,17 @@ def header_info(header, data):
     fx.printmsg('samples per trace:  %i' % header['rh_nsamp'])
     fx.printmsg('bits per sample:    %s' % BPS[header['rh_bits']])
     fx.printmsg('traces per second:  %.1f' % header['rhf_sps'])
-    fx.printmsg('traces per meter:   %.1f' % header['rhf_spm'])
+    if header['dzt_spm'] != header['rhf_spm']:
+        fx.printmsg('traces per meter:   %.2f (manually set - value from DZT: %.2f)' % (float(header['rhf_spm']), float(header['dzt_spm'])))
+    else:
+        fx.printmsg('traces per meter:   %.1f' % (float(header['rhf_spm'])))
     if header['dzt_epsr'] != header['rhf_epsr']:
-        fx.printmsg('user epsr:          %.1f (value from DZT: %.1f)' % (header['rhf_epsr'], header['dzt_epsr']))
+        fx.printmsg('user epsr:          %.1f (manually set - value from DZT: %.1f)' % (header['rhf_epsr'], header['dzt_epsr']))
     else:
         fx.printmsg('epsr:               %.1f' % header['rhf_epsr'])
     fx.printmsg('speed of light:     %.2E m/sec (%.2f%% of vacuum)' % (header['cr'], header['cr'] / C * 100))
     if header['dzt_depth'] != header['rhf_depth']:
-        fx.printmsg('sampling depth:     %.1f m (value from DZT: %.1f)' % (header['rhf_depth'], header['dzt_depth']))
+        fx.printmsg('sampling depth:     %.1f m (manually set - value from DZT: %.1f)' % (header['rhf_depth'], header['dzt_depth']))
     else:
         fx.printmsg('sampling depth:     %.1f m' % (header['rhf_depth']))
     fx.printmsg('"rhf_top":          %.1f m' % header['rhf_top'])
@@ -243,5 +250,4 @@ def header_info(header, data):
     else:
         fx.printmsg('traces:             %f' % int(data.shape[1]/header['rh_nchan']))
     fx.printmsg('seconds:            %.8f' % (header['sec']))
-    fx.printmsg('samp/m:             %.2f (zero unless DMI present)' % (float(header['rhf_spm']))) # I think...
     fx.printmsg('array dimensions:   %i x %i' % (data.shape[0], data.shape[1]))
