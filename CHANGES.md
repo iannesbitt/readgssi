@@ -1,6 +1,8 @@
 # Changelog
 
 ## changes since 0.0.11
+- added PyPI downloads badge
+- added ability to manually set samples per meter using `-d <float>` flag
 - added support and badge for travis-ci in anticipation of test suite
 - `-V` or `--version` outputs version string
 - fixed bug ([#10](https://github.com/iannesbitt/readgssi/issues/10)) which read NMEA GGA strings incorrectly from DZGs that don't contain NMEA RMC
