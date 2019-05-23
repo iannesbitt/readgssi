@@ -8,7 +8,7 @@ from readgssi.gps import readdzg
 import readgssi.functions as fx
 from readgssi.constants import *
 
-'''
+"""
 helper module for reading information from GSSI DZT files
 
 the main function, readdzt(), returns header information in dictionary format
@@ -16,10 +16,10 @@ and the radar profile in a numpy array.
 
 readdzt_gprpy() restructures output for use specifically with
 Alain Plattner's GPRPy software (https://github.com/NSGeophysics/GPRPy).
-'''
+"""
 
 def readtime(bytes):
-    '''
+    """
     function to read dates
     have i mentioned yet that this is not a great way of storing dates
     
@@ -29,7 +29,7 @@ def readtime(bytes):
 
     so we read (seconds/2, min, hr, day, month, year-1980)
     then do seconds*2 and year+1980 and return a datetime object
-    '''
+    """
     dtbits = ''
     rfDateByte = (b for b in bytes)
     for byte in rfDateByte:                    # assemble the binary string
@@ -45,7 +45,7 @@ def readtime(bytes):
     return datetime(yr, mo, day, hr, mins, sec2, 0, tzinfo=pytz.UTC)
 
 def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
-    '''
+    """
     function to unpack and return things we need from the header, and the data itself
     currently unused but potentially useful lines:
     # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s' # the structure of the bytewise header and "gps data" as I understand it - 1024 bytes
@@ -54,7 +54,7 @@ def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
     # packed_size = 0
     # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
     # fx.printmsg('fixed header size: '+str(packed_size)+'\n')
-    '''
+    """
     infile_gps = os.path.splitext(infile)[0] + ".DZG"
     infile = open(infile, 'rb')
     header = {}
@@ -204,9 +204,9 @@ def readdzt_gprpy(infile):
     return data, header
 
 def header_info(header, data):
-    '''
+    """
     function to print relevant header data
-    '''
+    """
     fx.printmsg('system:             %s (system code %s)' % (UNIT[header['rh_system']], header['rh_system']))
     fx.printmsg('antennas:           %s' % header['rh_antname'])
 

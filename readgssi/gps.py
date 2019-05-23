@@ -8,12 +8,12 @@ import readgssi.functions as fx
 from readgssi.constants import TZ
 from math import sin, cos, sqrt, atan2, radians
 
-'''
+"""
 contains functions for reading gps data from various formats
-'''
+"""
 
 def readdzg(fi, frmt, header, verbose=False):
-    '''
+    """
     a parser to extract gps data from DZG file format
     DZG contains raw NMEA sentences, which should include RMC and GGA
     fi = file containing gps information
@@ -29,7 +29,7 @@ def readdzg(fi, frmt, header, verbose=False):
     $GPRMC,UTC hhmmss,status,lat DDmm.sss,lon DDDmm.sss,SOG,COG,date ddmmyy,checksum *xx
     RMC strings may also be useful for SOG and COG,
     ...but let's keep it simple for now.
-    '''
+    """
     traces = header['traces']
     if header['rhf_spm'] == 0:
         spu = header['rhf_sps']

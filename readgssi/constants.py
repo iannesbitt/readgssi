@@ -1,8 +1,8 @@
 import pytz
 
-'''
+"""
 defining some constants
-'''
+"""
 
 MINHEADSIZE = 1024 # absolute minimum total header size
 PAREASIZE = 128 # fixed info header size

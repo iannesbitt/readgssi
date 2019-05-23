@@ -3,29 +3,29 @@ import numpy as np
 import pandas as pd
 
 def flip(ar, verbose=False):
-    '''
+    """
     flip radargram horizontally (read backwards)
-    '''
+    """
     if verbose:
         fx.printmsg('flipping radargram...')
     return ar.T[::-1].T
 
 def reducex(ar, by=1, verbose=False):
-    '''
+    """
     reduce the number of traces in the array by a number
 
     not the same as stacking since it doesn't sum adjacent traces
-    '''
+    """
     if verbose:
         fx.printmsg('reducing array by a factor of %s...' % (by))
     return ar[:,::by]
 
 def stack(ar, stack='auto', verbose=False):
-    '''
+    """
     stacking algorithm
 
     stack='auto' results in an approximately 2.5:1 x:y axis ratio
-    '''
+    """
     stack0 = stack
     if str(stack).lower() in 'auto':
         am = '(automatic)'
@@ -60,9 +60,9 @@ def stack(ar, stack='auto', verbose=False):
     return arr, stack
 
 def distance_normalize(header, ar, gps, verbose=False):
-    '''
+    """
     distance normalization (not pretty but gets the job done)
-    '''
+    """
     if ar[2] == []:
         if verbose:
             fx.printmsg('no gps information for distance normalization')

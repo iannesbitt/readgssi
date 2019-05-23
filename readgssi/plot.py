@@ -7,14 +7,14 @@ import matplotlib.colors as colors
 import readgssi.functions as fx
 from readgssi.constants import *
 
-'''
+"""
 contains several plotting functions
-'''
+"""
 
 def histogram(ar, verbose=True):
-    '''
+    """
     shows a y-log histogram of data value distribution
-    '''
+    """
     mean = np.mean(ar)
     std = np.std(ar)
     ll = mean - (std * 3) # lower color limit
@@ -32,11 +32,11 @@ def histogram(ar, verbose=True):
     plt.show()
 
 def spectrogram(ar, header, freq, verbose=True):
-    '''
+    """
     displays a spectrogram of the center trace of the array
 
     this is for testing purposes and not accessible from the command prompt
-    '''
+    """
     tr = int(ar.shape[1] / 2)
     if verbose:
         fx.printmsg('converting trace %s to frequency domain and drawing spectrogram...' % (tr))
@@ -47,7 +47,7 @@ def spectrogram(ar, header, freq, verbose=True):
 
 def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds',
               colormap='Greys', colorbar=False, noshow=False, outfile='readgssi_plot', aspect='auto'):
-    '''
+    """
     let's do some matplotlib
 
     requirements:
@@ -59,7 +59,7 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
     colorbar    - boolean, whether to draw the colorbar. defaults to False
     noshow      - boolean, whether to bring up the matplotlib figure dialog when drawing. defaults to False, meaning the dialog will be displayed.
     outfile     - name of the output file. defaults to 'readgssi_plot.png' in the current directory.
-    '''
+    """
 
     # having lots of trouble with this line not being friendly with figsize tuple (integer coercion-related errors)
     # so we will force everything to be integers explicitly

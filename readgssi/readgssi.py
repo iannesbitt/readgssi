@@ -34,11 +34,11 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
              stack=1, x='seconds', z='nanoseconds', verbose=False, histogram=False, colormap='Greys', colorbar=False,
              zero=0, gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, dewow=False,
              normalize=False, specgram=False, noshow=False, spm=None, epsr=None):
-    '''
+    """
     primary radar processing function
 
     includes calls to reading, filtering, translation, and plotting functions
-    '''
+    """
 
     if infile:
         # read the file
@@ -97,9 +97,9 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
     del arr, new_arr
 
     for ar in img_arr:
-        '''
+        """
         filter and construct an output file or plot from the current channel's array
-        '''
+        """
         if verbose:
             fx.printmsg('beginning processing for channel %s (antenna %s)' % (ar, r[0]['rh_antname'][ar]))
         # execute filtering functions if necessary
@@ -136,9 +136,9 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             if len(chans) > 1:
                 outfile = '%sc%s' % (outfile, ar) # avoid naming conflicts
         else:
-            '''
+            """
             ~~~ The Seth Campbell Honorary Naming Scheme ~~~
-            '''
+            """
             outfile = '%sc%s' % (os.path.join(infile_basename), ar)
             if normalize:
                 outfile = '%sDn' % (outfile)
@@ -193,9 +193,9 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
 
     
 def main():
-    '''
+    """
     gathers and parses arguments to create function calls
-    '''
+    """
 
     verbose = True
     stack = 1
@@ -408,7 +408,7 @@ def main():
         sys.exit(2)
 
 if __name__ == "__main__":
-    '''
+    """
     directs the command line call to the main argument parsing function.
-    '''
+    """
     main()

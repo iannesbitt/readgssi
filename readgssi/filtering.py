@@ -2,16 +2,16 @@ import numpy as np
 from obspy.signal.filter import bandpass
 import readgssi.functions as fx
 
-'''
+"""
 Mathematical filtering routines for array manipulation
 Written in part by François-Xavier Simon (@fxsimon)
-'''
+"""
 
 def bgr(ar, verbose=False):
-    '''
+    """
     Instrument background removal (BGR)
     Subtracts off row averages
-    '''
+    """
     if verbose:
         fx.printmsg('removing horizontal background...')
     i = 0
@@ -22,9 +22,9 @@ def bgr(ar, verbose=False):
     return ar
 
 def dewow(ar, verbose=False):
-    '''
+    """
     Polynomial dewow filter
-    '''
+    """
     if verbose:
         fx.printmsg('dewowing data...')
     signal = list(zip(*ar))[10]
@@ -37,9 +37,9 @@ def dewow(ar, verbose=False):
     return ar
 
 def bp(ar, header, freqmin, freqmax, verbose=False):
-    '''
+    """
     Vertical frequency domain bandpass
-    '''
+    """
     if verbose:
         fx.printmsg('vertical frequency filtering...')
     samp_freq = 1 / (header['rhf_depth'] / header['cr'] / header['rh_nsamp'])

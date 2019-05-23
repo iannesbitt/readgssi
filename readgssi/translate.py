@@ -5,23 +5,23 @@ import json
 from readgssi.gps import readdzg
 import readgssi.functions as fx
 
-'''
+"""
 contains translations to common formats
-'''
+"""
 
 def json_header(header, outfile_abspath, verbose=False):
-    '''
+    """
     save header values as a .json so another script can take what it needs
-    '''
+    """
     with open('%s.json' % (outfile_abspath), 'w') as f:
         if verbose:
             fx.printmsg('serializing header as %s' % (f.name))
         json.dump(obj=header, fp=f, indent=4, sort_keys=True, default=str)
 
 def csv(ar, outfile_abspath, header=None, verbose=False):
-    '''
+    """
     outputting to csv is simple. we read into a dataframe, then use pandas' to_csv() builtin function.
-    '''
+    """
     if verbose:
         t = ''
         if header:
@@ -33,9 +33,9 @@ def csv(ar, outfile_abspath, header=None, verbose=False):
         json_header(header=header, outfile_abspath=outfile_abspath, verbose=verbose)
 
 def numpy(ar, outfile_abspath, header=None, verbose=False):
-    '''
+    """
     save as .npy binary numpy file
-    '''
+    """
     if verbose:
         t = ''
         if header:
@@ -47,23 +47,23 @@ def numpy(ar, outfile_abspath, header=None, verbose=False):
         json_header(header=header, outfile_abspath=outfile_abspath, verbose=verbose)
 
 def gprpy(ar, header, outfile_abspath, verbose=False):
-    '''
+    """
     save in a format GPRPy (https://github.com/NSGeophysics/GPRPy) can open
 
     currently, that's numpy binary .npy and a .json formatted header file
     (https://github.com/NSGeophysics/GPRPy/issues/3#issuecomment-460462612)
-    '''
+    """
     numpy(ar=ar, header=header, outfile_abspath=outfile_abspath, verbose=verbose)
 
 def segy(ar, outfile_abspath, verbose=False):
-    '''
+    """
     segy output is not yet available
-    '''
+    """
     fx.printmsg('ERROR: SEG-Y is not yet supported, please choose another format.')
     raise NotImplementedError('SEG-Y is not yet supported.')
 
 def h5(ar, infile_basename, outfile_abspath, verbose=False):
-    '''
+    """
     Now we gather gps data.
     Full GPS data are in .DZG files of same name if they exist (see below).
     If .DZG does not exist, then locations are determined from correlating
@@ -86,7 +86,7 @@ def h5(ar, infile_basename, outfile_abspath, verbose=False):
     /line_x/location_n/datacapture_0/echogram_0 (/group/group/group/dataset)
     each dataset has an 'attributes' item attached, formatted in 'collections.defaultdict' style:
     [('PCSavetimestamp', str), ('GPS Cluster- MetaData_xml', str), ('Digitizer-MetaData_xml', str), ('GPS Cluster_UTM-MetaData_xml', str)]
-    '''
+    """
 
     if verbose:
         fx.printmsg('output format is IceRadar HDF5. writing file to: %s' % outfile_abspath)
