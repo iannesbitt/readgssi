@@ -69,8 +69,8 @@ def distance_normalize(header, ar, gps, verbose=False):
     else:
         if verbose:
             fx.printmsg('normalizing GPS velocity records...')
-        while gps['velocity'].min() < 0.02: # fix zero and negative velocity values
-            gps['velocity'].replace(gps['velocity'].min(), 0.02, inplace=True)
+        while np.min(gps['velocity']) < 0.01: # fix zero and negative velocity values
+            gps['velocity'].replace(gps['velocity'].min(), 0.01, inplace=True)
         norm_vel = (gps['velocity'] * (1/gps['velocity'].max())*100).to_frame('normalized') # should end up as dataframe with one column
         # upsample to match radar array shape
         nanosec_samp_rate = int((1/header['rhf_sps'])*10**9) # nanoseconds
