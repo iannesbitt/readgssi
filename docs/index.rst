@@ -1,5 +1,5 @@
 .. readgssi documentation master file, created by
-   sphinx-quickstart on Sat May  4 18:38:05 2019.
+   sphinx-quickstart on Thu May 23 12:37:37 2019.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
