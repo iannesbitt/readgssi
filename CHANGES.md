@@ -1,6 +1,9 @@
 # Changelog
 
 ## changes since 0.0.11
+- fixed bug that only prevented reading NMEA RMC-only DZG files. now fully compatible with DZGs created with [gpx2dzg](https://github.com/iannesbitt/gpx2dzg)
+- added `-d` flag documentation to help text and readme
+- updated docstring formatting
 - added PyPI downloads badge
 - added ability to manually set samples per meter using `-d <float>` flag
 - added support and badge for travis-ci in anticipation of test suite

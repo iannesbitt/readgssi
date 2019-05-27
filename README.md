@@ -77,6 +77,7 @@ optional flags:
 -a, --antfreq   | positive integer    |  specify antenna frequency (read automatically if not given)
 -s, --stack     | +integer or "auto"  |  specify trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
 -N, --normalize |                     |  reads a .DZG NMEA data if it exists; otherwise tries to read a csv file with lat, lon, and time fields to distance normalize with
+-d, --spm       | positive float      |  specify the samples per meter (spm) manually. overrides header value.
 -m, --histogram |                     |  produce a histogram of data values
 -E, --epsr      | float > 1.0         |  user-defined epsilon sub r (sometimes referred to as "dielectric"; ignores value in DZT header)
 -Z, --zero      | positive integer    |  skip this many samples from the top of the trace downward (useful for removing transceiver delay)
