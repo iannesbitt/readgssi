@@ -1,5 +1,8 @@
 # Changelog
 
+## changes since 0.0.12
+- fixed [#13](https://github.com/iannesbitt/readgssi/issues/13) by adding `SS MINI` to list of recognized antenna codes
+
 ## changes since 0.0.11
 - fixed bug that prevented reading NMEA RMC-only DZG files. now fully compatible with DZGs created with [gpx2dzg](https://github.com/iannesbitt/gpx2dzg)
 - added `-d` flag documentation to help text and readme
