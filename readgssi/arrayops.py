@@ -79,8 +79,11 @@ def distance_normalize(header, ar, gps, verbose=False):
         norm_vel = pd.concat([norm_vel, newdf], axis=1).interpolate('time').bfill()
         norm_vel = norm_vel.round().astype(int, casting='unsafe')
 
-        rm = round(ar.shape[1] / (norm_vel.shape[0] - ar.shape[1]))
-        norm_vel = norm_vel.drop(norm_vel.index[::rm])
+        try:
+            rm = round(ar.shape[1] / (norm_vel.shape[0] - ar.shape[1]))
+            norm_vel = norm_vel.drop(norm_vel.index[::rm])
+        except ZeroDivisionError as e:
+            fx.printmsg('equal shape radar & velocity arrays; no size adjustment')
         for i in range(0,abs(norm_vel.shape[0]-ar.shape[1])):
             s = pd.DataFrame({'normalized':[norm_vel['normalized'].iloc[-1]]}) # hacky, but necessary
             norm_vel = pd.concat([norm_vel, s])
@@ -92,6 +95,6 @@ def distance_normalize(header, ar, gps, verbose=False):
         ar = reducex(ar, by=int(round(norm_vel['normalized'].mean())), verbose=verbose)
         if verbose:
             fx.printmsg('replacing traces per meter value of %s with %s' % (header['rhf_spm'],
-                                                                                   ar.shape[1] / gps['meters'].iloc[-1]))
+                                                                            ar.shape[1] / gps['meters'].iloc[-1]))
         header['rhf_spm'] = ar.shape[1] / gps['meters'].iloc[-1]
     return header, ar, gps
