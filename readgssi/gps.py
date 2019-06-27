@@ -129,8 +129,8 @@ def readdzg(fi, frmt, header, verbose=False):
                     z1 = pynmea2.parse(ln.rstrip()).altitude
                     if rowrmc != rowgga:
                         # this takes care of the case where RMC lines occur above GGA
-                        z0 = array.iat[rowgga, 'altitude']
-                        array.iat[rowgga, 'altitude'] = z1
+                        z0 = array['altitude'].iat[rowgga]
+                        array['altitude'].iat[rowgga] = z1
                     rowgga += 1
 
                 if rmc == True: # if there is RMC, we can use the full datestamp but there is no altitude

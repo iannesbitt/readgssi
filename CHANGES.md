@@ -3,6 +3,7 @@
 ## changes since 0.0.12
 - fixed [#13](https://github.com/iannesbitt/readgssi/issues/13) by adding `SS MINI` to list of recognized antenna codes
 - fixed bug ([#15](https://github.com/iannesbitt/readgssi/issues/15)) which caused runaway memory usage when distance-normalizing large files. files are now distance normalized in chunks.
+- fixed a bug that caused a read failure on DZG files with RMC strings before GGA (iat function didn't like my slicing)
 
 ## changes since 0.0.11
 - fixed bug that prevented reading NMEA RMC-only DZG files. now fully compatible with DZGs created with [gpx2dzg](https://github.com/iannesbitt/gpx2dzg)
