@@ -103,14 +103,14 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
         if verbose:
             fx.printmsg('beginning processing for channel %s (antenna %s)' % (ar, r[0]['rh_antname'][ar]))
         # execute filtering functions if necessary
-        if normalize:
-            r[0], img_arr[ar], r[2] = arrayops.distance_normalize(header=r[0], ar=img_arr[ar], gps=r[2],
-                                                                  verbose=verbose)
         if stack != 1:
             # horizontal stacking
             img_arr[ar], stack = arrayops.stack(ar=img_arr[ar], stack=stack, verbose=verbose)
         else:
             stack = 1
+        if normalize:
+            r[0], img_arr[ar], r[2] = arrayops.distance_normalize(header=r[0], ar=img_arr[ar], gps=r[2],
+                                                                  verbose=verbose)
         if reverse:
             img_arr[ar] = arrayops.flip(img_arr[ar], verbose=verbose)
         if bgr:
