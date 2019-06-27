@@ -77,22 +77,26 @@ def distance_normalize(header, ar, gps, verbose=False):
         start = np.datetime64(str(norm_vel.index[0])) - np.timedelta64(nanosec_samp_rate*(gps.iloc[0,0]), 'ns')
         newdf = pd.DataFrame(index=pd.date_range(start=start, periods=ar.shape[1], freq=str(nanosec_samp_rate)+'N', tz='UTC'))
         norm_vel = pd.concat([norm_vel, newdf], axis=1).interpolate('time').bfill()
+        del newdf
         norm_vel = norm_vel.round().astype(int, casting='unsafe')
 
         try:
-            rm = round(ar.shape[1] / (norm_vel.shape[0] - ar.shape[1]))
+            rm = int(round(ar.shape[1] / (norm_vel.shape[0] - ar.shape[1])))
             norm_vel = norm_vel.drop(norm_vel.index[::rm])
         except ZeroDivisionError as e:
-            fx.printmsg('equal shape radar & velocity arrays; no size adjustment')
+            fx.printmsg('equal length radar & velocity arrays; no size adjustment')
         for i in range(0,abs(norm_vel.shape[0]-ar.shape[1])):
             s = pd.DataFrame({'normalized':[norm_vel['normalized'].iloc[-1]]}) # hacky, but necessary
             norm_vel = pd.concat([norm_vel, s])
+
         if verbose:
             fx.printmsg('mean of normalized velocity is %.2f' % (norm_vel['normalized'].mean()))
             fx.printmsg('expanding array using normalized GPS velocity...')
         # takes (array, [transform values to broadcast], axis)
         ar = np.repeat(ar, norm_vel['normalized'].astype(int, casting='unsafe').values, axis=1)
-        ar = reducex(ar, by=int(round(norm_vel['normalized'].mean())), verbose=verbose)
+        nvm = int(round(norm_vel['normalized'].mean()))
+        del norm_vel
+        ar = reducex(ar, by=nvm, verbose=verbose)
         if verbose:
             fx.printmsg('replacing traces per meter value of %s with %s' % (header['rhf_spm'],
                                                                             ar.shape[1] / gps['meters'].iloc[-1]))
