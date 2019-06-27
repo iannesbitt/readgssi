@@ -10,14 +10,14 @@ def flip(ar, verbose=False):
         fx.printmsg('flipping radargram...')
     return ar.T[::-1].T
 
-def reducex(ar, by=1, verbose=False):
+def reducex(ar, by=1, chnum=1, number=1, verbose=False):
     """
     reduce the number of traces in the array by a number
 
     not the same as stacking since it doesn't sum adjacent traces
     """
     if verbose:
-        fx.printmsg('reducing array by a factor of %s...' % (by))
+        fx.printmsg('%s/%s reducing %sx%s chunk by a factor of %s...' % (chnum, number, ar.shape[0], ar.shape[1], by))
     return ar[:,::by]
 
 def stack(ar, stack='auto', verbose=False):
@@ -89,16 +89,20 @@ def distance_normalize(header, ar, gps, verbose=False):
             s = pd.DataFrame({'normalized':[norm_vel['normalized'].iloc[-1]]}) # hacky, but necessary
             norm_vel = pd.concat([norm_vel, s])
 
-        if verbose:
-            fx.printmsg('mean of normalized velocity is %.2f' % (norm_vel['normalized'].mean()))
-            fx.printmsg('expanding array using normalized GPS velocity...')
-        # takes (array, [transform values to broadcast], axis)
-        ar = np.repeat(ar, norm_vel['normalized'].astype(int, casting='unsafe').values, axis=1)
         nvm = int(round(norm_vel['normalized'].mean()))
-        del norm_vel
-        ar = reducex(ar, by=nvm, verbose=verbose)
+        proc = np.ndarray((ar.shape[0], 0))
         if verbose:
-            fx.printmsg('replacing traces per meter value of %s with %s' % (header['rhf_spm'],
+            fx.printmsg('expanding array using mean of normalized velocity %.2f' % (norm_vel['normalized'].mean()))
+        on, i = 0, 0
+        for c in np.array_split(ar, nvm, axis=1):
+            # takes (array, [transform values to broadcast], axis)
+            c = np.repeat(c, norm_vel['normalized'].astype(int, casting='unsafe').values[on:on+c.shape[1]], axis=1)
+            c = reducex(c, by=nvm, chnum=i, number=nvm, verbose=verbose)
+            proc = np.concatenate((proc, c), axis=1)
+            on += c.shape[1]
+            i += 1
+        if verbose:
+            fx.printmsg('replacing old traces per meter value of %s with %s' % (header['rhf_spm'],
                                                                             ar.shape[1] / gps['meters'].iloc[-1]))
         header['rhf_spm'] = ar.shape[1] / gps['meters'].iloc[-1]
     return header, ar, gps
