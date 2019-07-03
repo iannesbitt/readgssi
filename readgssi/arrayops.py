@@ -1,8 +1,6 @@
 import readgssi.functions as fx
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-plt.gca()
 
 def flip(ar, verbose=False):
     """
