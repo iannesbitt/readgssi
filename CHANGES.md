@@ -2,6 +2,7 @@
 
 ## changes since 0.0.13
 - updated examples in README
+- fixed [#16](https://github.com/iannesbitt/readgssi/issues/16) which incorrectly applied GPS array values for normalization
 
 ## changes since 0.0.12
 - fixed [#13](https://github.com/iannesbitt/readgssi/issues/13) by adding `SS MINI` to list of recognized antenna codes
