@@ -1,5 +1,8 @@
 # Changelog
 
+## changes since 0.0.13
+- updated examples in README
+
 ## changes since 0.0.12
 - fixed [#13](https://github.com/iannesbitt/readgssi/issues/13) by adding `SS MINI` to list of recognized antenna codes
 - fixed bug ([#15](https://github.com/iannesbitt/readgssi/issues/15)) which caused runaway memory usage when distance-normalizing large files. files are now distance normalized in chunks.

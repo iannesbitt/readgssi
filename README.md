@@ -125,42 +125,62 @@ readgssi -i DZT__001.DZT -s 8 -w -r -o test.csv -f CSV
 Applies 8x stacking, dewow, and background removal filters before exporting to CSV.
 
 ### plotting
-#### example 1A
+#### example 1A: without gain
 ```bash
-readgssi -i DZT__001.DZT -p 5 -s auto -c viridis -m
+readgssi -i DZT__001.DZT -o  -p 5 -s auto -m
 ```
-The above command will cause `readgssi` to save and show a plot named "DZT__001_100MHz.png" with a y-size of 6 inches at 150 dpi (`-p 6`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing on a monitor, approximately 2.5\*y (`-s auto`). The plot will be rendered in the viridis color scheme, which is the default for matplotlib. The `-m` flag will draw a histogram for each data channel.
+The above command will cause `readgssi` to save and show a plot named "TEST__001c0Tz233S6G1.png" with a y-size of 5 inches at 150 dpi (`-p 5`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing on a monitor, approximately 2.5\*y (`-s auto`). The plot will be rendered in the `Greys` color scheme. The `-m` flag will draw a histogram for each data channel.
 ![Example 1a](https://github.com/iannesbitt/readgssi/raw/master/examples/1a.png)
 ![Example 1a histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/1a-h.png)
 
-#### example 1B
+#### example 1B: with gain
 ```bash
-readgssi -i DZT__001.DZT -o 1b.png -p 5 -s auto -c viridis -g 50 -m -r -w
+readgssi -i DZT__001.DZT -o 1b.png -p 5 -s auto -g 50 -m -r
 ```
-This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. Next `readgssi` will run the background removal (`-r`) and dewow (`-w`) filters. Finally, the `-m` flag will draw a histogram for each data channel. Note how the histogram changes when filters are applied.
+This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. Next `readgssi` will run the background removal (`-r`) filter. Finally, the `-m` flag will draw a histogram for each data channel. Note how the histogram changes when filters are applied.
 ![Example 1b](https://github.com/iannesbitt/readgssi/raw/master/examples/1b.png)
 ![Example 1b histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/1b-h.png)
 
-#### example 1C: gain can be tricky depending on your colormap
+#### example 1C: the right gain settings can be slightly different depending on your colormap
 ```bash
-readgssi -i DZT__001.DZT -o 1c.png -p 5 -s auto -r -w -c seismic
+readgssi -i DZT__001.DZT -o 1c.png -p 5 -s auto -r -g 20 -c seismic
 ```
-Here, background removal and dewow filters are applied, but no gain adjustments are made (equivalent to `-g 1`). The script uses matplotlib's "seismic" colormap (`-c seismic`) which is specifically designed for this type of waterfall array plotting. Even without gain, you will often be able to easily see very slight signal perturbations. It is not colorblind-friendly for either of the two most common types of human colorblindness, however, which is why it is not the default colormap.
+Here, a horizontal background removal is applied, but gain is turned down (`-g 20`). The script uses matplotlib's "seismic" colormap (`-c seismic`) which is specifically designed for this type of waterfall array plotting. Even without gain, you will often be able to easily see very slight signal perturbations. Given its use of red, however, it is not terribly colorblind-friendly for either of the two most common types of human colorblindness, which is why it is not used as the default colormap.
 ![Example 1c](https://github.com/iannesbitt/readgssi/raw/master/examples/1c.png)
 
 #### example 2A: no background removal
 ```bash
-readgssi -i DZT__002.DZT -o 2a.png -p 10 -s 3 -n
+readgssi -i DZT__002.DZT -o 2a.png -p 5 -s 5 -n
 ```
-Here `readgssi` will create a plot of size 10 and stack 3x (`-p 10 -s 3`). Matplotlib will use the default "Greys" colormap and save a PNG of the figure, but the script will suppress the matplotlib window (`-n`, useful for processing an entire directory full of DZTs at once).
+Sometimes, files will look "washed out" due to a skew relative to the mean of the data. This is easily correctable. Here `readgssi` will create a plot of size 5 and stack 5x (`-p 5 -s 5`). Matplotlib will use the default "Greys" colormap and save a PNG of the figure, but the script will suppress the matplotlib window (using the `-n` flag, useful for processing an entire directory full of DZTs at once).
 ![Example 2a](https://github.com/iannesbitt/readgssi/raw/master/examples/2a.png)
 
 #### example 2B: horizontal mean BGR algorithm applied
 ```bash
-readgssi -i DZT__002.DZT -o 2b.png -p 10 -s 3 -n -r
+readgssi -i DZT__002.DZT -o 2b.png -p 5 -s 5 -n -r
 ```
-The script does the same thing, except it applies horizontal mean background removal `-r`. Note the difference in ringing artifacts between examples 2a and 2b.
+The flag to get rid of the skew (or any horizontally uniform noise) is `-r`. The script does the same thing as above, except `-r` applies horizontal mean background removal to the profile. Note the difference in ringing artifacts and skew between examples 2a and 2b.
 ![Example 2b](https://github.com/iannesbitt/readgssi/raw/master/examples/2b.png)
+
+#### example 3A: (without) distance normalization
+The default behavior of `readgssi` is to plot the X-axis in survey time units (seconds). This can be changed using the `-x` flag. To display in distance units, you must either have GPS information in DZG format, or specify the number of radar traces per meter using the `-d` flag. `-d 24 -x meters` will change the traces per meter value in the header to 24.0 and display the profile with distance in meters along the X-axis.
+
+Files with GPS information are handled in a slightly different way. First, `readgssi` will read a DZG file to create an array of distance information associated with marks in the DZT. *(NOTE: If your project was recorded without DZG files but you have per-line GPS mark information in GPX format, please look at [gpx2dzg](https://github.com/iannesbitt/gpx2dzg) for a method of creating a DZG file for each survey line)* After reading the DZG, the program will expand or contract the GPR array based on the speed over ground between GPS points. It will then modify the traces per meter value from the header and display the profile with distance on the X-axis.
+
+Here a file is processed and displayed without distance normalization:
+```bash
+readgssi -i DZT__003.DZT -o 3a.png -p 10 -s 5 -r -g 50
+```
+![Example 3a](https://github.com/iannesbitt/readgssi/raw/master/examples/3a.png)
+
+#### example 3B: distance normalization using a DZG file
+
+To use DZG GPS information to distance normalize the profile and display in meters traveled, use the `-N` and `-x meters` flags. `readgssi` will normalize the file in chunks to reduce memory usage. Here is the same file with distance normalization applied:
+
+```bash
+readgssi -i DZT__003.DZT -o 3b.png -p 10 -s 5 -r -g 50 -N -x meters
+```
+![Example 3b](https://github.com/iannesbitt/readgssi/raw/master/examples/3b.png)
 
 
 ## contributors
@@ -173,6 +193,7 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 
 #### known bugs:
 - color bar shows up too large on some plots (matplotlib bug)
+- short lines have axis limits that end up tall and narrow (plot sizing information should be calculated differently)
 
 ## future
 - explicit documentation

@@ -1,6 +1,8 @@
 import readgssi.functions as fx
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+plt.gca()
 
 def flip(ar, verbose=False):
     """
@@ -96,13 +98,13 @@ def distance_normalize(header, ar, gps, verbose=False):
         on, i = 0, 0
         for c in np.array_split(ar, nvm, axis=1):
             # takes (array, [transform values to broadcast], axis)
-            c = np.repeat(c, norm_vel['normalized'].astype(int, casting='unsafe').values[on:on+c.shape[1]], axis=1)
-            c = reducex(c, by=nvm, chnum=i, number=nvm, verbose=verbose)
-            proc = np.concatenate((proc, c), axis=1)
-            on += c.shape[1]
+            p = np.repeat(c, norm_vel['normalized'].astype(int, casting='unsafe').values[on:on+c.shape[1]], axis=1)
+            p = reducex(p, by=nvm, chnum=i, number=nvm, verbose=verbose)
+            proc = np.concatenate((proc, p), axis=1)
+            on = on + c.shape[1]
             i += 1
         if verbose:
             fx.printmsg('replacing old traces per meter value of %s with %s' % (header['rhf_spm'],
                                                                             ar.shape[1] / gps['meters'].iloc[-1]))
-        header['rhf_spm'] = ar.shape[1] / gps['meters'].iloc[-1]
-    return header, ar, gps
+        header['rhf_spm'] = proc.shape[1] / gps['meters'].iloc[-1]
+    return header, proc, gps
