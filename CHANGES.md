@@ -1,5 +1,8 @@
 # Changelog
 
+## changes since 0.0.14
+- added support for the 5103 400 MHz antenna, and an antenna called `CUSTOM` in the header, for which center frequency is not known but is likely adjustable
+
 ## changes since 0.0.13
 - updated examples in README
 - fixed [#16](https://github.com/iannesbitt/readgssi/issues/16) which incorrectly applied GPS array values for normalization
