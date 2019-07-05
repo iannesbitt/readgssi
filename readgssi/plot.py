@@ -123,7 +123,7 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
                 zmax = zmax * 100.
             if 'mm' in z:
                 zmax = zmax * 1000.
-            zlabel = r'Depth at $\epsilon_r$=%s (%s)' % (header['rhf_epsr'], z)
+            zlabel = r'Depth at $\epsilon_r$=%.2f (%s)' % (header['rhf_epsr'], z)
         else: # else we plot in units of samples
             zmax = ar.shape[0]
             zlabel = 'Sample'
