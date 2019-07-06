@@ -2,6 +2,10 @@
 
 ## changes since 0.0.14
 - added support for the 5103 400 MHz antenna, and an antenna called `CUSTOM` in the header, for which center frequency is not known but is likely adjustable
+- added support for the 350 HS hyperstacking antenna
+- fixed a bug that created an extra matplotlib axis
+- added rounding to epsilon_r value on y-axis depth-type display
+- added a patch for [#12](https://github.com/iannesbitt/readgssi/issues/12) to improve axis sizing and tight_layout() handling
 
 ## changes since 0.0.13
 - updated examples in README
