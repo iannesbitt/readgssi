@@ -196,16 +196,18 @@ for f in `ls *.DZT`; do readgssi -p 8 -n -r -g 40 -Z 233 -z ns -N -x m -s auto -
 
 The structure of this command is easy to understand if you know a little bit about `for` loops. This command loops over every file with the extension `.DZT` (`ls *.DZT` where `*` indicates a wildcard) and assigns the filename to the `f` variable on each loop. Then, after the semicolon, bash runs readgssi for every pass of the loop. In this case, the parameters are:
 
-`-p 8` - plot with size 8
-`-n` - suppress the matplotlib window; useful if you do not want the operation interrupted by matplotlib
-`-r` - background removal
-`-g 40` - gain of 40
-`-Z 233` - time zero at 233 samples
-`-z ns` - display the depth axis in nanoseconds
-`-N` - distance-normalize the profile
-`-x m` - display the x-axis in meters
-`-s auto` - apply automatic stacking
-`-i $f` - call the `f` variable, which contains this loop's filename, and feed that to the input flag of `readgssi`
+```bash
+-p 8    # plot with size 8
+-n      # suppress the matplotlib window; useful if you do not want the operation interrupted
+-r      # background removal
+-g 40   # gain of 40
+-Z 233  # time zero at 233 samples
+-z ns   # display the depth axis in nanoseconds
+-N      # distance-normalize the profile
+-x m    # display the x-axis in meters
+-s auto # apply automatic stacking
+-i $f   # recall the `f` variable containing this loop's filename and feed it to the input flag of readgssi
+```
 
 Finally, end the loop by closing the command with a linebreak `;`, and the `done` marker.
 
