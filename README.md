@@ -182,6 +182,42 @@ readgssi -i DZT__003.DZT -o 3b.png -p 10 -s 5 -r -g 50 -N -x meters
 ```
 ![Example 3b](https://github.com/iannesbitt/readgssi/raw/master/examples/3b.png)
 
+## advanced usage
+
+UNIX users have a distinct advantage of being able to easily process entire folders full of DZTs with a simple command. Users who wish to do this should [read up](https://linuxize.com/post/bash-for-loop/) on how to construct `for` loops in Bash or simply follow and modify these examples below.
+
+### processing all files in a folder
+
+This command makes use of the `ls` function in Bash, which lists all files that match a specific pattern. In this case, we want the pattern to be "any DZT file," which ends up being simply `ls *.DZT` (the `*` symbol is a wildcard, meaning it matches any set of characters, so in this case it would match both `FILE____005.DZT` and `test.DZT` but not `Test01.dzt` because the `.DZT` is case sensitive.).
+
+```bash
+for f in `ls *.DZT`; do readgssi -p 8 -n -r -g 40 -Z 233 -z ns -N -x m -s auto -i $f; done
+```
+
+The structure of this command is easy to understand if you know a little bit about `for` loops. This command loops over every file with the extension `.DZT` (`ls *.DZT` where `*` indicates a wildcard) and assigns the filename to the `f` variable on each loop. Then, after the semicolon, bash runs readgssi for every pass of the loop. In this case, the parameters are:
+
+`-p 8` - plot with size 8
+`-n` - suppress the matplotlib window; useful if you do not want the operation interrupted by matplotlib
+`-r` - background removal
+`-g 40` - gain of 40
+`-Z 233` - time zero at 233 samples
+`-z ns` - display the depth axis in nanoseconds
+`-N` - distance-normalize the profile
+`-x m` - display the x-axis in meters
+`-s auto` - apply automatic stacking
+`-i $f` - call the `f` variable, which contains this loop's filename, and feed that to the input flag of `readgssi`
+
+Finally, end the loop by closing the command with a linebreak `;`, and the `done` marker.
+
+### processing specific sets of files
+You can make the command even more specific by further modifying the set of files returned by the `ls` command. For example:
+
+```bash
+for f in `ls FILE__{010..025}.DZT`; do readgssi -p 8 -n -r -g 40 -Z 233 -z ns -N -x m -s auto -i $f; done
+```
+
+This command will process only the 16 files in the numeric sequence between and including `010` and `025` in the set (`FILE__010.DZT`, `FILE__011.DZT`, `...`, `FILE__025.DZT`). `bash` handles the zero padding for you as well. Pretty cool. 
+
 
 ## contributors
 - Ian Nesbitt ([@iannesbitt](https://github.com/iannesbitt), author)
