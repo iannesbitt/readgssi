@@ -64,14 +64,14 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
     # having lots of trouble with this line not being friendly with figsize tuple (integer coercion-related errors)
     # so we will force everything to be integers explicitly
     if figsize != 'auto':
-        figx, figy = int(int(figsize)*int(int(ar.shape[1])/int(ar.shape[0]))), int(figsize) # force to integer instead of coerce
+        figx, figy = int(int(figsize)*int(int(ar.shape[1])/int(ar.shape[0]))), int(figsize)-1 # force to integer instead of coerce
         if figy <= 1:
             figy += 1 # avoid zero height error in y dimension
         if figx <= 1:
             figx += 1 # avoid zero height error in x dimension
         if verbose:
             fx.printmsg('plotting %sx%sin image with gain=%s...' % (figx, figy, gain))
-        fig, ax = plt.subplots(figsize=(figx, figy-1), dpi=150)
+        fig, ax = plt.subplots(figsize=(figx, figy), dpi=150)
     else:
         if verbose:
             fx.printmsg('plotting with gain=%s...' % gain)
@@ -160,9 +160,13 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
     if verbose:
         plt.title('%s - %s MHz - stacking: %s - gain: %s' % (os.path.basename(header['infile']), freq, stack, gain))
     if figx / figy >=1: # if x is longer than y (avoids plotting error where data disappears for some reason)
-        plt.tight_layout(pad=fig.get_size_inches()[1]) # then it's ok to call tight_layout()
+        plt.tight_layout()#pad=fig.get_size_inches()[1]/4.) # then it's ok to call tight_layout()
     else:
-        fx.printmsg('WARNING: not calling tight_layout() because axis lengths are funky. please adjust manually in matplotlib gui.')
+        try:
+            plt.tight_layout(w_pad=2, h_pad=1)
+            fx.printmsg('WARNING: axis lengths are funky. current axis sizes may cut off text. please adjust manually in matplotlib gui.')
+        except:
+            fx.printmsg('WARNING: tight_layout() raised an error because axis lengths are funky. please adjust manually in matplotlib gui.')
     if outfile != 'readgssi_plot':
         # if outfile doesn't match this then save fig with the outfile name
         if verbose:
