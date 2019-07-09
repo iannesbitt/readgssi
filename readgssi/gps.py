@@ -22,10 +22,10 @@ def readdzg(fi, frmt, header, verbose=False):
     """
     a parser to extract gps data from DZG file format
     DZG contains raw NMEA sentences, which should include RMC and GGA
-    fi = file containing gps information
-    frmt = format ('dzg' = DZG file containing gps sentence strings (see below); 'csv' = comma separated file with: lat,lon,elev,time)
-    spu = samples per unit (second or meter)
-    traces = the number of traces in the file
+    fi = str - file containing gps information
+    frmt = str - format ('dzg' = DZG file containing gps sentence strings (see below); 'csv' = comma separated file with: lat,lon,elev,time)
+    header = dict - file header
+    verbose = bool - verbose output on (True) or off (False)
     Reading DZG
     We need to relate gpstime to scan number then interpolate for each scan
     between gps measurements.
@@ -41,7 +41,6 @@ def readdzg(fi, frmt, header, verbose=False):
 
     we prefer RMC because it has datestamp, but this parser will read either.
     """
-    traces = header['traces']
     if header['rhf_spm'] == 0:
         spu = header['rhf_sps']
     else:

@@ -161,7 +161,6 @@ def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
         header['sec'] = data.shape[1]/float(header['rhf_sps'])
     except ZeroDivisionError:
         header['sec'] = 1.
-    header['traces'] = int(data.shape[1]/header['rh_nchan'])
 
     infile.close()
 
