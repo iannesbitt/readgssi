@@ -45,8 +45,8 @@ def spectrogram(ar, header, freq, verbose=True):
     sg.spectrogram(data=trace, samp_rate=samp_rate, wlen=samp_rate/1000, per_lap = 0.99, dbscale=True,
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
 
-def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds',
-              colormap='Greys', colorbar=False, noshow=False, outfile='readgssi_plot', aspect='auto'):
+def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
+              colormap='Greys', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', aspect='auto'):
     """
     let's do some matplotlib
 
@@ -83,6 +83,7 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
     ul = mean + (std * 3) # upper color limit
     if verbose:
         fx.printmsg('image stats')
+        fx.printmsg('size:               %sx%s' % (ar.shape[0], ar.shape[1]))
         fx.printmsg('mean:               %s' % mean)
         fx.printmsg('stdev:              %s' % std)
         fx.printmsg('lower color limit:  %s [mean - (3 * stdev)]' % ll)
@@ -115,7 +116,7 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
     # Z scaling routine
     if (z == None) or (z in 'nanoseconds'): # plot z as time by default
         zmax = header['ns_per_zsample'] * ar.shape[0] * 10**9
-        zlabel = 'Two-way travel time (ns)'
+        zlabel = 'Two-way time (ns)'
     else:
         if z in ('mm', 'cm', 'm'): # plot z as TWTT based on unit and cr/rhf_epsr value
             zmax = header['rhf_depth']
@@ -157,8 +158,14 @@ def radargram(ar, header, freq, verbose=True, figsize='auto', gain=1, stack=1, x
 
     if colorbar:
         fig.colorbar(img)
-    if verbose:
-        plt.title('%s - %s MHz - stacking: %s - gain: %s' % (os.path.basename(header['infile']), freq, stack, gain))
+    if title:
+        title = '%s - %s MHz - stacking: %s - gain: %s' % (
+                    os.path.basename(header['infile']), freq, stack, gain)
+        if win:
+            if win == 0:
+                win = 'full'
+            title = '%s - bgr: %s' % (title, win)
+        plt.title(title)
     if figx / figy >=1: # if x is longer than y (avoids plotting error where data disappears for some reason)
         plt.tight_layout()#pad=fig.get_size_inches()[1]/4.) # then it's ok to call tight_layout()
     else:

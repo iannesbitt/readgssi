@@ -6,6 +6,14 @@
 - fixed a bug that created an extra matplotlib axis
 - added rounding to epsilon_r value on y-axis depth-type display
 - added a patch for [#12](https://github.com/iannesbitt/readgssi/issues/12) to improve axis sizing and tight_layout() handling
+- changed background removal (BGR) function to operate similar to RADAN boxcar function
+  - this change means that you can no longer simply specify `-r` for full-width background removal. new nomenclature for full-width BGR flag is `-r 0`. `-r 100` will apply a 100-trace rolling boxcar BGR (after normalization and stacking)
+  - this is done with the `scipy.ndimage.filters.uniform_filter1d()` function and means that `scipy` is now explicitly required
+  - function will automatically filter out low-frequency washout noise caused by bgr, using obspy's implementation of scipy's butterworth bandpass from `0.1*f` to `10*f`, where `f` is antenna frequency. nyquist is automatically accounted for by obspy.
+  - BGR value is displayed in title if set > 0, or as "full" if BGR is full-width (i.e. `-r 0`)
+- added 4th order vertical triangular FIR filter, and changed default filter from butterworth to triangular to match that in RADAN. butterworth is now used only to remove low-frequency sensor noise during BGR (but kept for posterity).
+  - this function uses the `scipy.signal.firwin()` filter design and `scipy.signal.lfilter()` implementation
+- added ability to suppress plot title using `-T` or `--titleoff` from the command line
 
 ## changes since 0.0.13
 - updated examples in README

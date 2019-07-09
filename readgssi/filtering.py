@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.ndimage.filters import uniform_filter1d
+from scipy.signal import firwin, lfilter
 from obspy.signal.filter import bandpass
 import readgssi.functions as fx
 
@@ -7,23 +9,45 @@ Mathematical filtering routines for array manipulation
 Written in part by François-Xavier Simon (@fxsimon)
 """
 
-def bgr(ar, verbose=False):
+def bgr(ar, header, antfreq, win=0, verbose=False):
     """
     Instrument background removal (BGR)
     Subtracts off row averages
     """
+    if (int(win) > 1) & (int(win) < ar.shape[1]):
+        window = int(win)
+        how = 'boxcar (%s trace window)' % window
+    else:
+        how = 'full'
     if verbose:
-        fx.printmsg('removing horizontal background...')
+        fx.printmsg('removing horizontal background using method=%s...' % (how))
     i = 0
-    for row in ar:          # each row
-        mean = np.mean(row)
-        ar[i] = row - mean
-        i += 1
+    if how == 'full':
+        for row in ar:          # each row
+            mean = np.mean(row)
+            ar[i] = row - mean
+            i += 1
+    else:
+        if window < 10:
+            fx.printmsg('WARNING: BGR window size is very short. be careful, this may obscure horizontal layering')
+        if window < 4:
+            window = 4
+        elif (window / 2. != int(window / 2)):
+            window = window + 1
+        ar -= uniform_filter1d(ar, size=window, mode='constant', cval=0, axis=1)
+    if verbose:
+        fx.printmsg('removing residual vertical noise...')
+    try:
+        ar = bp(ar, header, freqmin=antfreq/10., freqmax=antfreq*10)
+    except Exception as e:
+        fx.printmsg('WARNING: could not remove vertical residuals')
+        fx.printmsg('details: %s' % (e))
     return ar
 
 def dewow(ar, verbose=False):
     """
     Polynomial dewow filter
+    Written by fxsimon
     """
     if verbose:
         fx.printmsg('dewowing data...')
@@ -38,22 +62,45 @@ def dewow(ar, verbose=False):
 
 def bp(ar, header, freqmin, freqmax, verbose=False):
     """
-    Vertical frequency domain bandpass
+    Vertical frequency domain butterworth bandpass
     """
     if verbose:
-        fx.printmsg('vertical frequency filtering...')
+        fx.printmsg('vertical butterworth bandpass filter')
     samp_freq = 1 / (header['rhf_depth'] / header['cr'] / header['rh_nsamp'])
     freqmin = freqmin * 10 ** 6
     freqmax = freqmax * 10 ** 6
     
     if verbose:
-        fx.printmsg('Sampling frequency:       %.2E Hz' % samp_freq)
-        fx.printmsg('Minimum filter frequency: %.2E Hz' % freqmin)
-        fx.printmsg('Maximum filter frequency: %.2E Hz' % freqmax)
+        fx.printmsg('sampling frequency:       %.2E Hz' % samp_freq)
+        fx.printmsg('minimum filter frequency: %.2E Hz' % freqmin)
+        fx.printmsg('maximum filter frequency: %.2E Hz' % freqmax)
+        fx.printmsg('2 corners, zerophase: True, filter order: 4')
     
     i = 0
     for t in ar.T:
-        f = bandpass(data=t, freqmin=freqmin, freqmax=freqmax, df=samp_freq, corners=2, zerophase=False)
+        f = bandpass(data=t, freqmin=freqmin, freqmax=freqmax, df=samp_freq, corners=2, zerophase=True)
         ar[:,i] = f
         i += 1
     return ar
+
+def triangular(ar, header, freqmin, freqmax, verbose=False):
+    """
+    Vertical frequency domain triangular bandpass
+    """
+    if verbose:
+        fx.printmsg('vertical triangular FIR bandpass filter')
+    samp_freq = 1 / (header['rhf_depth'] / header['cr'] / header['rh_nsamp'])
+    freqmin = freqmin * 10 ** 6
+    freqmax = freqmax * 10 ** 6
+    
+    if verbose:
+        fx.printmsg('sampling frequency:       %.2E Hz' % samp_freq)
+        fx.printmsg('minimum filter frequency: %.2E Hz' % freqmin)
+        fx.printmsg('maximum filter frequency: %.2E Hz' % freqmax)
+        fx.printmsg('filter order: 4')
+
+    filt = firwin(numtaps=5, cutoff=[freqmin, freqmax], window='triangle', pass_zero='bandpass', fs=samp_freq)
+    far = lfilter(filt, 1.0, ar, axis=0)
+    del ar
+
+    return far

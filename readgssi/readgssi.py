@@ -32,8 +32,8 @@ from readgssi.dzt import *
 
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figsize=10,
              stack=1, x='seconds', z='nanoseconds', verbose=False, histogram=False, colormap='Greys', colorbar=False,
-             zero=0, gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, dewow=False,
-             normalize=False, specgram=False, noshow=False, spm=None, epsr=None):
+             zero=2, gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, win=0, dewow=False,
+             normalize=False, specgram=False, noshow=False, spm=None, epsr=None, title=True):
     """
     primary radar processing function
 
@@ -112,16 +112,20 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
         else:
             stack = 1
         if reverse:
+            # read array backwards
             img_arr[ar] = arrayops.flip(img_arr[ar], verbose=verbose)
         if bgr:
             # background removal
-            img_arr[ar] = filtering.bgr(ar=img_arr[ar], verbose=verbose)
+            img_arr[ar] = filtering.bgr(ar=img_arr[ar], header=r[0], antfreq=r[0]['antfreq'][ar], win=win,
+                                        verbose=verbose)
+        else:
+            win = None
         if dewow:
             # dewow
             img_arr[ar] = filtering.dewow(ar=img_arr[ar], verbose=verbose)
         if freqmin and freqmax:
-            # vertical bandpass
-            img_arr[ar] = filtering.bp(ar=img_arr[ar], header=r[0], freqmin=freqmin, freqmax=freqmax,
+            # vertical triangular bandpass
+            img_arr[ar] = filtering.triangular(ar=img_arr[ar], header=r[0], freqmin=freqmin, freqmax=freqmax,
                                        verbose=verbose)
 
         # name the output file
@@ -137,9 +141,11 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
                 outfile = '%sc%s' % (outfile, ar) # avoid naming conflicts
         else:
             """
-            ~~~ The Seth Campbell Honorary Naming Scheme ~~~
+            ~~~ The Seth W. Campbell Honorary Naming Scheme ~~~
             """
-            outfile = '%sc%s' % (os.path.join(infile_basename), ar)
+            outfile = '%s' % (os.path.join(infile_basename))
+            if len(chans) > 1:
+                outfile = '%sCh%s' % (outfile, ar)
             if normalize:
                 outfile = '%sDn' % (outfile)
             if zero and (zero > 0):
@@ -149,7 +155,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             if reverse:
                 outfile = '%sRv' % (outfile)
             if bgr:
-                outfile = '%sBgr' % (outfile)
+                outfile = '%sBgr%s' % (outfile, win)
             if dewow:
                 outfile = '%sDw' % (outfile)
             if freqmin and freqmax:
@@ -182,8 +188,9 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
                                     header=r[0], verbose=verbose)
 
         if plotting:
-            plot.radargram(ar=img_arr[ar], header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose, figsize=figsize, stack=stack,
-                           x=x, z=z, gain=gain, colormap=colormap, colorbar=colorbar, noshow=noshow, outfile=outfile)
+            plot.radargram(ar=img_arr[ar], header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose,
+                           figsize=figsize, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
+                           colorbar=colorbar, noshow=noshow, outfile=outfile, win=win, title=title)
 
         if histogram:
             plot.histogram(ar=img_arr[ar], verbose=verbose)
@@ -198,7 +205,9 @@ def main():
     """
 
     verbose = True
+    title = True
     stack = 1
+    win = 0
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
     reverse, freqmin, freqmax, specgram, zero, normalize, spm, epsr = None, None, None, None, None, None, None, None
     colormap = 'Greys'
@@ -208,10 +217,10 @@ def main():
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plotting=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hVqd:i:a:o:f:p:s:rRNwnmc:bg:Z:E:t:x:z:',
-            ['help', 'version', 'quiet','spm=','input=','antfreq=','output=','format=','plot=','stack=','bgr',
+        opts, args = getopt.getopt(sys.argv[1:],'hVqd:i:a:o:f:p:s:r:RNwnmc:bg:Z:E:t:x:z:T',
+            ['help', 'version', 'quiet','spm=','input=','antfreq=','output=','format=','plot=','stack=','bgr=',
             'reverse', 'normalize','dewow','noshow','histogram','colormap=','colorbar','gain=',
-            'zero=','epsr=','bandpass=', 'xscale=', 'zscale='])
+            'zero=','epsr=','bandpass=', 'xscale=', 'zscale=', 'titleoff'])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
         fx.printmsg('ERROR: invalid argument(s) supplied')
@@ -281,6 +290,11 @@ def main():
                         sys.exit(2)
         if opt in ('-r', '--bgr'):
             bgr = True
+            if arg:
+                try:
+                    win = abs(int(arg))
+                except:
+                    fx.printmsg('ERROR: background removal window must be a positive integer. defaulting to full width.')
         if opt in ('-w', '--dewow'):
             dewow = True
         if opt in ('-R', '--reverse'):
@@ -388,6 +402,8 @@ def main():
                 except:
                     fx.printmsg('ERROR: gain must be positive. defaulting to gain=1.')
                     gain = 1
+        if opt in ('-T', '--titleoff'):
+            title = False
 
 
     # call the function with the values we just got
@@ -396,9 +412,9 @@ def main():
             fx.printmsg(config.dist)
         readgssi(infile=infile, outfile=outfile, antfreq=antfreq, frmt=frmt, plotting=plotting,
                  figsize=figsize, stack=stack, verbose=verbose, histogram=histogram, x=x, z=z,
-                 colormap=colormap, colorbar=colorbar, reverse=reverse, gain=gain, bgr=bgr, zero=zero,
-                 normalize=normalize, dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax,
-                 spm=spm, epsr=epsr)
+                 colormap=colormap, colorbar=colorbar, reverse=reverse, gain=gain, bgr=bgr, win=win,
+                 zero=zero, normalize=normalize, dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax,
+                 spm=spm, epsr=epsr, title=title)
         if verbose:
             fx.printmsg('done with %s' % infile)
         print('')
