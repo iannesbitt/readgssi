@@ -69,8 +69,8 @@ optional flags:
 -n, --noshow    |                     |  suppress matplotlib popup window and simply save a figure (useful for multiple file processing)
 -c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
 -g, --gain      | positive (+)integer |  gain value (higher=greater contrast, default: 1)
--r 0, --bgr       | +integer or zero    |  horizontal background removal (removes ringing): 0 for full-width average, or boxcar style moving window of size (+int)
--R 0, --r 0everse   |                     |  reverse (flip radargram horizontally)
+-r, --bgr       | +integer or zero    |  horizontal background removal (removes ringing): 0 for full-width average, or boxcar style moving window of size (+int)
+-R, --reverse   |                     |  reverse (flip radargram horizontally)
 -w, --dewow     |                     |  trinomial dewow algorithm
 -t, --bandpass  | +int-+int (MHz)     |  butterworth bandpass filter (positive integer range in megahertz; ex. 100-145)
 -b, --colorbar  |                     |  add a colorbar to the radar figure
@@ -156,10 +156,12 @@ Sometimes, files will look "washed out" due to a skew relative to the mean of th
 ![Example 2a](https://github.com/iannesbitt/readgssi/raw/master/examples/2a.png)
 
 #### example 2B: horizontal mean BGR algorithm applied
+The flag to get rid of the skew (or any horizontally uniform noise) is `-r`, also known as background removal or BGR for short. `-r` has two modes, one set by `-r 0` and one set when the option after the `-r` flag is greater than zero. When this BGR option is zero, the program simply subtracts the average of each profile row from the array. When it's greater than 0, `readgssi` will implement a moving window mean, the size of which is set in **post-stack** traces. `-r 50` would subtract the average of 25 cells to the left and right of the current cell, for each cell in the array. This is, for all intents and purposes, the same as RADAN's "BOXCAR" method of horizontal noise removal, but much, much faster because it uses a `scipy` function.
+
+The command below does the same thing as above, except `-r 0` applies full width horizontal mean background removal to the profile. Note the difference in ringing artifacts and skew between examples 2a and 2b.
 ```bash
 readgssi -i DZT__002.DZT -o 2b.png -p 5 -s 5 -n -r 0
 ```
-The flag to get rid of the skew (or any horizontally uniform noise) is `-r 0`. The script does the same thing as above, except `-r 0` applies horizontal mean background removal to the profile. Note the difference in ringing artifacts and skew between examples 2a and 2b.
 ![Example 2b](https://github.com/iannesbitt/readgssi/raw/master/examples/2b.png)
 
 #### example 3A: (without) distance normalization
@@ -199,7 +201,7 @@ The structure of this command is easy to understand if you know a little bit abo
 ```bash
 -p 8    # plot with size 8
 -n      # suppress the matplotlib window; useful if you do not want the operation interrupted
--r 0    # background removal
+-r 0    # full-width background removal
 -g 40   # gain of 40
 -Z 233  # time zero at 233 samples
 -z ns   # display the depth axis in nanoseconds

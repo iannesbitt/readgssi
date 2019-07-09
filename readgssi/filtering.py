@@ -30,9 +30,9 @@ def bgr(ar, header, antfreq, win=0, verbose=False):
     else:
         if window < 10:
             fx.printmsg('WARNING: BGR window size is very short. be careful, this may obscure horizontal layering')
-        if window < 4:
-            window = 4
-        elif (window / 2. != int(window / 2)):
+        if window < 3:
+            window = 3
+        elif (window / 2. == int(window / 2)):
             window = window + 1
         ar -= uniform_filter1d(ar, size=window, mode='constant', cval=0, axis=1)
     if verbose:
