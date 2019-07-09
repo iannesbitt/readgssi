@@ -39,9 +39,9 @@ def stack(ar, stack='auto', verbose=False):
         try:
             stack = int(stack)
         except ValueError:
-            fx.printmsg('ERROR: stacking must be indicated with an integer greater than 1, "auto", or None.')
-            fx.printmsg('a stacking value of 1 equates to None. "auto" will attempt to stack to about a 2.5:1 x to y axis ratio.')
-            fx.printmsg('the result will not be stacked.')
+            fx.printmsg('NOTE: stacking must be indicated with an integer greater than 1, "auto", or None.')
+            fx.printmsg('      a stacking value of 1 equates to None. "auto" will attempt to stack to')
+            fx.printmsg('      about a 2.5:1 x to y axis ratio. the result will not be stacked.')
             stack = 1
     if stack > 1:
         if verbose:
@@ -56,7 +56,7 @@ def stack(ar, stack='auto', verbose=False):
         if str(stack0).lower() in 'auto': # this happens when distance normalization reduces the file
             pass
         else:
-            fx.printmsg('WARNING: no stacking applied. be warned: this can result in very large and awkwardly-shaped figures.')
+            fx.printmsg('WARNING: no stacking applied. this can result in very large and awkwardly-shaped figures.')
     return arr, stack
 
 def distance_normalize(header, ar, gps, verbose=False):
