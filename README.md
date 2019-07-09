@@ -69,8 +69,8 @@ optional flags:
 -n, --noshow    |                     |  suppress matplotlib popup window and simply save a figure (useful for multiple file processing)
 -c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
 -g, --gain      | positive (+)integer |  gain value (higher=greater contrast, default: 1)
--r, --bgr       |                     |  horizontal background removal algorithm (useful to remove ringing)
--R, --reverse   |                     |  reverse (flip radargram horizontally)
+-r 0, --bgr       | +integer or zero    |  horizontal background removal (removes ringing): 0 for full-width average, or boxcar style moving window of size (+int)
+-R 0, --r 0everse   |                     |  reverse (flip radargram horizontally)
 -w, --dewow     |                     |  trinomial dewow algorithm
 -t, --bandpass  | +int-+int (MHz)     |  butterworth bandpass filter (positive integer range in megahertz; ex. 100-145)
 -b, --colorbar  |                     |  add a colorbar to the radar figure
@@ -120,7 +120,7 @@ readgssi -i DZT__001.DZT -o test.csv -f CSV
 Translates radar data array to CSV format, if that's your cup of tea. One might use this to export to Matlab. One CSV will be written per channel. The script will rename the output to 'test_100MHz.csv' automatically. No header information is included in the CSV.
 
 ```bash
-readgssi -i DZT__001.DZT -s 8 -w -r -o test.csv -f CSV
+readgssi -i DZT__001.DZT -s 8 -w -r 0 -o test.csv -f CSV
 ```
 Applies 8x stacking, dewow, and background removal filters before exporting to CSV.
 
@@ -135,15 +135,15 @@ The above command will cause `readgssi` to save and show a plot named "TEST__001
 
 #### example 1B: with gain
 ```bash
-readgssi -i DZT__001.DZT -o 1b.png -p 5 -s auto -g 50 -m -r
+readgssi -i DZT__001.DZT -o 1b.png -p 5 -s auto -g 50 -m -r 0
 ```
-This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. Next `readgssi` will run the background removal (`-r`) filter. Finally, the `-m` flag will draw a histogram for each data channel. Note how the histogram changes when filters are applied.
+This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. Next `readgssi` will run the background removal (`-r 0`) filter. Finally, the `-m` flag will draw a histogram for each data channel. Note how the histogram changes when filters are applied.
 ![Example 1b](https://github.com/iannesbitt/readgssi/raw/master/examples/1b.png)
 ![Example 1b histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/1b-h.png)
 
 #### example 1C: the right gain settings can be slightly different depending on your colormap
 ```bash
-readgssi -i DZT__001.DZT -o 1c.png -p 5 -s auto -r -g 20 -c seismic
+readgssi -i DZT__001.DZT -o 1c.png -p 5 -s auto -r 0 -g 20 -c seismic
 ```
 Here, a horizontal background removal is applied, but gain is turned down (`-g 20`). The script uses matplotlib's "seismic" colormap (`-c seismic`) which is specifically designed for this type of waterfall array plotting. Even without gain, you will often be able to easily see very slight signal perturbations. Given its use of red, however, it is not terribly colorblind-friendly for either of the two most common types of human colorblindness, which is why it is not used as the default colormap.
 ![Example 1c](https://github.com/iannesbitt/readgssi/raw/master/examples/1c.png)
@@ -157,9 +157,9 @@ Sometimes, files will look "washed out" due to a skew relative to the mean of th
 
 #### example 2B: horizontal mean BGR algorithm applied
 ```bash
-readgssi -i DZT__002.DZT -o 2b.png -p 5 -s 5 -n -r
+readgssi -i DZT__002.DZT -o 2b.png -p 5 -s 5 -n -r 0
 ```
-The flag to get rid of the skew (or any horizontally uniform noise) is `-r`. The script does the same thing as above, except `-r` applies horizontal mean background removal to the profile. Note the difference in ringing artifacts and skew between examples 2a and 2b.
+The flag to get rid of the skew (or any horizontally uniform noise) is `-r 0`. The script does the same thing as above, except `-r 0` applies horizontal mean background removal to the profile. Note the difference in ringing artifacts and skew between examples 2a and 2b.
 ![Example 2b](https://github.com/iannesbitt/readgssi/raw/master/examples/2b.png)
 
 #### example 3A: (without) distance normalization
@@ -169,7 +169,7 @@ Files with GPS information are handled in a slightly different way. First, `read
 
 Here a file is processed and displayed without distance normalization:
 ```bash
-readgssi -i DZT__003.DZT -o 3a.png -p 10 -s 5 -r -g 50
+readgssi -i DZT__003.DZT -o 3a.png -p 10 -s 5 -r 0 -g 50
 ```
 ![Example 3a](https://github.com/iannesbitt/readgssi/raw/master/examples/3a.png)
 
@@ -178,7 +178,7 @@ readgssi -i DZT__003.DZT -o 3a.png -p 10 -s 5 -r -g 50
 To use DZG GPS information to distance normalize the profile and display in meters traveled, use the `-N` and `-x meters` flags. `readgssi` will normalize the file in chunks to reduce memory usage. Here is the same file with distance normalization applied:
 
 ```bash
-readgssi -i DZT__003.DZT -o 3b.png -p 10 -s 5 -r -g 50 -N -x meters
+readgssi -i DZT__003.DZT -o 3b.png -p 10 -s 5 -r 0 -g 50 -N -x meters
 ```
 ![Example 3b](https://github.com/iannesbitt/readgssi/raw/master/examples/3b.png)
 
@@ -191,7 +191,7 @@ UNIX users have a distinct advantage of being able to easily process entire fold
 This command makes use of the `ls` function in Bash, which lists all files that match a specific pattern. In this case, we want the pattern to be "any DZT file," which ends up being simply `ls *.DZT` (the `*` symbol is a wildcard, meaning it matches any set of characters, so in this case it would match both `FILE____005.DZT` and `test.DZT` but not `Test01.dzt` because the `.DZT` is case sensitive.).
 
 ```bash
-for f in `ls *.DZT`; do readgssi -p 8 -n -r -g 40 -Z 233 -z ns -N -x m -s auto -i $f; done
+for f in `ls *.DZT`; do readgssi -p 8 -n -r 0 -g 40 -Z 233 -z ns -N -x m -s auto -i $f; done
 ```
 
 The structure of this command is easy to understand if you know a little bit about `for` loops. This command loops over every file with the extension `.DZT` (`ls *.DZT` where `*` indicates a wildcard) and assigns the filename to the `f` variable on each loop. Then, after the semicolon, bash runs readgssi for every pass of the loop. In this case, the parameters are:
@@ -199,7 +199,7 @@ The structure of this command is easy to understand if you know a little bit abo
 ```bash
 -p 8    # plot with size 8
 -n      # suppress the matplotlib window; useful if you do not want the operation interrupted
--r      # background removal
+-r 0    # background removal
 -g 40   # gain of 40
 -Z 233  # time zero at 233 samples
 -z ns   # display the depth axis in nanoseconds
@@ -215,7 +215,7 @@ Finally, end the loop by closing the command with a linebreak `;`, and the `done
 You can make the command even more specific by further modifying the set of files returned by the `ls` command. For example:
 
 ```bash
-for f in `ls FILE__{010..025}.DZT`; do readgssi -p 8 -n -r -g 40 -Z 233 -z ns -N -x m -s auto -i $f; done
+for f in `ls FILE__{010..025}.DZT`; do readgssi -p 8 -n -r 0 -g 40 -Z 233 -z ns -N -x m -s auto -i $f; done
 ```
 
 This command will process only the 16 files in the numeric sequence between and including `010` and `025` in the set (`FILE__010.DZT`, `FILE__011.DZT`, `...`, `FILE__025.DZT`). `bash` handles the zero padding for you as well. Pretty cool. 
