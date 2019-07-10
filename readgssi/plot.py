@@ -40,7 +40,7 @@ def spectrogram(ar, header, freq, verbose=True):
     tr = int(ar.shape[1] / 2)
     if verbose:
         fx.printmsg('converting trace %s to frequency domain and drawing spectrogram...' % (tr))
-    samp_rate = 1 / (header['rhf_depth'] / header['cr'] / header['rh_nsamp'])
+    samp_rate = 1 / header['ns_per_zsample']
     trace = ar.T[tr]
     sg.spectrogram(data=trace, samp_rate=samp_rate, wlen=samp_rate/1000, per_lap = 0.99, dbscale=True,
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
