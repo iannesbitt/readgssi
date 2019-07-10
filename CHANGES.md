@@ -11,7 +11,7 @@
   - this is done with the `scipy.ndimage.filters.uniform_filter1d()` function and means that `scipy` is now explicitly required
   - function will automatically filter out low-frequency washout noise caused by bgr, using obspy's implementation of scipy's butterworth bandpass from `0.1*f` to `10*f`, where `f` is antenna frequency. nyquist is automatically accounted for by obspy.
   - BGR value is displayed in title if set > 0, or as "full" if BGR is full-width (i.e. `-r 0`)
-- added 4th order vertical triangular FIR filter, and changed default filter from butterworth to triangular to attempt to match that in RADAN. butterworth is no longer used (but kept for posterity).
+- added zerophase vertical triangular FIR filter, and changed default filter from butterworth to triangular to attempt to match that in RADAN. butterworth is no longer used (but kept for posterity).
   - this function uses the `scipy.signal.firwin()` filter design and `scipy.signal.lfilter()` implementation
 - added ability to suppress plot title using `-T` or `--titleoff` from the command line or title=False in main python function
 - changed `ns_per_zsample` in header to read data shape from header rather than array size
@@ -24,7 +24,7 @@
 - updated help text and README help text
 - added automatic tight bbox axes for savefig
 - changed from 150 to 300 dpi for easier poster printing measurements
-- fixed calculation for two-way time (previously, calculation was wrong and displayed one-way time)
+- fixed calculation for two-way time (previously per [#17](https://github.com/iannesbitt/readgssi/issues/17), calculation erroneously displayed one-way time)
 
 ## changes since 0.0.13
 - updated examples in README
