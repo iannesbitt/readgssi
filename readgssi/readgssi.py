@@ -115,6 +115,13 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
         if normalize:
             r[0], img_arr[ar], r[2] = arrayops.distance_normalize(header=r[0], ar=img_arr[ar], gps=r[2],
                                                                   verbose=verbose)
+        if dewow:
+            # dewow
+            img_arr[ar] = filtering.dewow(ar=img_arr[ar], verbose=verbose)
+        if freqmin and freqmax:
+            # vertical triangular bandpass
+            img_arr[ar] = filtering.triangular(ar=img_arr[ar], header=r[0], freqmin=freqmin, freqmax=freqmax,
+                                               zerophase=True, verbose=verbose)
         if stack != 1:
             # horizontal stacking
             img_arr[ar], stack = arrayops.stack(ar=img_arr[ar], stack=stack, verbose=verbose)
@@ -129,13 +136,6 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
                                         verbose=verbose)
         else:
             win = None
-        if dewow:
-            # dewow
-            img_arr[ar] = filtering.dewow(ar=img_arr[ar], verbose=verbose)
-        if freqmin and freqmax:
-            # vertical triangular bandpass
-            img_arr[ar] = filtering.triangular(ar=img_arr[ar], header=r[0], freqmin=freqmin, freqmax=freqmax,
-                                               zerophase=True, verbose=verbose)
 
         ## file naming
         # name the output file
