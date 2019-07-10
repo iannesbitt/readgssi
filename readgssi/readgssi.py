@@ -32,7 +32,7 @@ from readgssi.dzt import *
 
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figsize=10,
              stack=1, x='seconds', z='nanoseconds', verbose=False, histogram=False, colormap='Greys', colorbar=False,
-             zero=2, gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, win=0, dewow=False,
+             zero=[2,2,2,2], gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, win=0, dewow=False,
              normalize=False, specgram=False, noshow=False, spm=None, epsr=None, title=True):
     """
     primary radar processing function
@@ -84,16 +84,30 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
     # create a list of n arrays, where n is the number of channels
     arr = r[1].astype(np.int32)
     chans = list(range(r[0]['rh_nchan']))
-    timezero = 0
-    #timezero = abs(round(float(r[0]['rh_nsamp'])/float(r[0]['rhf_range'])*float(r[0]['rhf_position'])))
-    img_arr = arr[timezero:r[0]['rh_nchan']*r[0]['rh_nsamp']]
+    # time zero per channel
+    r[0]['timezero'] = [None, None, None, None]
+    try:
+        r[0]['timezero'][0] = int(zero)
+    except TypeError:
+        try:
+            for i in range(4):
+                r[0]['timezero'][i] = int(list(zero)[i])
+        except IndexError:
+            pass
+        except Exception as e:
+            fx.printmsg('ERROR: could not set time zero! defaulting to 2 samples down')
+            fx.printmsg('details: %s' % e)
+            r[0]['timezero'] = [2,2,2,2]
+
+    # set up list of arrays
+    img_arr = arr[:r[0]['rh_nchan']*r[0]['rh_nsamp']] # test if we understand data structure. arrays should be stacked nchan*nsamp high
     new_arr = {}
     for ar in chans:
         a = []
-        a = img_arr[(ar)*r[0]['rh_nsamp']:(ar+1)*r[0]['rh_nsamp']]
-        new_arr[ar] = a[zero:,:int(img_arr.shape[1])]
+        a = img_arr[(ar)*r[0]['rh_nsamp']:(ar+1)*r[0]['rh_nsamp']] # break apart
+        new_arr[ar] = a[r[0]['timezero'][ar]:,:int(img_arr.shape[1])] # put into dict form
             
-    img_arr = new_arr
+    img_arr = new_arr # overwrite
     del arr, new_arr
 
     for ar in img_arr:
@@ -126,8 +140,9 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
         if freqmin and freqmax:
             # vertical triangular bandpass
             img_arr[ar] = filtering.triangular(ar=img_arr[ar], header=r[0], freqmin=freqmin, freqmax=freqmax,
-                                       verbose=verbose)
+                                               zerophase=True, verbose=verbose)
 
+        ## file naming
         # name the output file
         if ar == 0: # first channel?
             orig_outfile = outfile # preserve the original
@@ -148,8 +163,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
                 outfile = '%sCh%s' % (outfile, ar)
             if normalize:
                 outfile = '%sDn' % (outfile)
-            if zero and (zero > 0):
-                outfile = '%sTz%s' % (outfile, zero)
+            if r[0]['timezero'][ar] and (r[0]['timezero'][ar] > 0):
+                outfile = '%sTz%s' % (outfile, r[0]['timezero'][ar])
             if stack > 1:
                 outfile = '%sS%s' % (outfile, stack)
             if reverse:
@@ -190,7 +205,8 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
         if plotting:
             plot.radargram(ar=img_arr[ar], header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose,
                            figsize=figsize, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
-                           colorbar=colorbar, noshow=noshow, outfile=outfile, win=win, title=title)
+                           colorbar=colorbar, noshow=noshow, outfile=outfile, win=win, title=title,
+                           zero=r[0]['timezero'][ar])
 
         if histogram:
             plot.histogram(ar=img_arr[ar], verbose=verbose)
@@ -208,8 +224,9 @@ def main():
     title = True
     stack = 1
     win = 0
+    zero = [2,2,2,2]
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
-    reverse, freqmin, freqmax, specgram, zero, normalize, spm, epsr = None, None, None, None, None, None, None, None
+    reverse, freqmin, freqmax, specgram, normalize, spm, epsr = None, None, None, None, None, None, None
     colormap = 'Greys'
     x, z = 'seconds', 'nanoseconds'
     gain = 1
@@ -306,10 +323,12 @@ def main():
                 try:
                     zero = int(arg)
                 except:
-                    fx.printmsg('ERROR: zero correction must be an integer')
+                    try:
+                        zero = list(map(int, arg.split(',')))
+                    except:
+                        fx.printmsg('ERROR: zero correction must be an integer or list')
             else:
                 fx.printmsg('WARNING: no zero correction argument supplied')
-                zero = None
         if opt in ('-t', '--bandpass'):
             if arg:
                 freqmin, freqmax = arg.split('-')

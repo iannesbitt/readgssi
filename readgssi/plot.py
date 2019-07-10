@@ -46,7 +46,7 @@ def spectrogram(ar, header, freq, verbose=True):
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
 
 def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
-              colormap='Greys', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', aspect='auto'):
+              colormap='Greys', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', aspect='auto', zero=2):
     """
     let's do some matplotlib
 
@@ -54,7 +54,8 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
     ar          - a radar array
     verbose     - boolean, whether to print progress. defaults to True
     plotsize    - the size of the plot in inches
-    stack       - number of times to stack horizontally
+    zero        - the zero point (number of samples sliced off the top of the profile by the timezero option)
+    stack       - number of times stacked horizontally
     colormap    - the matplotlib colormap to use, defaults to 'Greys' which is to say: the same as the default RADAN colormap
     colorbar    - boolean, whether to draw the colorbar. defaults to False
     noshow      - boolean, whether to bring up the matplotlib figure dialog when drawing. defaults to False, meaning the dialog will be displayed.
@@ -77,7 +78,10 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
             fx.printmsg('plotting with gain=%s...' % gain)
         fig, ax = plt.subplots()
 
+    zmin = 0
     mean = np.mean(ar)
+    if mean > 1000:
+        fx.printmsg('WARNING: mean pixel value is very high. consider filtering with -t')
     std = np.std(ar)
     ll = mean - (std * 3) # lower color limit
     ul = mean + (std * 3) # upper color limit
@@ -126,7 +130,8 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
                 zmax = zmax * 1000.
             zlabel = r'Depth at $\epsilon_r$=%.2f (%s)' % (header['rhf_epsr'], z)
         else: # else we plot in units of samples
-            zmax = ar.shape[0]
+            zmin = zero
+            zmax = ar.shape[0] + zero
             zlabel = 'Sample'
     # finally, relate max scale value back to array shape in order to set matplotlib axis scaling
     try:
@@ -145,13 +150,13 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
             fx.printmsg('attempting to plot with colormap %s' % (colormap))
         img = ax.imshow(ar, cmap=colormap, clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
-                                            vmin=ll, vmax=ul), extent=[0,xmax,zmax,0])
+                                            vmin=ll, vmax=ul), extent=[0,xmax,zmax,zmin])
     except:
         fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using viridis instead' % colormap)
         fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
         img = ax.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
-                                            vmin=ll, vmax=ul), extent=[0,xmax,zmax,0])
+                                            vmin=ll, vmax=ul), extent=[0,xmax,zmax,zmin])
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(zlabel)

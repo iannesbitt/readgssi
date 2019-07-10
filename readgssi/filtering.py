@@ -18,16 +18,15 @@ def bgr(ar, header, antfreq, win=0, verbose=False):
         window = int(win)
         how = 'boxcar (%s trace window)' % window
     else:
-        how = 'full'
+        how = 'full only'
     if verbose:
         fx.printmsg('removing horizontal background using method=%s...' % (how))
     i = 0
-    if how == 'full':
-        for row in ar:          # each row
-            mean = np.mean(row)
-            ar[i] = row - mean
-            i += 1
-    else:
+    for row in ar:          # each row
+        mean = np.mean(row)
+        ar[i] = row - mean
+        i += 1
+    if how != 'full only':
         if window < 10:
             fx.printmsg('WARNING: BGR window size is very short. be careful, this may obscure horizontal layering')
         if window < 3:
@@ -35,13 +34,7 @@ def bgr(ar, header, antfreq, win=0, verbose=False):
         elif (window / 2. == int(window / 2)):
             window = window + 1
         ar -= uniform_filter1d(ar, size=window, mode='constant', cval=0, axis=1)
-    if verbose:
-        fx.printmsg('removing residual vertical noise...')
-    try:
-        ar = bp(ar, header, freqmin=antfreq/10., freqmax=antfreq*10)
-    except Exception as e:
-        fx.printmsg('WARNING: could not remove vertical residuals')
-        fx.printmsg('details: %s' % (e))
+
     return ar
 
 def dewow(ar, verbose=False):
@@ -49,6 +42,7 @@ def dewow(ar, verbose=False):
     Polynomial dewow filter
     Written by fxsimon
     """
+    fx.printmsg('WARNING: dewow filter is experimental')
     if verbose:
         fx.printmsg('dewowing data...')
     signal = list(zip(*ar))[10]
@@ -60,47 +54,54 @@ def dewow(ar, verbose=False):
         i += 1
     return ar
 
-def bp(ar, header, freqmin, freqmax, verbose=False):
+def bp(ar, header, freqmin, freqmax, zerophase=True, verbose=False):
     """
-    Vertical frequency domain butterworth bandpass
+    Vertical butterworth bandpass
     """
     if verbose:
         fx.printmsg('vertical butterworth bandpass filter')
-    samp_freq = 1 / (header['rhf_depth'] / header['cr'] / header['rh_nsamp'])
+        fx.printmsg('NOTE: better results are achieved with readgssi.filtering.triangular()')
+    samp_freq = 1 / ((header['rhf_depth'] * 2) / header['cr'] / header['rh_nsamp'])
     freqmin = freqmin * 10 ** 6
     freqmax = freqmax * 10 ** 6
     
+    corners = 1
+
     if verbose:
         fx.printmsg('sampling frequency:       %.2E Hz' % samp_freq)
         fx.printmsg('minimum filter frequency: %.2E Hz' % freqmin)
         fx.printmsg('maximum filter frequency: %.2E Hz' % freqmax)
-        fx.printmsg('2 corners, zerophase: True, filter order: 4')
+        fx.printmsg('corners: %s, zerophase: %s' % (corners, zerophase))
     
     i = 0
     for t in ar.T:
-        f = bandpass(data=t, freqmin=freqmin, freqmax=freqmax, df=samp_freq, corners=2, zerophase=True)
+        f = bandpass(data=t, freqmin=freqmin, freqmax=freqmax, df=samp_freq, corners=corners, zerophase=zerophase)
         ar[:,i] = f
         i += 1
     return ar
 
-def triangular(ar, header, freqmin, freqmax, verbose=False):
+def triangular(ar, header, freqmin, freqmax, zerophase=True, verbose=False):
     """
-    Vertical frequency domain triangular bandpass
+    Vertical triangular FIR bandpass
     """
     if verbose:
         fx.printmsg('vertical triangular FIR bandpass filter')
-    samp_freq = 1 / (header['rhf_depth'] / header['cr'] / header['rh_nsamp'])
+    samp_freq = 1 / ((header['rhf_depth'] * 2) / header['cr'] / header['rh_nsamp'])
     freqmin = freqmin * 10 ** 6
     freqmax = freqmax * 10 ** 6
     
+    numtaps = 25
+
     if verbose:
         fx.printmsg('sampling frequency:       %.2E Hz' % samp_freq)
         fx.printmsg('minimum filter frequency: %.2E Hz' % freqmin)
         fx.printmsg('maximum filter frequency: %.2E Hz' % freqmax)
-        fx.printmsg('filter order: 4')
+        fx.printmsg('numtaps: %s, zerophase: %s' % (numtaps, zerophase))
 
-    filt = firwin(numtaps=5, cutoff=[freqmin, freqmax], window='triangle', pass_zero='bandpass', fs=samp_freq)
-    far = lfilter(filt, 1.0, ar, axis=0)
-    del ar
+    filt = firwin(numtaps=numtaps, cutoff=[freqmin, freqmax], window='triangle', pass_zero='bandpass', fs=samp_freq)
+
+    far = lfilter(filt, 1.0, ar, axis=0).copy()
+    if zerophase:
+        far = lfilter(filt, 1.0, far[::-1], axis=0)[::-1]
 
     return far
