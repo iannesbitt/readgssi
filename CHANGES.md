@@ -21,6 +21,9 @@
 - added per-channel handling of timezero. you can pass a list with `-Z 233,150,92` (or `zero=[233,150,92,None]` in python). defaults to `-Z 2` (`zero=[2,None,None,None]`)
 - added programmable zoom with `-e left,right,up,down` flag and list
 - cleaned up some dangling floats
+- updated help text
+- added automatic tight bbox axes for savefig
+- changed from 150 to 300 dpi for easier poster printing measurements
 
 ## changes since 0.0.13
 - updated examples in README
