@@ -46,7 +46,8 @@ def spectrogram(ar, header, freq, verbose=True):
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
 
 def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
-              colormap='Greys', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', aspect='auto', zero=2):
+              colormap='Greys', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', aspect='auto', zero=2,
+              zoom=[0,0,0,0]):
     """
     let's do some matplotlib
 
@@ -88,10 +89,10 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
     if verbose:
         fx.printmsg('image stats')
         fx.printmsg('size:               %sx%s' % (ar.shape[0], ar.shape[1]))
-        fx.printmsg('mean:               %s' % mean)
-        fx.printmsg('stdev:              %s' % std)
-        fx.printmsg('lower color limit:  %s [mean - (3 * stdev)]' % ll)
-        fx.printmsg('upper color limit:  %s [mean + (3 * stdev)]' % ul)
+        fx.printmsg('mean:               %.3f' % mean)
+        fx.printmsg('stdev:              %.3f' % std)
+        fx.printmsg('lower color limit:  %.2f [mean - (3 * stdev)]' % ll)
+        fx.printmsg('upper color limit:  %.2f [mean + (3 * stdev)]' % ul)
 
     # X scaling routine
     if (x == None) or (x in 'seconds'): # plot x as time by default
@@ -143,20 +144,71 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
         zscale = ar.shape[0]/zmax
 
     if verbose:
-        fx.printmsg('xmax: %s %s, zmax: %s %s' % (xmax, xlabel, zmax, zlabel))
+        fx.printmsg('xmax: %.4f %s, zmax: %.4f %s' % (xmax, xlabel, zmax, zlabel))
+
+    extent = [0, xmax, zmax, zmin]
 
     try:
         if verbose:
             fx.printmsg('attempting to plot with colormap %s' % (colormap))
         img = ax.imshow(ar, cmap=colormap, clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
-                                            vmin=ll, vmax=ul), extent=[0,xmax,zmax,zmin])
+                                            vmin=ll, vmax=ul), extent=extent)
     except:
         fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using viridis instead' % colormap)
         fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
         img = ax.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
-                                            vmin=ll, vmax=ul), extent=[0,xmax,zmax,zmin])
+                                            vmin=ll, vmax=ul), extent=extent)
+
+    # zooming
+    if zoom != [0,0,0,0]: # if zoom is set
+        for i in range(4):
+            if zoom[i] < 0:
+                zoom[i] = 0
+                if verbose:
+                    fx.printmsg('WARNING: %s zoom limit was negative, now set to zero' % ['left','right','up','down'])
+        if (zoom[0] > 0) or (zoom[1] > 0): # if a LR value has been set
+            if zoom[0] > extent[1]: # if L zoom is beyond extents, set back to extent limit
+                zoom[0] = extent[1]
+                if verbose:
+                    fx.printmsg('WARNING: left zoom limit out of bounds (limit is %s %s)' % (extent[1], x))
+            if zoom[1] > extent[1]: # if R zoom is beyond extents, set back to extent limit
+                zoom[1] = extent[1]
+                if verbose:
+                    fx.printmsg('WARNING: right zoom limit out of bounds (limit is %s %s)' % (extent[1], x))
+            if zoom[0] == zoom[1]: # if LR extents are impossible,
+                zoom[0] = extent[0] # set both to full extents
+                zoom[1] = extent[1]
+                if verbose:
+                    fx.printmsg('WARNING: left and right zoom values were equal or both out of bounds, now set to full extent')
+        else:
+            zoom[0] = extent[0]
+            zoom[1] = extent[1]
+        if (zoom[2] > 0) or (zoom[3] > 0): # if a UD value has been set
+            if zoom[2] > extent[2]: # if upper zoom is beyond extents, set back to extent limit
+                zoom[2] = extent[2]
+                if verbose:
+                    fx.printmsg('WARNING: upper zoom limit out of bounds (limit is %s %s)' % (extent[3], x))
+            if zoom[3] > extent[2]: # if lower zoom is beyond extents, set back to extent limit
+                zoom[3] = extent[2]
+                if verbose:
+                    fx.printmsg('WARNING: lower zoom limit out of bounds (limit is %s %s)' % (extent[3], x))
+            if zoom[2] == zoom[3]: # if UD extents are impossible,
+                zoom[2] = extent[2] # set both to full extents
+                zoom[3] = extent[3]
+                if verbose:
+                    fx.printmsg('WARNING: top and bottom zoom values were equal or both out of bounds, now set to full extent')
+        else:
+            zoom[2] = extent[2]
+            zoom[3] = extent[3]
+    else:
+        zoom = extent
+    if zoom != extent:
+        if verbose:
+            fx.printmsg('zooming in to %s [xmin, xmax, ymax, ymin]' % zoom)
+        ax.set_xlim(zoom[0], zoom[1])
+        ax.set_ylim(zoom[2], zoom[3])
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(zlabel)

@@ -33,7 +33,7 @@ from readgssi.dzt import *
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figsize=10,
              stack=1, x='seconds', z='nanoseconds', verbose=False, histogram=False, colormap='Greys', colorbar=False,
              zero=[None,None,None,None], gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, win=0, dewow=False,
-             normalize=False, specgram=False, noshow=False, spm=None, epsr=None, title=True):
+             normalize=False, specgram=False, noshow=False, spm=None, epsr=None, title=True, zoom=[0,0,0,0]):
     """
     primary radar processing function
 
@@ -201,7 +201,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             plot.radargram(ar=img_arr[ar], header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose,
                            figsize=figsize, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
                            colorbar=colorbar, noshow=noshow, outfile=outfile, win=win, title=title,
-                           zero=r[0]['timezero'][ar])
+                           zero=r[0]['timezero'][ar], zoom=zoom)
 
         if histogram:
             plot.histogram(ar=img_arr[ar], verbose=verbose)
@@ -220,6 +220,7 @@ def main():
     stack = 1
     win = 0
     zero = [None,None,None,None]
+    zoom = [0,0,0,0]
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
     reverse, freqmin, freqmax, specgram, normalize, spm, epsr = None, None, None, None, None, None, None
     colormap = 'Greys'
@@ -229,10 +230,10 @@ def main():
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plotting=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hVqd:i:a:o:f:p:s:r:RNwnmc:bg:Z:E:t:x:z:T',
+        opts, args = getopt.getopt(sys.argv[1:],'hVqd:i:a:o:f:p:s:r:RNwnmc:bg:Z:E:t:x:z:Te:',
             ['help', 'version', 'quiet','spm=','input=','antfreq=','output=','format=','plot=','stack=','bgr=',
             'reverse', 'normalize','dewow','noshow','histogram','colormap=','colorbar','gain=',
-            'zero=','epsr=','bandpass=', 'xscale=', 'zscale=', 'titleoff'])
+            'zero=','epsr=','bandpass=', 'xscale=', 'zscale=', 'titleoff', 'zoom='])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
         fx.printmsg('ERROR: invalid argument(s) supplied')
@@ -415,6 +416,18 @@ def main():
                     gain = 1
         if opt in ('-T', '--titleoff'):
             title = False
+        if opt in ('-e', '--zoom'):
+            if arg:
+                if True:#try:
+                    zoom = list(map(int, arg.split(',')))
+                    if len(zoom) != 4:
+                        fx.printmsg('ERROR: zoom must be a list of four numbers (zeros are accepted).')
+                        fx.printmsg('       defaulting to full extents.')
+                        zoom = [0,0,0,0]
+                # except Exception as e:
+                #     fx.printmsg('ERROR setting zoom values. zoom must be a list of four numbers (zeros are accepted).')
+                #     fx.printmsg('       defaulting to full extents.')
+                #     fx.printmsg('details: %s' % e)
 
 
     # call the function with the values we just got
@@ -425,7 +438,7 @@ def main():
                  figsize=figsize, stack=stack, verbose=verbose, histogram=histogram, x=x, z=z,
                  colormap=colormap, colorbar=colorbar, reverse=reverse, gain=gain, bgr=bgr, win=win,
                  zero=zero, normalize=normalize, dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax,
-                 spm=spm, epsr=epsr, title=title)
+                 spm=spm, epsr=epsr, title=title, zoom=zoom)
         if verbose:
             fx.printmsg('done with %s' % infile)
         print('')

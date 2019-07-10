@@ -19,6 +19,8 @@
 - significantly improved triangular bandpass filter, so that it nearly matches RADAN
 - when Z axis value is set to "samples", the zeroed samples are taken into account. so, if the array had 150 samples sliced off, the plot axis will now start at 150 instead of 0
 - added per-channel handling of timezero. you can pass a list with `-Z 233,150,92` (or `zero=[233,150,92,None]` in python). defaults to `-Z 2` (`zero=[2,None,None,None]`)
+- added programmable zoom with `-e left,right,up,down` flag and list
+- cleaned up some dangling floats
 
 ## changes since 0.0.13
 - updated examples in README
