@@ -59,7 +59,7 @@ naming scheme for exports:
     Dw          |  Dewow filter
     Bp70-130    |  triangular FIR filter applied from 70 to 130 MHz
     G30         |  30x contrast gain
-    Z10.20.7.5  |  zoom from 10-20 on the x-axis and 5-7 on the z-axis
+    Z10.20.7.5  |  zoom from 10-20 axis units on the x-axis and 5-7 on the z-axis
 ''' % (__version__, u'\U0001F12F', author, year, affil)
 
 version_text = '%s %s' % (name, __version__)
