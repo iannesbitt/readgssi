@@ -11,9 +11,14 @@
   - this is done with the `scipy.ndimage.filters.uniform_filter1d()` function and means that `scipy` is now explicitly required
   - function will automatically filter out low-frequency washout noise caused by bgr, using obspy's implementation of scipy's butterworth bandpass from `0.1*f` to `10*f`, where `f` is antenna frequency. nyquist is automatically accounted for by obspy.
   - BGR value is displayed in title if set > 0, or as "full" if BGR is full-width (i.e. `-r 0`)
-- added 4th order vertical triangular FIR filter, and changed default filter from butterworth to triangular to match that in RADAN. butterworth is now used only to remove low-frequency sensor noise during BGR (but kept for posterity).
+- added 4th order vertical triangular FIR filter, and changed default filter from butterworth to triangular to attempt to match that in RADAN. butterworth is no longer used (but kept for posterity).
   - this function uses the `scipy.signal.firwin()` filter design and `scipy.signal.lfilter()` implementation
-- added ability to suppress plot title using `-T` or `--titleoff` from the command line
+- added ability to suppress plot title using `-T` or `--titleoff` from the command line or title=False in main python function
+- changed `ns_per_zsample` in header to read data shape from header rather than array size
+- added a bug fix for filtering that caused the sample rate to be set too high
+- significantly improved triangular bandpass filter, so that it nearly matches RADAN
+- when Z axis value is set to "samples", the zeroed samples are taken into account. so, if the array had 150 samples sliced off, the plot axis will now start at 150 instead of 0
+- added per-channel handling of timezero. you can pass a list with `-Z 233,150,92` (or `zero=[233,150,92,None]` in python). defaults to `-Z 2` (`zero=[2,None,None,None]`)
 
 ## changes since 0.0.13
 - updated examples in README
