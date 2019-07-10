@@ -24,6 +24,7 @@
 - updated help text and README help text
 - added automatic tight bbox axes for savefig
 - changed from 150 to 300 dpi for easier poster printing measurements
+- fixed calculation for two-way time (previously, calculation was wrong and displayed one-way time)
 
 ## changes since 0.0.13
 - updated examples in README
