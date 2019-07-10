@@ -208,12 +208,13 @@ def header_info(header, data):
     """
     fx.printmsg('system:             %s (system code %s)' % (UNIT[header['rh_system']], header['rh_system']))
     fx.printmsg('antennas:           %s' % header['rh_antname'])
+    fx.printmsg('time zeros:         %s' % header['timezero'])
 
     for i in range(header['rh_nchan']):
         if header['known_ant'][i] == True:
-            fx.printmsg('ant %s frequency:    %s MHz' % (i, ANT[header['rh_antname'][i]]))
+            fx.printmsg('ant %s center freq:  %s MHz' % (i, ANT[header['rh_antname'][i]]))
         else:
-            fx.printmsg('ant %s frequency:    %s MHz (antenna name %s not in current dictionary)'
+            fx.printmsg('ant %s center freq:  %s MHz (antenna name %s not in current dictionary)'
                         % (i, header['antfreq'][i], header['rh_antname'][i]))
 
     fx.printmsg('date created:       %s' % header['rhb_cdt'])

@@ -32,7 +32,7 @@ from readgssi.dzt import *
 
 def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figsize=10,
              stack=1, x='seconds', z='nanoseconds', verbose=False, histogram=False, colormap='Greys', colorbar=False,
-             zero=[2,2,2,2], gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, win=0, dewow=False,
+             zero=[None,None,None,None], gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, win=0, dewow=False,
              normalize=False, specgram=False, noshow=False, spm=None, epsr=None, title=True):
     """
     primary radar processing function
@@ -47,6 +47,15 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
                 fx.printmsg('reading...')
                 fx.printmsg('input file:         %s' % (infile))
             r = readdzt(infile, gps=normalize, spm=spm, epsr=epsr, verbose=verbose)
+            # time zero per channel
+            r[0]['timezero'] = [None, None, None, None]
+            for i in range(r[0]['rh_nchan']):
+                try:
+                    r[0]['timezero'][i] = int(list(zero)[i])
+                except (TypeError, IndexError):
+                    fx.printmsg('WARNING: no time zero specified for channel %s, defaulting to 2' % i)
+                    r[0]['timezero'][i] = 2
+            # print a bunch of header info
             if verbose:
                 fx.printmsg('success. header values:')
                 header_info(r[0], r[1])
@@ -84,20 +93,6 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
     # create a list of n arrays, where n is the number of channels
     arr = r[1].astype(np.int32)
     chans = list(range(r[0]['rh_nchan']))
-    # time zero per channel
-    r[0]['timezero'] = [None, None, None, None]
-    try:
-        r[0]['timezero'][0] = int(zero)
-    except TypeError:
-        try:
-            for i in range(4):
-                r[0]['timezero'][i] = int(list(zero)[i])
-        except IndexError:
-            pass
-        except Exception as e:
-            fx.printmsg('ERROR: could not set time zero! defaulting to 2 samples down')
-            fx.printmsg('details: %s' % e)
-            r[0]['timezero'] = [2,2,2,2]
 
     # set up list of arrays
     img_arr = arr[:r[0]['rh_nchan']*r[0]['rh_nsamp']] # test if we understand data structure. arrays should be stacked nchan*nsamp high
@@ -224,7 +219,7 @@ def main():
     title = True
     stack = 1
     win = 0
-    zero = [2,2,2,2]
+    zero = [None,None,None,None]
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
     reverse, freqmin, freqmax, specgram, normalize, spm, epsr = None, None, None, None, None, None, None
     colormap = 'Greys'
@@ -321,12 +316,9 @@ def main():
         if opt in ('-Z', '--zero'):
             if arg:
                 try:
-                    zero = int(arg)
+                    zero = list(map(int, arg.split(',')))
                 except:
-                    try:
-                        zero = list(map(int, arg.split(',')))
-                    except:
-                        fx.printmsg('ERROR: zero correction must be an integer or list')
+                    fx.printmsg('ERROR: zero correction must be an integer or list')
             else:
                 fx.printmsg('WARNING: no zero correction argument supplied')
         if opt in ('-t', '--bandpass'):
