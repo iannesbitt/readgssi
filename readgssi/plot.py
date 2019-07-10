@@ -73,7 +73,7 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
             figx += 1 # avoid zero height error in x dimension
         if verbose:
             fx.printmsg('plotting %sx%sin image with gain=%s...' % (figx, figy, gain))
-        fig, ax = plt.subplots(figsize=(figx, figy), dpi=150)
+        fig, ax = plt.subplots(figsize=(figx, figy), dpi=300)
     else:
         if verbose:
             fx.printmsg('plotting with gain=%s...' % gain)
@@ -210,6 +210,12 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
         ax.set_xlim(zoom[0], zoom[1])
         ax.set_ylim(zoom[2], zoom[3])
 
+        # adding to the Seth W. Campbell honorary naming scheme
+        outfile = '%sZ' % (outfile)
+        for ex in zoom:
+            outfile = '%s.%s' % (outfile, ex)
+
+
     ax.set_xlabel(xlabel)
     ax.set_ylabel(zlabel)
 
@@ -235,7 +241,7 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
         # if outfile doesn't match this then save fig with the outfile name
         if verbose:
             fx.printmsg('saving figure as %s.png' % (outfile))
-        plt.savefig('%s.png' % (outfile))
+        plt.savefig('%s.png' % (outfile), bbox_inches='tight')
     else:
         # else someone has called this function from outside and forgotten the outfile field
         if verbose:
