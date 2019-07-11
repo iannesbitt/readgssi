@@ -351,9 +351,10 @@ def main():
             if arg:
                 try:
                     spm = float(arg)
-                    assert spm < 0
+                    assert spm > 0
                 except:
-                    fx.printmsg('ERROR: samples per meter must be positive')
+                    fx.printmsg('ERROR: samples per meter must be positive. defaulting to read from header')
+                    spm = None
             else:
                 fx.printmsg('WARNING: no samples per meter value given')
         if opt in ('-x', '--xscale'):
