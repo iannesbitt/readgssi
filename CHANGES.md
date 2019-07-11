@@ -1,5 +1,8 @@
 # Changelog
 
+## changes since 0.0.15
+- fixed [#14](https://github.com/iannesbitt/readgssi/issues/14) which incorrectly asserted that user-set samples per meter was negative when it was not (sign was flipped) but processed the file correctly regardless
+
 ## changes since 0.0.14
 - added support for the 5103 400 MHz antenna, and an antenna called `CUSTOM` in the header, for which center frequency is not known but is likely adjustable
 - added support for the 350 HS hyperstacking antenna
