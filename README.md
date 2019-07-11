@@ -67,7 +67,9 @@ optional flags:
      OPTION     |      ARGUMENT       |       FUNCTIONALITY
 -o, --output    | file:  /dir/f.ext   |  output file. if not set, will be named similar to input
 -f, --format    | string, eg. "csv"   |  output format (csv is the only working format currently)
--p, --plot      | +integer or "auto"  |  plot size. will be x inches high (dpi=300) or "auto". default: 10
+-p, --plot      | +integer or "auto"  |  plot size. will be x inches high or "auto". default: 10. see also -D to set DPI
+-D, --dpi       | positive integer    |  set the plot DPI for figure making. defaults to 150
+-T, --titleoff  |                     |  turn the plot title off (useful for figure making)
 -x, --xscale    | string, eg. "dist"  |  x units. will attempt to convert the x-axis to distance, time, or trace units based on header values
 -z, --zscale    | string, eg. "time"  |  z units. attempt to convert the x-axis to depth, time, or sample units based on header values
 -e, --zoom      | list of +int [LRUD] |  set a zoom to automatically jump to. list order is [left,right,up,down] and units are the same as axis
@@ -86,7 +88,6 @@ optional flags:
 -m, --histogram |                     |  produce a histogram of data values
 -E, --epsr      | float > 1.0         |  user-defined epsilon sub r (sometimes referred to as "dielectric") if set, ignores value in DZT header
 -Z, --zero      | +int or list of int |  timezero: skip samples before direct wave. samples are removed from the top of the trace. use list for multi-channel
--T, --titleoff  |                     |  turn the plot title off (useful for figure making)
 
 naming scheme for exports:
   CHARACTERS    |      MEANING
