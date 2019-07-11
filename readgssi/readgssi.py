@@ -30,14 +30,62 @@ from readgssi.constants import *
 from readgssi.dzt import *
 
 
-def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figsize=10,
-             stack=1, x='seconds', z='nanoseconds', verbose=False, histogram=False, colormap='Greys', colorbar=False,
+def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt=None, plotting=False, figsize=10, dpi=150,
+             stack=1, x='seconds', z='nanoseconds', histogram=False, colormap='Greys', colorbar=False,
              zero=[None,None,None,None], gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, win=0, dewow=False,
              normalize=False, specgram=False, noshow=False, spm=None, epsr=None, title=True, zoom=[0,0,0,0]):
     """
-    primary radar processing function
+    Primary radar processing function. Coordinates calls to reading, filtering, translation, and plotting functions.
 
-    includes calls to reading, filtering, translation, and plotting functions
+    :param infile: Input DZT data file
+    :type outfile: str
+    :param outfile: Base output file name for plots, CSVs, and other products. Defaults to `None`, which will cause the output filename to take a form similar to the input. The default will let the file be named via the descriptive naming function :py:data: `readgssi.functions.naming()`.
+    :type verbose: bool
+    :param verbose: Whether or not to display (a lot of) information about the workings of the program. Defaults to False. Can be helpful for debugging but also to see various header values and processes taking place.
+    :type antfreq: int
+    :param antfreq: User setting for antenna frequency. Defaults to `None`, which will cause the program to try to determine the frequency from the antenna name in the header of the input file. If the antenna name is not in the dictionary :py:data: `readgssi.constants.ANT`, the function will try to 
+    :type frmt: str
+    :param frmt: The output format. Defaults to None. Presently, be set to "csv", "numpy", or "gprpy". Plotting will not interfere with output (i.e. you can output to CSV and plot a PNG in the same command).
+    :type plotting: bool
+    :param plotting: Whether to plot the radargram. Defaults to False.
+    :type figsize: int
+    :param figsize: Plot size in inches.
+    :type dpi: int
+    :param dpi: Dots per inch (DPI) for figure creation.
+    :type stack: int
+    :param figsize: Number of consecutive traces to stack (horizontally). Defaults to 1 (no stacking). Especially good for handling long radar lines. Algorithm combines consecutive traces together using addition, which reduces noise and enhances signal. The more stacking is done, generally the clearer signal will become. The tradeoff is that you will reduce the length of the X-axis. Sometimes this is desirable (i.e. for long survey lines).
+    :type x: str
+    :param x: The units to display on the x-axis during plotting. Defaults to "seconds". Acceptable values are "distance" (which sets to meters), "km", "m", "cm", "mm", "kilometers", "meters", etc., for distance; "seconds", "s", "temporal" or "time" for seconds, and "traces", "samples", "pulses", or "columns" for traces.
+    :type z: str
+    :param z: The units to display on the z-axis during plotting. Defaults to "nanoseconds". Acceptable values are "depth" (which sets to meters), "m", "cm", "mm", "meters", etc., for depth; "nanoseconds", "ns", "temporal" or "time" for seconds, and "samples" or "rows" for samples.
+    :type histogram: bool
+    :param histogram: Whether to plot a histogram of array values at plot time.
+    :type colormap: str or :class:`matplotlib.colors.Colormap`
+    :param colormap: Plot using a colormap. Defaults to "Greys" which is colorblind-friendly and behaves similarly to the RADAN default, but "seismic" is a favorite of many due to its diverging nature.
+    :type colorbar: bool
+    :param colorbar: Whether to display a graded color bar at plot time.
+    :type zero: list
+    :param zero: A list of values representing the amount of samples to slice off each channel. Defaults to None for all channels, which will end up being set as [2,2,2,2] for a four-channel file (2 is the number of rows down that GSSI stores mark information in).
+    :type gain: int
+    :param gain: The amount of gain applied to plots. Defaults to 1. Gain is applied as a ratio of the standard deviation of radargram values to the value set here.
+    :type freqmin: int
+    :param freqmin: Minimum frequency value to accept in a vertical triangular FIR bandpass filter. Defaults to None (no filter).
+    :type freqmax: int
+    :param freqmax: Maximum frequency value to accept in a vertical triangular FIR bandpass filter. Defaults to None (no filter).
+    :type reverse: bool
+    :param reverse: Whether to read the array backwards (i.e. flip horizontally). Defaults to False. Useful for lining up travel directions of files run opposite each other.
+    :type bgr: int
+    :param bgr: Background removal filter applied after stacking. Defaults to False (off). `bgr=True` must be accompanied by a valid value for `win`.
+    :type win: integer
+    :param win: Window size for background removal filter. If `bgr=True` and `win=0`, the full-width row average will be subtracted from each row. If `bgr=True` and `win=50`, a moving window will calculate the average of 25 cells on either side of the current cell, and subtract that average from the cell value, using :py:data: `scipy.ndimage.filters.uniform_filter1d()` with `mode='constant'` and `cval=0`. This is useful for removing non-uniform horizontal average, but the tradeoff is that it creates ghost data half the window size away from vertical figures, and that a window size set too low will obscure any horizontal layering longer than the window size.
+    :type dewow: bool
+    :param colorbar: Whether to apply a vertical dewow filter (experimental).
+    :type normalize: bool
+    :param normalize: Distance normalization.
+
+
+
+
     """
 
     if infile:
@@ -150,28 +198,10 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
             if len(chans) > 1:
                 outfile = '%sc%s' % (outfile, ar) # avoid naming conflicts
         else:
-            """
-            ~~~ The Seth W. Campbell Honorary Naming Scheme ~~~
-            """
-            outfile = '%s' % (os.path.join(infile_basename))
-            if len(chans) > 1:
-                outfile = '%sCh%s' % (outfile, ar)
-            if normalize:
-                outfile = '%sDn' % (outfile)
-            if r[0]['timezero'][ar] and (r[0]['timezero'][ar] > 0):
-                outfile = '%sTz%s' % (outfile, r[0]['timezero'][ar])
-            if stack > 1:
-                outfile = '%sS%s' % (outfile, stack)
-            if reverse:
-                outfile = '%sRv' % (outfile)
-            if bgr:
-                outfile = '%sBgr%s' % (outfile, win)
-            if dewow:
-                outfile = '%sDw' % (outfile)
-            if freqmin and freqmax:
-                outfile = '%sB%s-%s' % (outfile, freqmin, freqmax)
-            if plotting:
-                outfile = '%sG%s' % (outfile, int(gain))
+            outfile = fx.naming(infile_basename=infile_basename, chans=chans, ar=ar, normalize=normalize,
+                                zero=r[0]['timezero'][ar], stack=stack, reverse=reverse, bgr=bgr, win=win,
+                                dewow=dewow, freqmin=freqmin, freqmax=freqmax, plotting=plotting,
+                                gain=gain)
 
         if frmt != None:
             if verbose:
@@ -199,7 +229,7 @@ def readgssi(infile, outfile=None, antfreq=None, frmt=None, plotting=False, figs
 
         if plotting:
             plot.radargram(ar=img_arr[ar], header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose,
-                           figsize=figsize, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
+                           figsize=figsize, dpi=dpi, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
                            colorbar=colorbar, noshow=noshow, outfile=outfile, win=win, title=title,
                            zero=r[0]['timezero'][ar], zoom=zoom)
 
@@ -230,10 +260,10 @@ def main():
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plotting=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hVqd:i:a:o:f:p:s:r:RNwnmc:bg:Z:E:t:x:z:Te:',
+        opts, args = getopt.getopt(sys.argv[1:],'hVqd:i:a:o:f:p:s:r:RNwnmc:bg:Z:E:t:x:z:Te:D:',
             ['help', 'version', 'quiet','spm=','input=','antfreq=','output=','format=','plot=','stack=','bgr=',
             'reverse', 'normalize','dewow','noshow','histogram','colormap=','colorbar','gain=',
-            'zero=','epsr=','bandpass=', 'xscale=', 'zscale=', 'titleoff', 'zoom='])
+            'zero=','epsr=','bandpass=', 'xscale=', 'zscale=', 'titleoff', 'zoom=', 'dpi='])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
         fx.printmsg('ERROR: invalid argument(s) supplied')
@@ -429,7 +459,13 @@ def main():
                 #     fx.printmsg('ERROR setting zoom values. zoom must be a list of four numbers (zeros are accepted).')
                 #     fx.printmsg('       defaulting to full extents.')
                 #     fx.printmsg('details: %s' % e)
-
+        if opt in ('-D', '--dpi'):
+            if arg:
+                try:
+                    dpi = abs(int(arg))
+                    assert dpi > 0
+                except:
+                    fx.printmsg('WARNING: DPI could not be set. did you supply a positive integer?')
 
     # call the function with the values we just got
     if infile:

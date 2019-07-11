@@ -47,7 +47,7 @@ def spectrogram(ar, header, freq, verbose=True):
 
 def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
               colormap='Greys', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', aspect='auto', zero=2,
-              zoom=[0,0,0,0]):
+              zoom=[0,0,0,0], dpi=150):
     """
     let's do some matplotlib
 
@@ -73,7 +73,7 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
             figx += 1 # avoid zero height error in x dimension
         if verbose:
             fx.printmsg('plotting %sx%sin image with gain=%s...' % (figx, figy, gain))
-        fig, ax = plt.subplots(figsize=(figx, figy), dpi=300)
+        fig, ax = plt.subplots(figsize=(figx, figy), dpi=dpi)
     else:
         if verbose:
             fx.printmsg('plotting with gain=%s...' % gain)
@@ -163,58 +163,16 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
 
     # zooming
     if zoom != [0,0,0,0]: # if zoom is set
-        for i in range(4):
-            if zoom[i] < 0:
-                zoom[i] = 0
-                if verbose:
-                    fx.printmsg('WARNING: %s zoom limit was negative, now set to zero' % ['left','right','up','down'])
-        if (zoom[0] > 0) or (zoom[1] > 0): # if a LR value has been set
-            if zoom[0] > extent[1]: # if L zoom is beyond extents, set back to extent limit
-                zoom[0] = extent[1]
-                if verbose:
-                    fx.printmsg('WARNING: left zoom limit out of bounds (limit is %s %s)' % (extent[1], x))
-            if zoom[1] > extent[1]: # if R zoom is beyond extents, set back to extent limit
-                zoom[1] = extent[1]
-                if verbose:
-                    fx.printmsg('WARNING: right zoom limit out of bounds (limit is %s %s)' % (extent[1], x))
-            if zoom[0] == zoom[1]: # if LR extents are impossible,
-                zoom[0] = extent[0] # set both to full extents
-                zoom[1] = extent[1]
-                if verbose:
-                    fx.printmsg('WARNING: left and right zoom values were equal or both out of bounds, now set to full extent')
-        else:
-            zoom[0] = extent[0]
-            zoom[1] = extent[1]
-        if (zoom[2] > 0) or (zoom[3] > 0): # if a UD value has been set
-            if zoom[2] > extent[2]: # if upper zoom is beyond extents, set back to extent limit
-                zoom[2] = extent[2]
-                if verbose:
-                    fx.printmsg('WARNING: upper zoom limit out of bounds (limit is %s %s)' % (extent[3], x))
-            if zoom[3] > extent[2]: # if lower zoom is beyond extents, set back to extent limit
-                zoom[3] = extent[2]
-                if verbose:
-                    fx.printmsg('WARNING: lower zoom limit out of bounds (limit is %s %s)' % (extent[3], x))
-            if zoom[2] == zoom[3]: # if UD extents are impossible,
-                zoom[2] = extent[2] # set both to full extents
-                zoom[3] = extent[3]
-                if verbose:
-                    fx.printmsg('WARNING: top and bottom zoom values were equal or both out of bounds, now set to full extent')
-        else:
-            zoom[2] = extent[2]
-            zoom[3] = extent[3]
+        zoom = fx.zoom(zoom=zoom, extents=extents, x=x, z=z) # figure out if the user set extents properly
     else:
-        zoom = extent
-    if zoom != extent:
+        zoom = extent # otherwise, zoom is full extents
+    if zoom != extent: # if zoom is set correctly, then set new axis limits
         if verbose:
             fx.printmsg('zooming in to %s [xmin, xmax, ymax, ymin]' % zoom)
         ax.set_xlim(zoom[0], zoom[1])
         ax.set_ylim(zoom[2], zoom[3])
-
-        # adding to the Seth W. Campbell honorary naming scheme
-        outfile = '%sZ' % (outfile)
-        for ex in zoom:
-            outfile = '%s.%s' % (outfile, ex)
-
+        # add zoom extents to file name via the Seth W. Campbell honorary naming scheme
+        outfile = fx.naming(outfile=outfile, zoom=zoom)
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(zlabel)
@@ -246,7 +204,7 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
         # else someone has called this function from outside and forgotten the outfile field
         if verbose:
             fx.printmsg('saving figure as %s_%sMHz.png' % (os.path.splitext(header['infile'])[0], freq))
-        plt.savefig('%s_%sMHz.png' % (os.path.splitext(header['infile'])[0], freq))
+        plt.savefig('%s_%sMHz.png' % (os.path.splitext(header['infile'])[0], freq), bbox_inches='tight')
     if noshow:
         if verbose:
             fx.printmsg('not showing matplotlib')

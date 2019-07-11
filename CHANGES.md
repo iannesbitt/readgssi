@@ -2,6 +2,8 @@
 
 ## changes since 0.0.15
 - fixed [#14](https://github.com/iannesbitt/readgssi/issues/14) which incorrectly asserted that user-set samples per meter was negative when it was not (sign was flipped) but processed the file correctly regardless
+- moved zoom calculation and automatic file naming to their own functions
+- added sphinx autodoc descriptions to some functions, in order to work towards solving [#9](https://github.com/iannesbitt/readgssi/issues/9)
 
 ## changes since 0.0.14
 - added support for the 5103 400 MHz antenna, and an antenna called `CUSTOM` in the header, for which center frequency is not known but is likely adjustable
