@@ -20,6 +20,7 @@ Strongly recommended to install via [anaconda](https://www.anaconda.com/download
 - [`obspy`](https://obspy.org/)
 - [`matplotlib`](https://matplotlib.org/)
 - [`numpy`](http://www.numpy.org/)
+- [`scipy`](https://www.scipy.org/)
 - [`pandas`](https://pandas.pydata.org/)
 - [`h5py`](https://www.h5py.org/)
 
