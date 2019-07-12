@@ -31,16 +31,17 @@ def histogram(ar, verbose=True):
     plt.yscale('log', nonposy='clip')
     plt.show()
 
-def spectrogram(ar, header, freq, verbose=True):
+def spectrogram(ar, header, freq, tr='auto' verbose=True):
     """
     displays a spectrogram of the center trace of the array
 
     this is for testing purposes and not accessible from the command prompt
     """
-    tr = int(ar.shape[1] / 2)
+    if tr == 'auto':
+        tr = int(ar.shape[1] / 2)
     if verbose:
         fx.printmsg('converting trace %s to frequency domain and drawing spectrogram...' % (tr))
-    samp_rate = 1 / header['ns_per_zsample']
+    samp_rate = header['samp_freq']
     trace = ar.T[tr]
     sg.spectrogram(data=trace, samp_rate=samp_rate, wlen=samp_rate/1000, per_lap = 0.99, dbscale=True,
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
@@ -155,7 +156,7 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                             vmin=ll, vmax=ul), extent=extent)
     except:
-        fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using viridis instead' % colormap)
+        fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using greys instead' % colormap)
         fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
         img = ax.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,

@@ -82,6 +82,18 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt=None, plott
     :param colorbar: Whether to apply a vertical dewow filter (experimental).
     :type normalize: bool
     :param normalize: Distance normalization.
+    :type specgram: bool
+    :param specgram: Produce a spectrogram of a trace in the array. Defaults to `False` (if `True`, defaults to a trace roughly halfway across the profile). This is mostly for debugging and is not currently accessible from the command line.
+    :type noshow: bool
+    :param noshow: If `True`, this will suppress the matplotlib interactive window and simply save a file. This is useful for processing many files in a folder without user input.
+    :type spm: float
+    :param spm: User-set samples per meter. This overrides the value read from the header, and typically doesn't need to be set if the samples per meter value was set correctly at survey time. This value does not need to be set if GPS input (DZG file) is present and the user sets :py:data: `Normalize` to `True`.
+    :type epsr: float
+    :param epsr: Epsilon_r, otherwise known as relative permittivity, or dielectric constant. This determines the speed at which waves travel through the first medium they encounter. It is used to calculate the profile depth if depth units are specified on the Z-axis of plots.
+    :type title: bool
+    :param title: Whether to display descriptive titles on plots. Defaults to `True`.
+    :type zoom: list of ints
+    :param zoom: Zoom extents to set programmatically for matplotlib plots. Must pass a list of four integers: [left, right, up, down]. Since the z-axis begins at the top, the "up" value is actually the one that displays lower on the page. All four values are axis units, so if you are working in nanoseconds, 10 will set a limit 10 nanoseconds down. If your x-axis is in seconds, 6 will set a limit 6 seconds from the start of the survey. It may be helpful to display the matplotlib interactive window at full extents first, to determine appropriate extents to set for this parameter. If extents are set outside the boundaries of the image, they will be set back to the boundaries. If two extents on the same axis are the same, the program will default to plotting full extents for that axis.
 
 
 

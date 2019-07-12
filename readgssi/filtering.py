@@ -62,7 +62,7 @@ def bp(ar, header, freqmin, freqmax, zerophase=True, verbose=False):
         fx.printmsg('vertical butterworth bandpass filter')
         fx.printmsg('NOTE: better results are achieved with readgssi.filtering.triangular()')
     #samp_freq = 1 / ((header['rhf_depth'] * 2) / header['cr'] / header['rh_nsamp'])
-    samp_freq = 1 / header['ns_per_zsample']
+    samp_freq = header['samp_freq']
     freqmin = freqmin * 10 ** 6
     freqmax = freqmax * 10 ** 6
     
@@ -88,7 +88,7 @@ def triangular(ar, header, freqmin, freqmax, zerophase=True, verbose=False):
     if verbose:
         fx.printmsg('vertical triangular FIR bandpass filter')
     #samp_freq = 1 / ((header['rhf_depth'] * 2) / header['cr'] / header['rh_nsamp'])
-    samp_freq = 1 / header['ns_per_zsample']
+    samp_freq = header['samp_freq']
     freqmin = freqmin * 10 ** 6
     freqmax = freqmax * 10 ** 6
     
