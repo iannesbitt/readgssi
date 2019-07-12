@@ -31,7 +31,7 @@ def histogram(ar, verbose=True):
     plt.yscale('log', nonposy='clip')
     plt.show()
 
-def spectrogram(ar, header, freq, tr='auto' verbose=True):
+def spectrogram(ar, header, freq, tr='auto', verbose=True):
     """
     displays a spectrogram of the center trace of the array
 
