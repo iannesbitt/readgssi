@@ -21,11 +21,12 @@ Alain Plattner's GPRPy software (https://github.com/NSGeophysics/GPRPy).
 def readtime(bytes):
     """
     function to read dates
-    have i mentioned yet that this is not a great way of storing dates
+    have i mentioned yet that this is not a great way of storing dates in 2019,
+    where the rest of my files are tens or hundreds of MB large, while dates are stored as 4-byte binary strings(??)
     
     DZT rfDateBytes are 32 bits of binary (01001010111110011010011100101111)
     structured as little endian u5u6u5u5u4u7 where
-    all numbers are unsigned int (uX) composed of X number of bits
+    all numbers are base 2 unsigned int (uX) composed of X number of bits
 
     so we read (seconds/2, min, hr, day, month, year-1980)
     then do seconds*2 and year+1980 and return a datetime object
@@ -36,12 +37,12 @@ def readtime(bytes):
         for i in range(8):
             dtbits += str((byte >> i) & 1)
     dtbits = dtbits[::-1]               # flip the string
-    sec2 = int(dtbits[27:32], 2) * 2
-    mins = int(dtbits[21:27], 2)
-    hr = int(dtbits[16:21], 2)
-    day = int(dtbits[11:16], 2)
-    mo = int(dtbits[7:11], 2)
-    yr = int(dtbits[0:7], 2) + 1980
+    sec2 = int(dtbits[27:32], 2) * 2    # seconds are stored as seconds/2 because there's only 5 bytes to work with
+    mins = int(dtbits[21:27], 2)        # minutes
+    hr = int(dtbits[16:21], 2)          # hours
+    day = int(dtbits[11:16], 2)         # day
+    mo = int(dtbits[7:11], 2)           # month
+    yr = int(dtbits[0:7], 2) + 1980     # year, stored as 1980+(0:127)
     return datetime(yr, mo, day, hr, mins, sec2, 0, tzinfo=pytz.UTC)
 
 def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
@@ -99,7 +100,7 @@ def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
     header['rh_proc'] = struct.unpack('<h', infile.read(2))[0] # offset to processing history
     header['rh_nproc'] = struct.unpack('<h', infile.read(2))[0] # size of processing history
     header['rh_nchan'] = struct.unpack('<h', infile.read(2))[0] # number of channels
-    if epsr != None:
+    if epsr != None: # in this case the user has specified an epsr value
         header['dzt_epsr'] = struct.unpack('<f', infile.read(4))[0]
         header['rhf_epsr'] = epsr
     else:
@@ -155,7 +156,9 @@ def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
     data = np.fromfile(infile, dtype).reshape(-1,(header['rh_nsamp']*header['rh_nchan'])).T
 
     header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
+    header['cr_true'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['dzt_epsr'])
     header['ns_per_zsample'] = (header['rhf_depth'] * 2) / (header['rh_nsamp'] * header['cr'])
+    header['samp_freq'] = 1 / (header['rhf_depth'] * 2) / (header['rh_nsamp'] * header['cr_true'])
 
     try:
         header['sec'] = data.shape[1]/float(header['rhf_sps'])
