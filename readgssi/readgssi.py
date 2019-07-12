@@ -187,15 +187,16 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt=None, plott
             img_arr[ar], stack = arrayops.stack(ar=img_arr[ar], stack=stack, verbose=verbose)
         else:
             stack = 1
-        if reverse:
-            # read array backwards
-            img_arr[ar] = arrayops.flip(img_arr[ar], verbose=verbose)
         if bgr:
             # background removal
             img_arr[ar] = filtering.bgr(ar=img_arr[ar], header=r[0], antfreq=r[0]['antfreq'][ar], win=win,
                                         verbose=verbose)
         else:
             win = None
+        if reverse:
+            # read array backwards
+            img_arr[ar] = arrayops.flip(img_arr[ar], verbose=verbose)
+
 
         ## file naming
         # name the output file
@@ -210,7 +211,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt=None, plott
             if len(chans) > 1:
                 outfile = '%sc%s' % (outfile, ar) # avoid naming conflicts
         else:
-            outfile = fx.naming(infile_basename=infile_basename, chans=chans, ar=ar, normalize=normalize,
+            outfile = fx.naming(infile_basename=infile_basename, chans=chans, chan=ar, normalize=normalize,
                                 zero=r[0]['timezero'][ar], stack=stack, reverse=reverse, bgr=bgr, win=win,
                                 dewow=dewow, freqmin=freqmin, freqmax=freqmax, plotting=plotting,
                                 gain=gain)
