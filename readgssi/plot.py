@@ -164,7 +164,7 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
 
     # zooming
     if zoom != [0,0,0,0]: # if zoom is set
-        zoom = fx.zoom(zoom=zoom, extents=extents, x=x, z=z) # figure out if the user set extents properly
+        zoom = fx.zoom(zoom=zoom, extent=extent, x=x, z=z) # figure out if the user set extents properly
     else:
         zoom = extent # otherwise, zoom is full extents
     if zoom != extent: # if zoom is set correctly, then set new axis limits
@@ -173,7 +173,7 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
         ax.set_xlim(zoom[0], zoom[1])
         ax.set_ylim(zoom[2], zoom[3])
         # add zoom extents to file name via the Seth W. Campbell honorary naming scheme
-        outfile = fx.naming(outfile=outfile, zoom=zoom)
+        outfile = fx.naming(outfile=outfile, zoom=[int(i) for i in zoom])
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(zlabel)

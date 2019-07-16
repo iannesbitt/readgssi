@@ -9,7 +9,7 @@ def printmsg(msg):
     """
     print('%s - %s' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), msg))
 
-def naming(outfile=None, infile_basename=None, chans=1, chan=0, normalize=None, zero=None, stack=1, reverse=None,
+def naming(outfile=None, infile_basename=None, chans=[1], chan=0, normalize=None, zero=None, stack=1, reverse=None,
            bgr=None, win=None, gain=None, dewow=None, freqmin=None, freqmax=None, plotting=None, zoom=None):
     """
     The Dr. Seth W. Campbell Honorary Naming Scheme
@@ -48,7 +48,7 @@ def naming(outfile=None, infile_basename=None, chans=1, chan=0, normalize=None, 
     return outfile
 
 
-def zoom(zoom, extents, x, z):
+def zoom(zoom, extent, x, z):
     """
     Logic to figure out how to set zoom extents.
     """
