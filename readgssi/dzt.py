@@ -158,7 +158,7 @@ def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
     header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
     header['cr_true'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['dzt_epsr'])
     header['ns_per_zsample'] = (header['rhf_depth'] * 2) / (header['rh_nsamp'] * header['cr'])
-    header['samp_freq'] = 1 / ((header['rhf_depth'] * 2) / (header['rh_nsamp'] * header['cr_true']))
+    header['samp_freq'] = 1 / ((header['dzt_depth'] * 2) / (header['rh_nsamp'] * header['cr_true']))
 
     try:
         header['sec'] = data.shape[1]/float(header['rhf_sps'])
