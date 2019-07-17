@@ -48,7 +48,7 @@ def naming(outfile=None, infile_basename=None, chans=[1], chan=0, normalize=None
     return outfile
 
 
-def zoom(zoom, extent, x, z):
+def zoom(zoom, extent, x, z, verbose=False):
     """
     Logic to figure out how to set zoom extents.
     """

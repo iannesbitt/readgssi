@@ -164,7 +164,7 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
 
     # zooming
     if zoom != [0,0,0,0]: # if zoom is set
-        zoom = fx.zoom(zoom=zoom, extent=extent, x=x, z=z) # figure out if the user set extents properly
+        zoom = fx.zoom(zoom=zoom, extent=extent, x=x, z=z, verbose=verbose) # figure out if the user set extents properly
     else:
         zoom = extent # otherwise, zoom is full extents
     if zoom != extent: # if zoom is set correctly, then set new axis limits
