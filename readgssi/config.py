@@ -2,6 +2,9 @@ from datetime import datetime
 from readgssi.__init__ import __version__, name
 import pkg_resources
 
+"""
+This module contains some things readgssi needs to operate, both command line and python-related.
+"""
 
 dist = pkg_resources.get_distribution(name)
 year = datetime.now().year

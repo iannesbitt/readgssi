@@ -49,12 +49,18 @@ def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
     """
     function to unpack and return things we need from the header, and the data itself
     currently unused but potentially useful lines:
+
     # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s' # the structure of the bytewise header and "gps data" as I understand it - 1024 bytes
+
     # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2) # the variable size of bytes in the header (most of the time) - 128 bytes
+
     # fx.printmsg('total header structure size: '+str(calcsize(headerstruct)))
+
     # packed_size = 0
+
     # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
-    # fx.printmsg('fixed header size: '+str(packed_size)+'\n')
+
+    # fx.printmsg('fixed header size: '+str(packed_size)+'\\n')
     """
     infile_gps = os.path.splitext(infile)[0] + ".DZG"
     infile = open(infile, 'rb')

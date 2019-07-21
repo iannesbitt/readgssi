@@ -1,7 +1,7 @@
 import pytz
 
 """
-defining some constants
+This module contains a number of variables that readgssi needs to perform physics calculations and interpret files from DZT files.
 """
 
 MINHEADSIZE = 1024 # absolute minimum total header size

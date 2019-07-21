@@ -37,66 +37,36 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt=None, plott
     """
     This is the primary directive function. It coordinates calls to reading, filtering, translation, and plotting functions, and should be used as the overarching processing function in most cases.
 
-    :param infile: Input DZT data file
-    :type outfile: str
-    :param outfile: Base output file name for plots, CSVs, and other products. Defaults to :py:data:`None`, which will cause the output filename to take a form similar to the input. The default will let the file be named via the descriptive naming function :py:data:`readgssi.functions.naming()`.
-    :type verbose: bool
-    :param verbose: Whether or not to display (a lot of) information about the workings of the program. Defaults to :py:data:`False`. Can be helpful for debugging but also to see various header values and processes taking place.
-    :type antfreq: int
-    :param antfreq: User setting for antenna frequency. Defaults to :py:data:`None`, which will cause the program to try to determine the frequency from the antenna name in the header of the input file. If the antenna name is not in the dictionary :py:data:`readgssi.constants.ANT`, the function will try to determine the frequency by decoding integers in the antenna name string.
-    :type frmt: str
-    :param frmt: The output format. Defaults to :py:data:`None`. Presently, this can be set to :py:data:`frmt='csv'`, :py:data:`'numpy'`, or :py:data:`'gprpy'`. Plotting will not interfere with output (i.e. you can output to CSV and plot a PNG in the same command).
-    :type plotting: bool
-    :param plotting: Whether to plot the radargram. Defaults to :py:data:`False`.
-    :type figsize: int
-    :param figsize: Plot size in inches.
-    :type dpi: int
-    :param dpi: Dots per inch (DPI) for figure creation.
-    :type stack: int
-    :param stack: Number of consecutive traces to stack (horizontally). Defaults to 1 (no stacking). Especially good for handling long radar lines. Algorithm combines consecutive traces together using addition, which reduces noise and enhances signal. The more stacking is done, generally the clearer signal will become. The tradeoff is that you will reduce the length of the X-axis. Sometimes this is desirable (i.e. for long survey lines).
-    :type x: str
-    :param x: The units to display on the x-axis during plotting. Defaults to :py:data:`x='seconds'`. Acceptable values are :py:data:`x='distance'` (which sets to meters), :py:data:`'km'`, :py:data:`'m'`, :py:data:`'cm'`, :py:data:`'mm'`, :py:data:`'kilometers'`, :py:data:`'meters'`, etc., for distance; :py:data:`'seconds'`, :py:data:`'s'`, :py:data:`'temporal'` or :py:data:`'time'` for seconds, and :py:data:`'traces'`, :py:data:`'samples'`, :py:data:`'pulses'`, or :py:data:`'columns'` for traces.
-    :type z: str
-    :param z: The units to display on the z-axis during plotting. Defaults to :py:data:`z='nanoseconds'`. Acceptable values are :py:data:`z='depth'` (which sets to meters), :py:data:`'m'`, :py:data:`'cm'`, :py:data:`'mm'`, :py:data:`'meters'`, etc., for depth; :py:data:`'nanoseconds'`, :py:data:`'ns'`, :py:data:`'temporal'` or :py:data:`'time'` for seconds, and :py:data:`'samples'` or :py:data:`'rows'` for samples.
-    :type histogram: bool
-    :param histogram: Whether to plot a histogram of array values at plot time.
+    :param str infile: Input DZT data file
+    :param str outfile: Base output file name for plots, CSVs, and other products. Defaults to :py:data:`None`, which will cause the output filename to take a form similar to the input. The default will let the file be named via the descriptive naming function :py:data:`readgssi.functions.naming()`.
+    :param bool verbose: Whether or not to display (a lot of) information about the workings of the program. Defaults to :py:data:`False`. Can be helpful for debugging but also to see various header values and processes taking place.
+    :param int antfreq: User setting for antenna frequency. Defaults to :py:data:`None`, which will cause the program to try to determine the frequency from the antenna name in the header of the input file. If the antenna name is not in the dictionary :py:data:`readgssi.constants.ANT`, the function will try to determine the frequency by decoding integers in the antenna name string.
+    :param str frmt: The output format. Defaults to :py:data:`None`. Presently, this can be set to :py:data:`frmt='csv'`, :py:data:`'numpy'`, :py:data:`'gprpy'`, or :py:data:`'object'` (which will return the header dictionary, the image arrays, and the gps coordinates as objects). Plotting will not interfere with output (i.e. you can output to CSV and plot a PNG in the same command).
+    :param bool plotting: Whether to plot the radargram. Defaults to :py:data:`False`.
+    :param int figsize: Plot size in inches.
+    :param int dpi: Dots per inch (DPI) for figure creation.
+    :param int stack: Number of consecutive traces to stack (horizontally). Defaults to 1 (no stacking). Especially good for handling long radar lines. Algorithm combines consecutive traces together using addition, which reduces noise and enhances signal. The more stacking is done, generally the clearer signal will become. The tradeoff is that you will reduce the length of the X-axis. Sometimes this is desirable (i.e. for long survey lines).
+    :param str x: The units to display on the x-axis during plotting. Defaults to :py:data:`x='seconds'`. Acceptable values are :py:data:`x='distance'` (which sets to meters), :py:data:`'km'`, :py:data:`'m'`, :py:data:`'cm'`, :py:data:`'mm'`, :py:data:`'kilometers'`, :py:data:`'meters'`, etc., for distance; :py:data:`'seconds'`, :py:data:`'s'`, :py:data:`'temporal'` or :py:data:`'time'` for seconds, and :py:data:`'traces'`, :py:data:`'samples'`, :py:data:`'pulses'`, or :py:data:`'columns'` for traces.
+    :param str z: The units to display on the z-axis during plotting. Defaults to :py:data:`z='nanoseconds'`. Acceptable values are :py:data:`z='depth'` (which sets to meters), :py:data:`'m'`, :py:data:`'cm'`, :py:data:`'mm'`, :py:data:`'meters'`, etc., for depth; :py:data:`'nanoseconds'`, :py:data:`'ns'`, :py:data:`'temporal'` or :py:data:`'time'` for seconds, and :py:data:`'samples'` or :py:data:`'rows'` for samples.
+    :param bool histogram: Whether to plot a histogram of array values at plot time.
     :type colormap: str or :class:`matplotlib.colors.Colormap`
     :param colormap: Plot using a colormap. Defaults to :py:data:`Greys` which is colorblind-friendly and behaves similarly to the RADAN default, but :py:data:`seismic` is a favorite of many due to its diverging nature.
-    :type colorbar: bool
-    :param colorbar: Whether to display a graded color bar at plot time.
-    :type zero: list
-    :param zero: A list of values representing the amount of samples to slice off each channel. Defaults to :py:data:`None` for all channels, which will end up being set as :py:data:`[2,2,2,2]` for a four-channel file (2 is the number of rows down that GSSI stores mark information in).
-    :type gain: int
-    :param gain: The amount of gain applied to plots. Defaults to 1. Gain is applied as a ratio of the standard deviation of radargram values to the value set here.
-    :type freqmin: int
-    :param freqmin: Minimum frequency value to accept in a vertical triangular FIR bandpass filter. Defaults to :py:data:`None` (no filter).
-    :type freqmax: int
-    :param freqmax: Maximum frequency value to accept in a vertical triangular FIR bandpass filter. Defaults to :py:data:`None` (no filter).
-    :type reverse: bool
-    :param reverse: Whether to read the array backwards (i.e. flip horizontally). Defaults to :py:data:`False`. Useful for lining up travel directions of files run opposite each other.
-    :type bgr: int
-    :param bgr: Background removal filter applied after stacking. Defaults to :py:data:`False` (off). :py:data:`bgr=True` must be accompanied by a valid value for :py:data:`win`.
-    :type win: int
-    :param win: Window size for background removal filter. If :py:data:`bgr=True` and :py:data:`win=0`, the full-width row average will be subtracted from each row. If :py:data:`bgr=True` and :py:data:`win=50`, a moving window will calculate the average of 25 cells on either side of the current cell, and subtract that average from the cell value, using :py:data:`scipy.ndimage.filters.uniform_filter1d()` with :py:data:`mode='constant'` and :py:data:`cval=0`. This is useful for removing non-uniform horizontal average, but the tradeoff is that it creates ghost data half the window size away from vertical figures, and that a window size set too low will obscure any horizontal layering longer than the window size.
-    :type dewow: bool
-    :param dewow: Whether to apply a vertical dewow filter (experimental).
-    :type normalize: bool
-    :param normalize: Distance normalization.
-    :type specgram: bool
-    :param specgram: Produce a spectrogram of a trace in the array. Defaults to :py:data:`False` (if :py:data:`True`, defaults to a trace roughly halfway across the profile). This is mostly for debugging and is not currently accessible from the command line.
-    :type noshow: bool
-    :param noshow: If :py:data:`True`, this will suppress the matplotlib interactive window and simply save a file. This is useful for processing many files in a folder without user input.
-    :type spm: float
-    :param spm: User-set samples per meter. This overrides the value read from the header, and typically doesn't need to be set if the samples per meter value was set correctly at survey time. This value does not need to be set if GPS input (DZG file) is present and the user sets :py:data:`normalize=True`.
-    :type epsr: float
-    :param epsr: Epsilon_r, otherwise known as relative permittivity, or dielectric constant. This determines the speed at which waves travel through the first medium they encounter. It is used to calculate the profile depth if depth units are specified on the Z-axis of plots.
-    :type title: bool
-    :param title: Whether to display descriptive titles on plots. Defaults to :py:data:`True`.
-    :type zoom: list
-    :param zoom: Zoom extents to set programmatically for matplotlib plots. Must pass a list of four integers: :py:data:`[left, right, up, down]`. Since the z-axis begins at the top, the "up" value is actually the one that displays lower on the page. All four values are axis units, so if you are working in nanoseconds, 10 will set a limit 10 nanoseconds down. If your x-axis is in seconds, 6 will set a limit 6 seconds from the start of the survey. It may be helpful to display the matplotlib interactive window at full extents first, to determine appropriate extents to set for this parameter. If extents are set outside the boundaries of the image, they will be set back to the boundaries. If two extents on the same axis are the same, the program will default to plotting full extents for that axis.
-
-
-
+    :param bool colorbar: Whether to display a graded color bar at plot time.
+    :param list[int,int,int,int] zero: A list of values representing the amount of samples to slice off each channel. Defaults to :py:data:`None` for all channels, which will end up being set as :py:data:`[2,2,2,2]` for a four-channel file (2 is the number of rows down that GSSI stores mark information in).
+    :param int gain: The amount of gain applied to plots. Defaults to 1. Gain is applied as a ratio of the standard deviation of radargram values to the value set here.
+    :param int freqmin: Minimum frequency value to accept in a vertical triangular FIR bandpass filter. Defaults to :py:data:`None` (no filter).
+    :param int freqmax: Maximum frequency value to accept in a vertical triangular FIR bandpass filter. Defaults to :py:data:`None` (no filter).
+    :param bool reverse: Whether to read the array backwards (i.e. flip horizontally). Defaults to :py:data:`False`. Useful for lining up travel directions of files run opposite each other.
+    :param int bgr: Background removal filter applied after stacking. Defaults to :py:data:`False` (off). :py:data:`bgr=True` must be accompanied by a valid value for :py:data:`win`.
+    :param int win: Window size for background removal filter. If :py:data:`bgr=True` and :py:data:`win=0`, the full-width row average will be subtracted from each row. If :py:data:`bgr=True` and :py:data:`win=50`, a moving window will calculate the average of 25 cells on either side of the current cell, and subtract that average from the cell value, using :py:data:`scipy.ndimage.filters.uniform_filter1d()` with :py:data:`mode='constant'` and :py:data:`cval=0`. This is useful for removing non-uniform horizontal average, but the tradeoff is that it creates ghost data half the window size away from vertical figures, and that a window size set too low will obscure any horizontal layering longer than the window size.
+    :param bool dewow: Whether to apply a vertical dewow filter (experimental).
+    :param bool normalize: Distance normalization.
+    :param bool specgram: Produce a spectrogram of a trace in the array. Defaults to :py:data:`False` (if :py:data:`True`, defaults to a trace roughly halfway across the profile). This is mostly for debugging and is not currently accessible from the command line.
+    :param bool noshow: If :py:data:`True`, this will suppress the matplotlib interactive window and simply save a file. This is useful for processing many files in a folder without user input.
+    :param float spm: User-set samples per meter. This overrides the value read from the header, and typically doesn't need to be set if the samples per meter value was set correctly at survey time. This value does not need to be set if GPS input (DZG file) is present and the user sets :py:data:`normalize=True`.
+    :param float epsr: Epsilon_r, otherwise known as relative permittivity, or dielectric constant. This determines the speed at which waves travel through the first medium they encounter. It is used to calculate the profile depth if depth units are specified on the Z-axis of plots.
+    :param bool title: Whether to display descriptive titles on plots. Defaults to :py:data:`True`.
+    :param list[int,int,int,int] zoom: Zoom extents to set programmatically for matplotlib plots. Must pass a list of four integers: :py:data:`[left, right, up, down]`. Since the z-axis begins at the top, the "up" value is actually the one that displays lower on the page. All four values are axis units, so if you are working in nanoseconds, 10 will set a limit 10 nanoseconds down. If your x-axis is in seconds, 6 will set a limit 6 seconds from the start of the survey. It may be helpful to display the matplotlib interactive window at full extents first, to determine appropriate extents to set for this parameter. If extents are set outside the boundaries of the image, they will be set back to the boundaries. If two extents on the same axis are the same, the program will default to plotting full extents for that axis.
 
     """
 
@@ -216,30 +186,6 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt=None, plott
                                 dewow=dewow, freqmin=freqmin, freqmax=freqmax, plotting=plotting,
                                 gain=gain)
 
-        if frmt != None:
-            if verbose:
-                fx.printmsg('outputting to %s...' % frmt)
-            for ar in img_arr:
-                # is there an output filepath given?
-                outfile_abspath = os.path.abspath(outfile) # set output to given location
-
-                # what is the output format
-                if frmt in 'csv':
-                    translate.csv(ar=img_arr[ar], outfile_abspath=outfile_abspath,
-                                  header=r[0], verbose=verbose)
-                elif frmt in 'h5':
-                    translate.h5(ar=img_arr[ar], infile_basename=infile_basename,
-                                 outfile_abspath=outfile_abspath, verbose=verbose)
-                elif frmt in 'segy':
-                    translate.segy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
-                                   verbose=verbose)
-                elif frmt in 'numpy':
-                    translate.numpy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
-                                    verbose=verbose)
-                elif frmt in 'gprpy':
-                    translate.gprpy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
-                                    header=r[0], verbose=verbose)
-
         if plotting:
             plot.radargram(ar=img_arr[ar], header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose,
                            figsize=figsize, dpi=dpi, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
@@ -252,6 +198,31 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt=None, plott
         if specgram:
             plot.spectrogram(ar=img_arr[ar], header=header, freq=r[0]['antfreq'][ar], verbose=verbose)
 
+    if frmt != None:
+        if verbose:
+            fx.printmsg('outputting to %s...' % frmt)
+        for ar in img_arr:
+            # is there an output filepath given?
+            outfile_abspath = os.path.abspath(outfile) # set output to given location
+
+            # what is the output format
+            if frmt in 'csv':
+                translate.csv(ar=img_arr[ar], outfile_abspath=outfile_abspath,
+                              header=r[0], verbose=verbose)
+            elif frmt in 'h5':
+                translate.h5(ar=img_arr[ar], infile_basename=infile_basename,
+                             outfile_abspath=outfile_abspath, verbose=verbose)
+            elif frmt in 'segy':
+                translate.segy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
+                               verbose=verbose)
+            elif frmt in 'numpy':
+                translate.numpy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
+                                verbose=verbose)
+            elif frmt in 'gprpy':
+                translate.gprpy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
+                                header=r[0], verbose=verbose)
+        if frmt in 'object':
+            return r[0], img_arr, r[2]
     
 def main():
     """

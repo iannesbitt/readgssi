@@ -14,27 +14,25 @@ contains functions for reading gps data from various formats
 
 def msgparse(msg):
     """
-    this function returns the NMEA message variables shared by both RMC and GGA
+    This function returns the NMEA message variables shared by both RMC and GGA.
     """
     return msg.timestamp, msg.latitude, msg.longitude
 
 def readdzg(fi, frmt, header, verbose=False):
     """
-    a parser to extract gps data from DZG file format
-    DZG contains raw NMEA sentences, which should include RMC and GGA
+    A parser to extract gps data from DZG file format. DZG contains raw NMEA sentences, which should include at least RMC and GGA.
     fi = str - file containing gps information
     frmt = str - format ('dzg' = DZG file containing gps sentence strings (see below); 'csv' = comma separated file with: lat,lon,elev,time)
     header = dict - file header
     verbose = bool - verbose output on (True) or off (False)
     Reading DZG
-    We need to relate gpstime to scan number then interpolate for each scan
-    between gps measurements.
+    We need to relate gpstime to scan number then interpolate for each scan between gps measurements.
 
     NMEA GGA sentence string format:
-    $xxGGA,UTC hhmmss.s,lat DDmm.sss,lon DDDmm.sss,fix qual,numsats,hdop,mamsl,wgs84 geoid ht,fix age,dgps sta.,checksum *xx
+    $xxGGA,UTC hhmmss.s,lat DDmm.sss,lon DDDmm.sss,fix qual,numsats,hdop,mamsl,wgs84 geoid ht,fix age,dgps sta.,checksum \*xx
     
     NMEA RMC sentence string format:
-    $xxRMC,UTC hhmmss,status,lat DDmm.sss,lon DDDmm.sss,SOG,COG,date ddmmyy,checksum *xx
+    $xxRMC,UTC hhmmss,status,lat DDmm.sss,lon DDDmm.sss,SOG,COG,date ddmmyy,checksum \*xx
 
     shared message vars:
     timestamp, latitude, longitude, 
