@@ -265,7 +265,7 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 
 #### known bugs:
 - color bar shows up too large on some plots (matplotlib bug)
-- short lines have axis limits that end up tall and narrow (plot sizing information should be calculated differently)
+- short lines have axis limits that end up tall and narrow, which may cut off titles (plot sizing information may need to be calculated differently)
 
 ## future
 - explicit documentation
