@@ -320,7 +320,7 @@ def main():
                     frmt = 'segy'
                 elif arg in ('h5', 'hdf5', '.h5', '.hdf5'):
                     frmt = 'h5'
-                elif arg in ('numpy', 'npy', '.npy'):
+                elif arg in ('numpy', 'npy', '.npy', 'np'):
                     frmt = 'numpy'
                 elif arg in ('gprpy'):
                     frmt = 'gprpy'
