@@ -134,13 +134,15 @@ readgssi -i DZT__001.DZT -s 8 -w -r 0 -o test.csv -f CSV
 Applies 8x stacking, dewow, and background removal filters before exporting to CSV.
 
 ### numpy object output
+```bash
 readgssi -i DZT__001.DZT -o test.npy -f numpy
-
+```
 This command will save the array in numpy binary format. Header information will not be saved, however.
 
 ### [`GPRPy`](https://github.com/NSGeophysics/gprpy)-compatible output
+```bash
 readgssi -i DZT__001.DZT -o test -f gprpy
-
+```
 This command saves the array in numpy binary format, and preserves the header as a JSON file as well. [`GPRPy`](https://github.com/NSGeophysics/gprpy) will soon support importing this type of file.
 
 
