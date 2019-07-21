@@ -117,7 +117,7 @@ Simply specifying an input DZT file like in the above command (`-i file`) will d
 - traces per second
 - L1 dielectric as entered during survey
 - sampling depth
-- speed of light at given dielectric
+- speed of wave at given dielectric
 - number of traces
 - number of seconds
 
@@ -136,19 +136,17 @@ Applies 8x stacking, dewow, and background removal filters before exporting to C
 ### plotting
 #### example 1A: without gain
 ```bash
-readgssi -i DZT__001.DZT -o  -p 5 -s auto -m
+readgssi -i DZT__001.DZT -o 1a.png -p 5 -s auto
 ```
-The above command will cause `readgssi` to save and show a plot named "TEST__001c0Tz233S6G1.png" with a y-size of 5 inches at 150 dpi (`-p 5`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing on a monitor, approximately 2.5\*y (`-s auto`). The plot will be rendered in the `Greys` color scheme. The `-m` flag will draw a histogram for each data channel.
+The above command will cause `readgssi` to save and show a plot named "TEST__001c0Tz233S6G1.png" with a y-size of 5 inches at 150 dpi (`-p 5`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing on a monitor, approximately 2.5\*y (`-s auto`). The plot will be rendered in the `Greys` color scheme.
 ![Example 1a](https://github.com/iannesbitt/readgssi/raw/master/examples/1a.png)
-![Example 1a histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/1a-h.png)
 
 #### example 1B: with gain
 ```bash
-readgssi -i DZT__001.DZT -o 1b.png -p 5 -s auto -g 50 -m -r 0
+readgssi -i DZT__001.DZT -o 1b.png -p 5 -s auto -g 50 -r 0
 ```
-This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. Next `readgssi` will run the background removal (`-r 0`) filter. Finally, the `-m` flag will draw a histogram for each data channel. Note how the histogram changes when filters are applied.
+This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. Next `readgssi` will run the background removal (`-r 0`) filter.
 ![Example 1b](https://github.com/iannesbitt/readgssi/raw/master/examples/1b.png)
-![Example 1b histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/1b-h.png)
 
 #### example 1C: the right gain settings can be slightly different depending on your colormap
 ```bash
@@ -159,19 +157,31 @@ Here, a horizontal background removal is applied, but gain is turned down (`-g 2
 
 #### example 2A: no background removal
 ```bash
-readgssi -i DZT__002.DZT -o 2a.png -p 5 -s 5 -n
+readgssi -i DZT__002.DZT -o 2a.png -p 5 -s 5 -n -m
 ```
-Sometimes, files will look "washed out" due to a skew relative to the mean of the data. This is easily correctable. Here `readgssi` will create a plot of size 5 and stack 5x (`-p 5 -s 5`). Matplotlib will use the default "Greys" colormap and save a PNG of the figure, but the script will suppress the matplotlib window (using the `-n` flag, useful for processing an entire directory full of DZTs at once).
+Sometimes, files will look "washed out" due to a skew relative to the mean of the data. This is easily correctable. Here `readgssi` will create a plot of size 5 and stack 5x (`-p 5 -s 5`). Matplotlib will use the default "Greys" colormap and save a PNG of the figure, but the script will suppress the matplotlib window (using the `-n` flag, useful for processing an entire directory full of DZTs at once). Finally, the `-m` flag will draw a histogram for each data channel. Note how the histogram changes when filters are applied.
 ![Example 2a](https://github.com/iannesbitt/readgssi/raw/master/examples/2a.png)
+![Example 2a histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/2a-h.png)
 
 #### example 2B: horizontal mean BGR algorithm applied
-The flag to get rid of the skew (or any horizontally uniform noise) is `-r`, also known as background removal or BGR for short. `-r` has two modes, one set by `-r 0` and one set when the option after the `-r` flag is greater than zero. When this BGR option is zero, the program simply subtracts the average of each profile row from the array. When it's greater than 0, `readgssi` will implement a moving window mean, the size of which is set in **post-stack** traces. `-r 50` would subtract the average of 25 cells to the left and right of the current cell, for each cell in the array. This is, for all intents and purposes, the same as RADAN's "BOXCAR" method of horizontal noise removal, but much, much faster because it uses a `scipy` function.
+The flag to get rid of the skew (or any horizontally uniform noise) is `-r`, also known as background removal or BGR for short. `-r` has two modes, one set by `-r 0` and one set when the option after the `-r` flag is greater than zero. When this BGR option is zero, the program simply subtracts the average of each profile row from the array. When it's greater than 0, `readgssi` will implement a moving window mean, the size of which is set in **post-stack** traces (see [example 2C](#example-2c-moving-window-horizontal-mean)).
 
-The command below does the same thing as above, except `-r 0` applies full width horizontal mean background removal to the profile. Note the difference in ringing artifacts and skew between examples 2a and 2b.
+The command below does the same thing as [example 2A](#example-2a-no-background-removal), except `-r 0` applies full width horizontal mean background removal to the profile. Note the difference in ringing artifacts and skew between examples 2a and 2b.
 ```bash
-readgssi -i DZT__002.DZT -o 2b.png -p 5 -s 5 -n -r 0
+readgssi -i DZT__002.DZT -o 2b.png -p 5 -s 5 -n -m -r 0
 ```
 ![Example 2b](https://github.com/iannesbitt/readgssi/raw/master/examples/2b.png)
+![Example 2b histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/2b-h.png)
+
+#### example 2C: moving window horizontal mean
+
+```bash
+readgssi -i DZT__002.DZT -o 2c.png -p 5 -s 5 -n -m -r 75 -g 8
+```
+Same as above but with a 75-trace wide moving window mean (`-r 75`). This width represents post-stack traces. This is, for all intents and purposes, the same as RADAN's "BOXCAR" method of horizontal noise removal, but much, much faster. Areas beyond the left and right edges are treated as zeros. Notice that the noise in the water column is nearly entirely wiped out, but real data is extended with lateral wisps the size of half of the window, which is a side-effect of this method. Note that the histogram (`-m`) has a fairly even distribution around the mean, which generally indicates that the image should be fairly readable.
+
+![Example 2c](https://github.com/iannesbitt/readgssi/raw/master/examples/2c.png)
+![Example 2c histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/2c-h.png)
 
 #### example 3A: (without) distance normalization
 The default behavior of `readgssi` is to plot the X-axis in survey time units (seconds). This can be changed using the `-x` flag. To display in distance units, you must either have GPS information in DZG format, or specify the number of radar traces per meter using the `-d` flag. `-d 24 -x meters` will change the traces per meter value in the header to 24.0 and display the profile with distance in meters along the X-axis.
