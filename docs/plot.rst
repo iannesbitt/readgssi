@@ -1,5 +1,5 @@
-Plotting module
-====================================
+:py:data:`readgssi.plot` 
+=====================================================
 
 .. automodule:: readgssi.plot
     :members:

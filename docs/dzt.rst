@@ -1,5 +1,5 @@
-Reading DZTs
-====================================
+:py:data:`readgssi.dzt` (reads DZTs)
+=====================================================
 
 .. automodule:: readgssi.dzt
     :members:

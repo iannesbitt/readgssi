@@ -1,4 +1,4 @@
-`readgssi` documentation
+`readgssi` |version| documentation
 ====================================
 
 Welcome to readgssi's documentation. This program was written to read and process ground-penetrating radar files from instruments made by Geophysical Survey Systems Incorporated (GSSI), although I have no affiliation with nor endorsement for the afforementioned organization.
@@ -6,8 +6,19 @@ Welcome to readgssi's documentation. This program was written to read and proces
 .. warning:: Docs are under construction, use with caution.
 
 .. toctree::
+    :numbered:
     :maxdepth: 2
-    :caption: Modules:
+    :caption: Tutorial
+
+    reading
+    processing
+    plotting
+    translating
+    troubleshooting
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Modules
 
     readgssi
     dzt

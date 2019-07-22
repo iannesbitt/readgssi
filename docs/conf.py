@@ -85,6 +85,7 @@ pygments_style = None
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+html_logo = 'logo.png'
 
 #html_theme = 'alabaster'
 
@@ -190,7 +191,13 @@ epub_exclude_files = ['search.html']
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'obspy': ('https://docs.obspy.org/', None),
+    'matplotlib': ('https://matplotlib.org/3.1.1/', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy-1.16.1/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy-1.2.1/reference/', None),
+    }
 
 # -- Options for todo extension ----------------------------------------------
 

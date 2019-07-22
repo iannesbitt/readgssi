@@ -1,5 +1,7 @@
-Helper functions
-====================================
+:py:data:`readgssi.functions` (reusables)
+=====================================================
+
+A number of helper functions used by readgssi.
 
 .. automodule:: readgssi.functions
     :members:

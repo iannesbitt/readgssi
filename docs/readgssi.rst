@@ -1,5 +1,5 @@
-Main module
-====================================
+:py:data:`readgssi.readgssi` (main module)
+=====================================================
 
 .. automodule:: readgssi.readgssi
     :members:

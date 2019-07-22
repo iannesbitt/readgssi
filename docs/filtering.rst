@@ -1,5 +1,5 @@
-Filtering functions
-====================================
+:py:data:`readgssi.filtering`
+=====================================================
 
 .. automodule:: readgssi.filtering
     :members:

@@ -1,5 +1,7 @@
-GPS
-====================================
+:py:data:`readgssi.gps` (ingest GPS info)
+=====================================================
+
+Reads GPS information from DZG files.
 
 .. automodule:: readgssi.gps
     :members:

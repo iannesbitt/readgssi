@@ -1,5 +1,5 @@
-readgssi configuration module
-====================================
+:py:data:`readgssi.config` (essentials)
+=====================================================
 
 This module contains some things readgssi needs to operate, both command line and python-related.
 

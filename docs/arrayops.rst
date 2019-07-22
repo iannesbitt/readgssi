@@ -1,5 +1,5 @@
-Array operations
-====================================
+:py:data:`readgssi.arrayops` (array manipulation)
+=====================================================
 
 .. automodule:: readgssi.arrayops
     :members:
