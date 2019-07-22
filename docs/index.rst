@@ -13,6 +13,7 @@ Welcome to readgssi's documentation. This program was written to read and proces
     :caption: Tutorial
 
     installing
+    general
     reading
     processing
     plotting
@@ -41,3 +42,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+`Back to top ↑ <#top>`_

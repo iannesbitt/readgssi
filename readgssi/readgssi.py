@@ -30,7 +30,7 @@ from readgssi.constants import *
 from readgssi.dzt import *
 
 
-def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt=None, plotting=False, figsize=10, dpi=150,
+def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python', plotting=False, figsize=7, dpi=150,
              stack=1, x='seconds', z='nanoseconds', histogram=False, colormap='Greys', colorbar=False,
              zero=[None,None,None,None], gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, win=0, dewow=False,
              normalize=False, specgram=False, noshow=False, spm=None, epsr=None, title=True, zoom=[0,0,0,0]):
@@ -221,7 +221,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt=None, plott
             elif frmt in 'gprpy':
                 translate.gprpy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
                                 header=r[0], verbose=verbose)
-        if frmt in 'object':
+        if frmt in ('object', 'python'):
             return r[0], img_arr, r[2]
     
 def main():
@@ -295,7 +295,7 @@ def main():
                     frmt = 'numpy'
                 elif arg in ('gprpy'):
                     frmt = 'gprpy'
-                elif arg in ('plot'):
+                elif arg in ('plot', 'png'):
                     plotting = True
                 else:
                     # else the user has given an invalid format

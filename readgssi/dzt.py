@@ -173,13 +173,13 @@ def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
 
     infile.close()
 
-    if gps:
+    if os.path.isfile(infile_gps):
         try:
             if verbose:
                 fx.printmsg('reading GPS file...')
             gps = readdzg(infile_gps, 'dzg', header, verbose=verbose)
         except IOError as e0:
-            fx.printmsg('WARNING: no DZG file found')
+            fx.printmsg('WARNING: cannot read DZG file')
             try:
                 infile_gps = os.path.splitext(infile_gps)[0] + ".csv"
                 gps = readdzg(infile_gps, 'csv', header, verbose=verbose)
@@ -194,7 +194,7 @@ def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
                     fx.printmsg('            %s' % e2)
                     gps = []
     else:
-        pass
+        fx.printmsg('WARNING: no DZG file found for GPS input')
 
     return [header, data, gps]
 

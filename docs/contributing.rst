@@ -16,3 +16,5 @@ Contributing in other ways
 :py:data:`readgssi` is open-source software written as a side project during the completion of my Master's degree at the University of Maine. It is written and maintained because it makes me feel warm and fuzzy inside, and because it helps me do my own work.
 
 If you would like to contribute by buying me a coffee, please seek me out at the next AGU, or drop me a couple bucks at https://paypal.me/IanNesbitt/. Thank you for your support, it is very much appreciated. Graduate student salaries aren't what they used to be!
+
+`Back to top ↑ <#top>`_
