@@ -26,7 +26,7 @@ copyright = '%s, Ian Nesbitt' % datetime.now().year
 author = 'Ian Nesbitt'
 
 # The short X.Y version
-version = readgssi.__version__
+version = '' # readgssi.__version__
 # The full version, including alpha/beta/rc tags
 release = ''
 
@@ -192,11 +192,14 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'obspy': ('https://docs.obspy.org/', None),
-    'matplotlib': ('https://matplotlib.org/3.1.1/', None),
-    'numpy': ('https://docs.scipy.org/doc/numpy-1.16.1/', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy-1.2.1/reference/', None),
+    'python 3': ('https://docs.python.org/3', None),
+    'obspy [latest]': ('https://docs.obspy.org', None),
+    'matplotlib [latest]': ('https://matplotlib.org', None),
+    'numpy [latest]': ('https://docs.scipy.org/doc/numpy', None),
+    'scipy [latest]': ('https://docs.scipy.org/doc/scipy/reference', None),
+    'pandas [latest]': ('https://pandas.pydata.org/pandas-docs/stable', None),
+    'h5py [latest]': ('http://docs.h5py.org/en/stable', None),
+    'geopy [latest]': ('https://geopy.readthedocs.io/en/stable/', None),
     }
 
 # -- Options for todo extension ----------------------------------------------
