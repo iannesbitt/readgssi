@@ -1,11 +1,11 @@
 Reading radar data
 #####################################
 
-* :ref:`In Python`
-* :ref:`In bash`
+* :ref:`Reading with Python`
+* :ref:`Reading with bash`
 
 ==========================
-In Python
+Reading with Python
 ==========================
 
 Simplest usage (reading the header)
@@ -60,7 +60,7 @@ Printing a file's header information to output is easy. Use :code:`frmt=None` an
 
 Note here that there is a warning regarding the time-zero. That can be set using :code:`zero=[int]`, as below.
 
-Reading to python objects
+Reading to Python objects
 ----------------------------
 
 Now, we'll be reading the file into python objects using :py:func:`readgssi.readgssi.readgssi`.
@@ -91,7 +91,7 @@ No valid GPS file means that you will not be able to distance normalize the arra
 `Back to top ↑ <#top>`_
 
 ===========================
-In bash
+Reading with bash
 ===========================
 
 Same as above, you can print a host of information about the DZT specified with a simple command.
