@@ -7,6 +7,7 @@
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.1439119.svg)](https://dx.doi.org/10.5281/zenodo.1439119)
 [![License](https://img.shields.io/badge/license-GNU%20Affero%203.0-lightgrey.svg)](https://github.com/iannesbitt/readgssi/blob/master/LICENSE)
 [![Build Status](https://travis-ci.org/iannesbitt/readgssi.svg?branch=master)](https://travis-ci.org/iannesbitt/readgssi)
+[![Documentation Status](https://readthedocs.org/projects/readgssi/badge/?version=latest)](https://readgssi.readthedocs.io/en/latest/?badge=latest)
 [![Downloads per month](https://img.shields.io/pypi/dm/readgssi.svg)](https://pypi.org/project/readgssi/)
 
 `readgssi` is a tool intended for use as an open-source reader and preprocessing module for subsurface data collected with Geophysical Survey Systems Incorporated (GSSI) ground-penetrating georadar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and plot the data contained in those files. `readgssi` is also currently able to translate most DZT files to CSV and will be able to translate to other output formats including HDF5  (see [future](#future)). Matlab code donated by [Gabe Lewis](https://earthsciences.dartmouth.edu/people/gabriel-lewis), Dartmouth College Department of Earth Sciences. Python adaptation written with permission by Ian Nesbitt, University of Maine School of Earth and Climate Sciences.
