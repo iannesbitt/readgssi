@@ -83,4 +83,3 @@ dependencies:
     - geographiclib==1.49
     - geopy==1.18.1
     - pynmea2==1.12.0
-    - readgssi
