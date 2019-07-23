@@ -2,12 +2,17 @@ Translating to different formats
 #####################################
 
 ===========================
-Translating with Python
+CSV
 ===========================
 
 
 ===========================
-Translating with bash
+numpy binary
+===========================
+
+
+===========================
+GPRPy-compatible format
 ===========================
 
 

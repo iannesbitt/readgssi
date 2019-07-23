@@ -15,8 +15,8 @@ Welcome to readgssi's documentation. This program was written to read and proces
     installing
     general
     reading
-    processing
     plotting
+    processing
     translating
     troubleshooting
     contributing

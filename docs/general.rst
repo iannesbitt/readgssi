@@ -10,6 +10,13 @@ General usage
 
 :bash:`readgssi` can be run straight from a :bash:`bash` console, using a python interpreter like :bash:`ipython` or the python console, or scripted in a development environment like Jupyter Notebook, Spyder, or Pycharm. Usage of :bash:`bash` is covered in :ref:`bash usage`, while usage in python is covered below in :ref:`Python usage`.
 
+.. note::
+    In the first part of this tutorial, I will separate bash and python operations, but towards the end I will bring them together, as they will produce nearly identical outputs. However, I felt it pertinent to separate the two at the start, since some may know either bash or python but not both. Newcomers to either one will note that both have different benefits over the other, which is why I develop most of the functionality of this program to be accessible from both.
+
+    bash is useful for coordinating calls to multiple files in a directory in for loops, which has distinct uses for processing large amounts of files in a much shorter amount of time than RADAN. bash's range of interoperability is much narrower, but it is very good at processing a number of things in a row using similar patterns of parameters.
+
+    Python is useful for its ability to hold objects in memory, and to pass objects to and from various functions. Python's range is broader in terms of array manipulation and object passing.
+
 ===============================
 Python usage
 ===============================
@@ -69,9 +76,24 @@ bash usage
 
 You should see readgssi output its help text, which will display options like those below, but in a more condensed form.
 
-Each option flag here is passed from :py:func:`readgssi.readgssi.main` to :py:func:`readgssi.readgssi.readgssi` after command formulation.
+.. note::
+    Each option flag here below passed to :py:func:`readgssi.readgssi.readgssi` after the command has been processed by :py:func:`readgssi.readgssi.main`.
+
+
+Usage:
+
+.. code-block:: bash
+
+    readgssi -i input.DZT [OPTIONS]
+
+Required flags
+------------------
 
     -i file, --infile=file              Input DZT file.
+
+Optional flags
+------------------
+
     -o file, --outfile=file             Output file. If not set, the output file will be named similar to the input. See :py:func:`readgssi.functions.naming` for naming convention details.
     -f str, --format=str                Output file format (eg. "csv", "numpy", "gprpy"). See :py:mod:`readgssi.translate`.
     -p int, --plot=int                  Tells :py:func:`readgssi.plot.radargram` to create a radargram plot <int> inches high (defaults to 7).

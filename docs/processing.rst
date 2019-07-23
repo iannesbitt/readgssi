@@ -2,13 +2,31 @@ Processing radar arrays
 #####################################
 
 ===========================
-Processing with Python
+Stacking
 ===========================
 
 
+=================================
+Getting rid of horizontal noise
+=================================
+
+Frequency (vertical) filters
+-----------------------------
+
+Horizontal average filters
+-----------------------------
+
 ===========================
-Processing with bash
+Distance normalization
 ===========================
+
+
+
+===========================
+Reversing
+===========================
+
+
 
 
 `Back to top ↑ <#top>`_
