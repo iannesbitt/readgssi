@@ -7,11 +7,17 @@ If you have a question that involves sensitive or proprietary data, send me an e
 
 Thanks for reporting errors and helping to keep scientific software free and open-source!
 
+=====================
+Filtering errors
+=====================
+
+The filtering algorithm :py:func:`readgssi.filtering.triangular` will fail if you use scipy 1.2.x. Please upgrade scipy to 1.3.0 to avoid errors while filtering.
+
 ===========================
 Antenna code errors
 ===========================
 
-Of all the errors you are likely to encounter, these are the most numerous, easiest to fix, and hardest to predict. GSSI is liberal when it comes to naming antennas, so antenna codes, which are the only thing that allows identification of the center frequency of the antenna used to record the file, are numerous. This wouldn't be such an issue if GSSI had a list of them somewhere.
+Of all the errors you are likely to encounter, these are the most numerous, easiest to fix, and hardest to predict. GSSI is liberal when it comes to naming antennas, so antenna codes, which are the primary identifying feature of the center frequency of the antenna, are numerous. This wouldn't be such an issue if GSSI had a list of them somewhere.
 
 Alas, they don't, so I've had to try to compile my own, and it's incomplete. If you come across a KeyError in :py:func:`readgssi.dzt.readdzt` related to a variable called :code:`ANT`, chances are your antenna needs to be added to the list. Copy and paste the error message into a `new github issue <https://github.com/iannesbitt/readgssi/issues/new>`_ and attach the DZT file to the message. I'll try to respond within 24 hours.
 
@@ -73,6 +79,7 @@ The dictionary of antenna codes and center frequencies as of |today| (version |v
         '52600': 2600,
         '52600S': 2600,
     }
+
 
 
 `Back to top ↑ <#top>`_

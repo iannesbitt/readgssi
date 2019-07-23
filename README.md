@@ -265,6 +265,7 @@ This command will process only the 16 files in the numeric sequence between and 
 Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-source tool to read and plot GSSI ground-penetrating radar data. [doi:10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)
 
 #### known bugs:
+- scipy 1.2.x causes errors when filtering. use scipy 1.3.0 to avoid.
 - color bar shows up too large on some plots (matplotlib bug)
 - short lines have axis limits that end up tall and narrow, which may cut off titles (plot sizing information may need to be calculated differently)
 

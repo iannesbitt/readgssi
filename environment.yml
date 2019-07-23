@@ -78,7 +78,7 @@ dependencies:
   - mkl=2019.1
   - numpy=1.15.4
   - numpy-base=1.15.4
-  - scipy=1.2.0
+  - scipy=1.3.0
   - pip:
     - geographiclib==1.49
     - geopy==1.18.1
