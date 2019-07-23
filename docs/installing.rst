@@ -111,6 +111,8 @@ This has not been tested (though will be in the future), but installing on the R
     sudo apt-get install python-pandas python-h5py
     pip install -U pytz pynmea2 geopy readgssi
 
+.. todo:: Install and test readgssi on armv7l architecture
+
 `Back to top ↑ <#top>`_
 
 ************************
@@ -125,5 +127,7 @@ There is no testing module as such yet, but a simple test will ensure that most 
     readgssi -h  # this will display the help text
 
 If it's working, head over to :doc:`general`.
+
+.. todo:: Create a testing module and routines.
 
 `Back to top ↑ <#top>`_
