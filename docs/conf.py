@@ -26,7 +26,7 @@ copyright = '%s, Ian Nesbitt' % datetime.now().year
 author = 'Ian Nesbitt'
 
 # The short X.Y version
-version = '' # readgssi.__version__
+version = readgssi.__version__
 # The full version, including alpha/beta/rc tags
 release = ''
 
