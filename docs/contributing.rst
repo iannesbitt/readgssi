@@ -13,7 +13,9 @@ If and when you encounter bugs, kindly provide the error output, describe what y
 Contributing in other ways
 *********************************
 
-:py:data:`readgssi` is open-source software written as a side project during the completion of my Master's degree at the University of Maine. It is written and maintained because it makes me feel warm and fuzzy inside, and because it helps me do my own work. It is not a money-making venture. It is intended for use by the wider scientific community as a way to understand field data faster, better, and with less hassle. Keeping software free and open source is an important way to help scientists make science transparent and accessible to the wider community, and also to allow them to collaborate on scientific outcomes and discoveries.
+:py:data:`readgssi` is open-source software written as a side project during the completion of my Master's degree at the University of Maine. It is written and maintained because it makes me feel warm and fuzzy inside, and because it helps me do my own work. It is not a money-making venture. It is intended for use by the wider scientific community as a way to understand field data faster, better, and with less hassle.
+
+Keeping software free and open source is an important way to help scientists make science transparent and accessible to the wider community, and also to allow them to collaborate on better scientific outcomes and discoveries. Therefore I strongly urge code contributions over financial ones.
 
 However, if this work has helped you or your lab personally and you would like to say thanks by buying me a coffee, please email me and/or seek me out at the next AGU/EGU, or drop me a couple bucks at https://paypal.me/IanNesbitt/. Thank you for your support, it is very much appreciated. Graduate student salaries aren't what they used to be!
 
