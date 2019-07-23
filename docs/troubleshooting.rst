@@ -3,7 +3,9 @@ Troubleshooting
 
 Questions, feature requests, and bugs: please `open a github issue <https://github.com/iannesbitt/readgssi/issues>`_. Kindly provide the error output, describe what you are attempting to do, and attach the DZT/DZX/DZG file(s) causing you trouble.
 
-If you have a question that involves sensitive or proprietary data, send me an email confidentially at ian dot nesbitt at g mail dot com. Thanks for helping to keep software free and open-source!
+If you have a question that involves sensitive or proprietary data, send me an email confidentially at ian dot nesbitt at g mail dot com.
+
+Thanks for reporting errors and helping to keep scientific software free and open-source!
 
 ===========================
 Antenna code errors
