@@ -1,8 +1,8 @@
 Plotting radargrams
 #####################################
 
-* ref:`Plotting with Python`
-* ref:`Plotting with bash`
+* :ref:`Plotting with Python`
+* :ref:`Plotting with bash`
 
 .. note::
     I apologize to metric system users. matplotlib uses inches and dots per inch (DPI) and for consistency's sake I chose to adhere to imperial units for plot size :(
