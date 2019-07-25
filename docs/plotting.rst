@@ -82,10 +82,12 @@ Wow, looking much better! Now let's see if we can display depth units on the Z-a
 Changing axis units
 ================================
 
-To set the X-axis to display water depth, we use two separate flags: :code:`epsr=80` or :bash:`-E 80` --- which modifies the wave velocity by setting the dielectric to roughly that of water at 20 degrees C --- and :code:`z='m'` or :bash:`-z m`, which sets the z-axis to use those units to calculate profile depths. `"m"` stands for `meters`, but you can also specify "meters", "centimeters"/"cm", or "millimeters"/"mm" explicitly.
+Z axis
+--------------------------------
 
-.. warning:: Changing the X-axis units is simple as well, but beware that distance units will not be accurate unless the file is either distance normalized, or was recorded with a survey wheel or DMI and has a proper samples per meter value set. See :ref:`Distance normalization` for more information.
+The Z axis can be displayed in three different unit types: samples, time, and distance. By default, it will display in nanoseconds (ns). The possible values for time display are "temporal", "time", "nanoseconds", and "ns". Setting the :code:`z` parameter to "samples" sets the axis to display the number of samples (cells) on that axis.
 
+To set the Z-axis to display material depth, we use two separate flags: :code:`epsr=80` or :bash:`-E 80` --- which modifies the wave velocity by setting the dielectric to roughly that of water at 20 degrees C --- and :code:`z='m'` or :bash:`-z m`, which sets the z-axis to use those units to calculate profile depths. `"m"` stands for `meters`, but you can also specify "meters", "centimeters"/"cm", or "millimeters"/"mm" explicitly.
 
 .. code-block:: python
 
@@ -102,6 +104,14 @@ To set the X-axis to display water depth, we use two separate flags: :code:`epsr
     :alt: With water depth displayed on the Z-axis
 
 If you would like to learn how to remove the horizontal noise in the water column of this image, head to :ref:`Getting rid of horizontal noise`.
+
+
+X axis
+-------------------------------
+
+.. warning:: Changing the X-axis units is simple as well, but beware that distance units will not be accurate unless the file is either distance normalized, or was recorded with a survey wheel or DMI and has a proper samples per meter value set. See :ref:`Distance normalization` for more information.
+
+The X axis can be displayed in time, traces, and distance. By default, it will display in seconds (s). To set this to "traces", which is calculated from the number of samples on the axis prior to stacking, set the :code:`x='traces'` or :bash:`-x traces` flag. See the warning above about setting the axis to distance.
 
 `Back to top ↑ <#top>`_
 
@@ -157,5 +167,22 @@ Changing colormaps is as simple as specifying a valid :class:`matplotlib.colors.
 
 .. versionchanged:: 0.0.16
     The default colormap was changed to "gray", because of a previously unnoticed polarity switch in the previous default "Greys".
+
+`Back to top ↑ <#top>`_
+
+
+===================================
+Suppressing the Matplotlib window
+===================================
+
+By default, the matplotlib GUI window will display upon successful execution and saving of the radargram, so that you can modify titles and other plot features. To suppress this behavior, set the :code:`noshow=True` or :bash:`-n` option.
+
+Because the program will wait for the closure of the Matplotlib window before continuing, this flag is useful for processing folders full of files in bash without user attention.
+
+.. note::
+    
+    If plotting is on, readgssi will always save an image, regardless of whether or not the Matplotlib GUI is set to show up. I have found that this behavior makes it easier to save files under the same name but with title and axis label modifications.
+
+    This is especially useful when the :code:`outfile` parameter is not set, and the program uses the :py:func:`readgssi.functions.naming` function to set complex but informative filenames. When saving from the Matplotlib window, click the save button, navigate to the file just saved by the program, then single-click the file name. The save dialog will auto-populate the filename and you can overwrite without the hassle of copying and pasting.
 
 `Back to top ↑ <#top>`_
