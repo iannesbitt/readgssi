@@ -31,7 +31,7 @@ from readgssi.dzt import *
 
 
 def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python', plotting=False, figsize=7, dpi=150,
-             stack=1, x='seconds', z='nanoseconds', histogram=False, colormap='Greys', colorbar=False,
+             stack=1, x='seconds', z='nanoseconds', histogram=False, colormap='gray', colorbar=False,
              zero=[None,None,None,None], gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, win=0, dewow=False,
              normalize=False, specgram=False, noshow=False, spm=None, epsr=None, title=True, zoom=[0,0,0,0]):
     """
@@ -50,7 +50,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python', p
     :param str z: The units to display on the z-axis during plotting. Defaults to :py:data:`z='nanoseconds'`. Acceptable values are :py:data:`z='depth'` (which sets to meters), :py:data:`'m'`, :py:data:`'cm'`, :py:data:`'mm'`, :py:data:`'meters'`, etc., for depth; :py:data:`'nanoseconds'`, :py:data:`'ns'`, :py:data:`'temporal'` or :py:data:`'time'` for seconds, and :py:data:`'samples'` or :py:data:`'rows'` for samples.
     :param bool histogram: Whether to plot a histogram of array values at plot time.
     :type colormap: :py:class:`str` or :class:`matplotlib.colors.Colormap`
-    :param colormap: Plot using a Matplotlib colormap. Defaults to :py:data:`Greys` which is colorblind-friendly and behaves similarly to the RADAN default, but :py:data:`seismic` is a favorite of many due to its diverging nature.
+    :param colormap: Plot using a Matplotlib colormap. Defaults to :py:data:`gray` which is colorblind-friendly and behaves similarly to the RADAN default, but :py:data:`seismic` is a favorite of many due to its diverging nature.
     :param bool colorbar: Whether to display a graded color bar at plot time.
     :param list[int,int,int,int] zero: A list of values representing the amount of samples to slice off each channel. Defaults to :py:data:`None` for all channels, which will end up being set as :py:data:`[2,2,2,2]` for a four-channel file (2 is the number of rows down that GSSI stores mark information in).
     :param int gain: The amount of gain applied to plots. Defaults to 1. Gain is applied as a ratio of the standard deviation of radargram values to the value set here.
@@ -238,7 +238,7 @@ def main():
     zoom = [0,0,0,0]
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
     reverse, freqmin, freqmax, specgram, normalize, spm, epsr = None, None, None, None, None, None, None
-    colormap = 'Greys'
+    colormap = 'gray'
     x, z = 'seconds', 'nanoseconds'
     gain = 1
 

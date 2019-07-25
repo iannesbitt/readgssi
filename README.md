@@ -76,7 +76,7 @@ optional flags:
 -z, --zscale    | string, eg. "time"  |  z units. attempt to convert the x-axis to depth, time, or sample units based on header values
 -e, --zoom      | list of +int [LRUD] |  set a zoom to automatically jump to. list order is [left,right,up,down] and units are the same as axis
 -n, --noshow    |                     |  suppress matplotlib popup window and simply save a figure (useful for multi-file processing)
--c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
+-c, --colormap  | string, eg. seismic |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
 -g, --gain      | positive float      |  gain constant (higher=greater contrast, default: 1)
 -r, --bgr       | +integer or zero    |  horizontal background removal (useful to remove ringing). zero=full width; positive=window size (after stacking)
 -R, --reverse   |                     |  reverse (flip array horizontally)
@@ -152,7 +152,7 @@ This command saves the array in numpy binary format, and preserves the header as
 ```bash
 readgssi -i DZT__001.DZT -o 1a.png -p 5 -s auto
 ```
-The above command will cause `readgssi` to save and show a plot named "TEST__001c0Tz233S6G1.png" with a y-size of 5 inches at 150 dpi (`-p 5`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing on a monitor, approximately 2.5\*y (`-s auto`). The plot will be rendered in the `Greys` color scheme.
+The above command will cause `readgssi` to save and show a plot named "TEST__001c0Tz233S6G1.png" with a y-size of 5 inches at 150 dpi (`-p 5`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing on a monitor, approximately 2.5\*y (`-s auto`). The plot will be rendered in the `gray` color scheme.
 ![Example 1a](https://github.com/iannesbitt/readgssi/raw/master/examples/1a.png)
 
 #### example 1B: with gain
@@ -173,7 +173,7 @@ Here, a horizontal background removal is applied, but gain is turned down (`-g 2
 ```bash
 readgssi -i DZT__002.DZT -o 2a.png -p 5 -s 5 -n -m
 ```
-Sometimes, files will look "washed out" due to a skew relative to the mean of the data. This is easily correctable. Here `readgssi` will create a plot of size 5 and stack 5x (`-p 5 -s 5`). Matplotlib will use the default "Greys" colormap and save a PNG of the figure, but the script will suppress the matplotlib window (using the `-n` flag, useful for processing an entire directory full of DZTs at once). Finally, the `-m` flag will draw a histogram for each data channel. Note how the histogram changes when filters are applied.
+Sometimes, files will look "washed out" due to a skew relative to the mean of the data. This is easily correctable. Here `readgssi` will create a plot of size 5 and stack 5x (`-p 5 -s 5`). Matplotlib will use the default "gray" colormap and save a PNG of the figure, but the script will suppress the matplotlib window (using the `-n` flag, useful for processing an entire directory full of DZTs at once). Finally, the `-m` flag will draw a histogram for each data channel. Note how the histogram changes when filters are applied.
 ![Example 2a](https://github.com/iannesbitt/readgssi/raw/master/examples/2a.png)
 ![Example 2a histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/2a-h.png)
 

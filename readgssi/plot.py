@@ -47,7 +47,7 @@ def spectrogram(ar, header, freq, tr='auto', verbose=True):
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
 
 def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
-              colormap='Greys', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', aspect='auto', zero=2,
+              colormap='gray', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', aspect='auto', zero=2,
               zoom=[0,0,0,0], dpi=150):
     """
     let's do some matplotlib
@@ -58,7 +58,7 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
     plotsize    - the size of the plot in inches
     zero        - the zero point (number of samples sliced off the top of the profile by the timezero option)
     stack       - number of times stacked horizontally
-    colormap    - the matplotlib colormap to use, defaults to 'Greys' which is to say: the same as the default RADAN colormap
+    colormap    - the matplotlib colormap to use, defaults to 'gray' which is to say: the same as the default RADAN colormap
     colorbar    - boolean, whether to draw the colorbar. defaults to False
     noshow      - boolean, whether to bring up the matplotlib figure dialog when drawing. defaults to False, meaning the dialog will be displayed.
     outfile     - name of the output file. defaults to 'readgssi_plot.png' in the current directory.
@@ -156,9 +156,9 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                             vmin=ll, vmax=ul), extent=extent)
     except:
-        fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using greys instead' % colormap)
+        fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using gray instead' % colormap)
         fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
-        img = ax.imshow(ar, cmap='Greys', clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
+        img = ax.imshow(ar, cmap='gray', clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
                                             vmin=ll, vmax=ul), extent=extent)
 
