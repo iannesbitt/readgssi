@@ -1,14 +1,25 @@
 Processing radar arrays
 #####################################
 
-.. todo:: Under construction.
+.. role:: bash(code)
+   :language: bash
+
+.. note:: This section covers some rudimentary (and some more complex) preprocessing methods. Note that these are only a few of the most common methods. If you would like to see another method added here, please `open a github issue <https://github.com/iannesbitt/readgssi/issues/new>`_ and briefly explain the method, preferably including the math involved.
 
 ===========================
 Stacking
 ===========================
 
+Stacking is the process of adding a number of successive neighboring trace columns together, both in order to reduce noise (by cancelling out random variation in neighboring cells) and to condense the X-axis of the radar array. This is very useful in lines with a high number of traces, as it both helps accentuate returns and make the long axis viewable on a reasonable amount of screen space.
+
+The stacking algorithm is available in readgssi by using the :code:`stack=` argument in Python or the :bash:`-s` flag in bash. This program contains two methods of stacking: automatic and manual.
+
 Autostacking
 -------------------
+
+The automatic stacking method checks the ratio of width to height and if it's above 2.5:1, sets the stacking parameter roughly equal to 2.5:1. This can reduce the hassle of trying a number of different stacking values like in RADAN. In Python, this is accessible via the :code:`stack='auto'` argument, while in bash, the flag is :bash:`-f auto`.
+
+The file used in :ref:`Basic plotting` in the previous section shows the full length of the survey line. Below is the result of autostacking that line and turning the gain up (explained in :ref:`Setting gain`).
 
 .. code-block:: python
 
@@ -21,16 +32,18 @@ Autostacking
 
 .. image:: _static/1a.png
     :width: 100%
-    :alt: Autostacking
+    :alt: Autostacking (6 times)
 
 
-Stacking an explicit number of times
---------------------------------------
+Stacking manually
+--------------------------------------------------
+
+Sometimes it is preferable to stack a plot a specific number of times determined by the user. Occasionally, you may want to create plots that are longer (have less stacking) or shorter (have more stacking) than the auto method. The example above is stacked 6 times, here we will stack half that amount (i.e. the X-axis will be longer). In python: :code:`stack=3`; in bash: :bash:`-s 3`.
 
 .. code-block:: python
 
     readgssi.readgssi(infile='DZT__001.DZT', outfile='1b.png', frmt=None,
-                      zero=[233], plot=5, gain=60, stack=5)
+                      zero=[233], plot=5, gain=60, stack=3)
 
 .. code-block:: bash
 
@@ -38,7 +51,9 @@ Stacking an explicit number of times
 
 .. image:: _static/1b.png
     :width: 100%
-    :alt: Stacking an explicit number of times
+    :alt: Manually stacking 3 times
+
+`Back to top ↑ <#top>`_
 
 =================================
 Getting rid of horizontal noise
@@ -129,15 +144,27 @@ It's typically worthwhile to play with combining filters, as often they can have
     :width: 100%
     :alt: Both horizontal and vertical filters
 
+`Back to top ↑ <#top>`_
+
 ===========================
 Distance normalization
 ===========================
+
+If your files are recorded as time-triggered such as in the case of this lake profile, they need to be distance-normalized before they can be rendered with distance on the X-axis. This can only be done if there is proper GPS information in DZG format.
+
+The relevant function is :py:mod:`readgssi.arrayops.distance_normalize`, accessible with :code:`normalize=True` or :bash:`-N`, which calculates the distance traveled between GPS marks and resamples the array to a normalized state, then calculates the new samples per meter value and applies that to the header. The resulting corrected array can be displayed in distance units with :code:`x='m'` or :bash:`-x m`.
+
+.. warning:: Do not use :code:`x='m'` or :bash:`-x m` without either a DMI or distance normalization, as the file header samples per meter value could be very wrong (and in some cases will surely be wrong due to how RADAN handles distance, which has known flaws).
+
+.. note:: Recording GPS information with a GSSI system that does not have GPS input is not recommended. However, GPS marks can be aligned with user marks in GSSI files if the user can record GPS and radar mark information at the same time every set number of meters traveled. GPX (GPS exchange format) files with identical marks to GSSI files can be cross-correlated to DZG by using the `gpx2dzg <https://github.com/iannesbitt/gpx2dzg>`_ software package.
+
+This example distance normalizes and displays the X-axis in meters. Note the change in the beginning of the line, in which the slope appears longer than it really is due to slower survey speed at the start of the line.
 
 .. code-block:: python
 
     readgssi.readgssi(infile='DZT__001.DZT', outfile='2c.png', frmt=None,
                       zero=[233], plot=5, stack='auto', gain=60,
-                      normalize=True)
+                      normalize=True, x='m')
 
 .. code-block:: bash
 
@@ -147,9 +174,13 @@ Distance normalization
     :width: 100%
     :alt: Vertical triangular bandpass
 
+`Back to top ↑ <#top>`_
+
 ===========================
 Reversing
 ===========================
+
+Sometimes it is necessary to reverse the travel direction of a survey line in order to show a comparison with a line that travels in the opposite direction. readgssi will read arrays backwards if :code:`reverse=True` or :bash:`-R` are set, using the :py:func:`readgssi.arrayops.flip` function.
 
 .. code-block:: python
 
