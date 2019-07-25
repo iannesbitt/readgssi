@@ -7,6 +7,7 @@
 - added comments to datetime parsing function
 - fixed sampling frequency calculations to the value of `epsr` set in the header, which will prevent perceived frequency wander in frequency-based filters if the user sets `epsr`
 - changed the behavior of the readdzt script to automatically search for a DZG file of the same name, and load that data if possible. this should allow python users to read all three variables (header, arrays, gps) if GPS exists.
+- fixed command line control of DPI
 
 ## changes since 0.0.14
 - added support for the 5103 400 MHz antenna, and an antenna called `CUSTOM` in the header, for which center frequency is not known but is likely adjustable
