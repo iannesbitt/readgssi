@@ -174,8 +174,8 @@ This example distance normalizes and displays the X-axis in meters. Note the cha
     :width: 100%
     :alt: Vertical triangular bandpass
 
-X axis units
----------------------
+X axis distance units
+------------------------
 
 The X-axis can be modified to display various distance units. These include: kilometers/km, meters/m, and centimeters/cm. To use these, set :code:`x='km'` / :bash:`-x km`, :code:`x='m'` / :bash:`-x m`, or :code:`x='cm'` / :bash:`-x cm`.
 
