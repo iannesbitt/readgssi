@@ -123,15 +123,15 @@ Let's head to :doc:`processing` to try and remove some of that noise.
 Making poster-quality figures
 ================================
 
-Let's say you are really enamored with the way that last figure looks, and you now want to create a figure-quality image for a poster. You'll likely want to drop the title (:code:`titleoff=True` in Python or :bash:`-T` in bash), and increase the DPI to something that will work well on a plotter (:code:`dpi=300` in Python or :bash:`-D 300` in bash). Pretty simple. Let's see it in action.
+Let's say you are really enamored with the way that last figure looks, and you now want to create a figure-quality image for a poster. You'll likely want to drop the title (:code:`title=False` in Python or :bash:`-T` in bash), and increase the DPI to something that will work well on a plotter (:code:`dpi=300` in Python or :bash:`-D 300` in bash). Pretty simple. Let's see it in action.
 
-.. note:: I use 300 DPI here to keep file size down, but if you are worried about print quality, you may want to increase to 600 DPI to match the capability of most high-end plotters.
+.. note:: I use 300 DPI here to keep file size down, but if you are truly aiming for very high print quality, you may want to increase to 600 DPI to match the capability of most high-end plotters.
 
 .. code-block:: python
 
     readgssi.readgssi(infile='DZT__001.DZT', outfile='0d.png', frmt=None,
                       zero=[233], plot=5, stack='auto', gain=60,
-                      epsr=80, z='m', titleoff=True, dpi=300)
+                      epsr=80, z='m', title=False, dpi=300)
 
 .. code-block:: bash
 
