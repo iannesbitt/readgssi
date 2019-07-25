@@ -86,7 +86,7 @@ pygments_style = None
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-html_logo = 'logo.png'
+html_logo = '_static/logo.png'
 
 #html_theme = 'alabaster'
 
