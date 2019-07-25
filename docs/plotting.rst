@@ -94,7 +94,7 @@ Let's use a function that will condense this very long file horizontally (:code:
 
 .. code-block:: bash
 
-    readgssi -i DZT__001.DZT -o 0a.png -Z 233 -p 5 -s auto -g 60
+    readgssi -i DZT__001.DZT -o 0b.png -Z 233 -p 5 -s auto -g 60
 
 .. image:: _static/0b.png
     :width: 100%
@@ -108,12 +108,37 @@ Now let's say we want to display a water depth z-axis like above. To do that, si
 
 .. code-block:: bash
 
-    readgssi -i DZT__001.DZT -o 0a.png -Z 233 -p 5 -s auto -g 60 -z m -E 80
+    readgssi -i DZT__001.DZT -o 0c.png -Z 233 -p 5 -s auto -g 60 -z m -E 80
 
 .. image:: _static/0c.png
     :width: 100%
     :alt: With water depth displayed on the Z-axis
 
 Let's head to :doc:`processing` to try and remove some of that noise.
+
+`Back to top ↑ <#top>`_
+
+
+================================
+Making poster-quality figures
+================================
+
+Let's say you are really enamored with the way that last figure looks, and you now want to create a figure-quality image for a poster. You'll likely want to drop the title (:code:`titleoff=True` in Python or :bash:`-T` in bash), and increase the DPI to something that will work well on a plotter (:code:`dpi=300` in Python or :bash:`-D 300` in bash). Pretty simple. Let's see it in action.
+
+.. note:: I use 300 DPI here to keep file size down, but if you are worried about print quality, you may want to increase to 600 DPI to match the capability of most high-end plotters.
+
+.. code-block:: python
+
+    readgssi.readgssi(infile='DZT__001.DZT', outfile='0d.png', frmt=None,
+                      zero=[233], plot=5, stack='auto', gain=60,
+                      epsr=80, z='m', titleoff=True, dpi=300)
+
+.. code-block:: bash
+
+     readgssi -i DZT__001.DZT -o 0d.png -Z 233 -p 5 -s auto -g 60 -z m -E 80 -T -D 300
+
+.. image:: _static/0d.png
+    :width: 100%
+    :alt: No plot title and figure-quality DPI
 
 `Back to top ↑ <#top>`_
