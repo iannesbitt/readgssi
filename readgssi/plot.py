@@ -204,7 +204,7 @@ def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, 
     else:
         # else someone has called this function from outside and forgotten the outfile field
         if verbose:
-            fx.printmsg('saving figure as %s_%sMHz.png' % (os.path.splitext(header['infile'])[0], freq))
+            fx.printmsg('saving figure as %s_%sMHz.png with dpi=%s' % (os.path.splitext(header['infile'])[0], freq, dpi))
         plt.savefig('%s_%sMHz.png' % (os.path.splitext(header['infile'])[0], freq), bbox_inches='tight')
     if noshow:
         if verbose:

@@ -233,6 +233,7 @@ def main():
     title = True
     stack = 1
     win = 0
+    dpi = 150
     zero = [None,None,None,None]
     zoom = [0,0,0,0]
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
@@ -455,7 +456,7 @@ def main():
     if infile:
         if verbose:
             fx.printmsg(config.dist)
-        readgssi(infile=infile, outfile=outfile, antfreq=antfreq, frmt=frmt, plotting=plotting,
+        readgssi(infile=infile, outfile=outfile, antfreq=antfreq, frmt=frmt, plotting=plotting, dpi=dpi,
                  figsize=figsize, stack=stack, verbose=verbose, histogram=histogram, x=x, z=z,
                  colormap=colormap, colorbar=colorbar, reverse=reverse, gain=gain, bgr=bgr, win=win,
                  zero=zero, normalize=normalize, dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax,
