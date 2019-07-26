@@ -5,8 +5,6 @@ Welcome to readgssi's documentation. This program was written to read and proces
 
 `readgssi` is a tool intended for use as an open-source reader and preprocessing module for subsurface data collected with GSSI ground-penetrating radar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and plot the data contained in those files.
 
-.. warning:: Docs are under construction, use with caution.
-
 .. toctree::
     :numbered:
     :maxdepth: 2
@@ -18,6 +16,7 @@ Welcome to readgssi's documentation. This program was written to read and proces
     plotting
     processing
     translating
+    advanced
     troubleshooting
     contributing
 
