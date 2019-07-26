@@ -65,7 +65,7 @@ The following python and bash commands do the same (process then output), but ou
 GPRPy-compatible format
 ===========================
 
-And finally, these commands output the same data to a format compatible with `GPRPy <https://github.com/NSGeophysics/gprpy>`_.
+And finally, these commands output the same data to a format compatible with `GPRPy <https://github.com/NSGeophysics/gprpy>`_, which involves numpy binary (.npy) and a JSON serialization of header values.
 
 `Python:`
 
