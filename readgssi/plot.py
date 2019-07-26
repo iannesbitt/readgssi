@@ -13,7 +13,10 @@ contains several plotting functions
 
 def histogram(ar, verbose=True):
     """
-    shows a y-log histogram of data value distribution
+    Shows a y-log histogram of data value distribution.
+
+    :param numpy.ndarray ar: The radar array
+    :param bool verbose: Verbose, defaults to False
     """
     mean = np.mean(ar)
     std = np.std(ar)
@@ -33,9 +36,13 @@ def histogram(ar, verbose=True):
 
 def spectrogram(ar, header, freq, tr='auto', verbose=True):
     """
-    displays a spectrogram of the center trace of the array
+    Displays a spectrogram of the center trace of the array. This is for testing purposes and not accessible from the command prompt.
 
-    this is for testing purposes and not accessible from the command prompt
+    :param numpy.ndarray ar: The radar array
+    :param dict header: The file header dictionary
+    :type tr: int or str
+    :param tr: The trace to display the spectrogram for. Defaults to "auto" but can be an integer representing the trace number to plot. "auto" will pick a trace roughly halfway through the array.
+    :param bool verbose: Verbose, defaults to False
     """
     if tr == 'auto':
         tr = int(ar.shape[1] / 2)
@@ -46,22 +53,30 @@ def spectrogram(ar, header, freq, tr='auto', verbose=True):
     sg.spectrogram(data=trace, samp_rate=samp_rate, wlen=samp_rate/1000, per_lap = 0.99, dbscale=True,
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
 
-def radargram(ar, header, freq, verbose=False, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
-              colormap='gray', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', aspect='auto', zero=2,
-              zoom=[0,0,0,0], dpi=150):
+def radargram(ar, header, freq, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
+              colormap='gray', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', zero=2,
+              zoom=[0,0,0,0], dpi=150, verbose=False):
     """
-    let's do some matplotlib
+    Function that creates, modifies, and saves matplotlib plots of radargram images. For usage information, see :doc:`plotting`.
 
-    requirements:
-    ar          - a radar array
-    verbose     - boolean, whether to print progress. defaults to True
-    plotsize    - the size of the plot in inches
-    zero        - the zero point (number of samples sliced off the top of the profile by the timezero option)
-    stack       - number of times stacked horizontally
-    colormap    - the matplotlib colormap to use, defaults to 'gray' which is to say: the same as the default RADAN colormap
-    colorbar    - boolean, whether to draw the colorbar. defaults to False
-    noshow      - boolean, whether to bring up the matplotlib figure dialog when drawing. defaults to False, meaning the dialog will be displayed.
-    outfile     - name of the output file. defaults to 'readgssi_plot.png' in the current directory.
+    :param numpy.ndarray ar: The radar array
+    :param dict header: Radar file header dictionary
+    :param int freq: Antenna frequency
+    :param float plotsize: The height of the output plot in inches
+    :param float gain: The gain applied to the image. Must be positive but can be between 0 and 1 to reduce gain.
+    :param int stack: Number of times the file was stacked horizontally. Used to calculate traces on the X axis.
+    :param str x: The units to display on the x-axis during plotting. Defaults to :py:data:`x='seconds'`. Acceptable values are :py:data:`x='distance'` (which sets to meters), :py:data:`'km'`, :py:data:`'m'`, :py:data:`'cm'`, :py:data:`'mm'`, :py:data:`'kilometers'`, :py:data:`'meters'`, etc., for distance; :py:data:`'seconds'`, :py:data:`'s'`, :py:data:`'temporal'` or :py:data:`'time'` for seconds, and :py:data:`'traces'`, :py:data:`'samples'`, :py:data:`'pulses'`, or :py:data:`'columns'` for traces.
+    :param str z: The units to display on the z-axis during plotting. Defaults to :py:data:`z='nanoseconds'`. Acceptable values are :py:data:`z='depth'` (which sets to meters), :py:data:`'m'`, :py:data:`'cm'`, :py:data:`'mm'`, :py:data:`'meters'`, etc., for depth; :py:data:`'nanoseconds'`, :py:data:`'ns'`, :py:data:`'temporal'` or :py:data:`'time'` for seconds, and :py:data:`'samples'` or :py:data:`'rows'` for samples.
+    :param bool title: Whether to add a title to the figure. Defaults to True.
+    :param matplotlib.colors.Colormap colormap: The matplotlib colormap to use, defaults to 'gray' which is to say: the same as the default RADAN colormap
+    :param bool colorbar: Whether to draw the colorbar. Defaults to False.
+    :param bool noshow: Whether to suppress the matplotlib figure GUI window. Defaults to False, meaning the dialog will be displayed.
+    :param int win: Window size for background removal filter :py:func:`readgssi.filtering.bgr` to display in plot title.
+    :param str outfile: The name of the output file. Defaults to 'readgssi_plot.png' in the current directory.
+    :param int zero: The zero point. This represents the number of samples sliced off the top of the profile by the timezero option in :py:func:`readgssi.readgssi.readgssi`.
+    :param list[int,int,int,int] zoom: Zoom extents for matplotlib plots. Must pass a list of four integers: :py:data:`[left, right, up, down]`. Since the z-axis begins at the top, the "up" value is actually the one that displays lower on the page. All four values are axis units, so if you are working in nanoseconds, 10 will set a limit 10 nanoseconds down. If your x-axis is in seconds, 6 will set a limit 6 seconds from the start of the survey. It may be helpful to display the matplotlib interactive window at full extents first, to determine appropriate extents to set for this parameter. If extents are set outside the boundaries of the image, they will be set back to the boundaries. If two extents on the same axis are the same, the program will default to plotting full extents for that axis.
+    :param int dpi: The dots per inch value to use when creating images. Defaults to 150.
+    :param bool verbose: Verbose, defaults to False
     """
 
     # having lots of trouble with this line not being friendly with figsize tuple (integer coercion-related errors)

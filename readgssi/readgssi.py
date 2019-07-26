@@ -67,7 +67,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python', p
     :param float epsr: Epsilon_r, otherwise known as relative permittivity, or dielectric constant. This determines the speed at which waves travel through the first medium they encounter. It is used to calculate the profile depth if depth units are specified on the Z-axis of plots.
     :param bool title: Whether to display descriptive titles on plots. Defaults to :py:data:`True`.
     :param list[int,int,int,int] zoom: Zoom extents to set programmatically for matplotlib plots. Must pass a list of four integers: :py:data:`[left, right, up, down]`. Since the z-axis begins at the top, the "up" value is actually the one that displays lower on the page. All four values are axis units, so if you are working in nanoseconds, 10 will set a limit 10 nanoseconds down. If your x-axis is in seconds, 6 will set a limit 6 seconds from the start of the survey. It may be helpful to display the matplotlib interactive window at full extents first, to determine appropriate extents to set for this parameter. If extents are set outside the boundaries of the image, they will be set back to the boundaries. If two extents on the same axis are the same, the program will default to plotting full extents for that axis.
-
+    :rtype: header (:py:class:`dict`), radar array (:py:class:`numpy.ndarray`), gps (False or :py:class:`pandas.DataFrame`)
     """
 
     if infile:
@@ -159,8 +159,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python', p
             stack = 1
         if bgr:
             # background removal
-            img_arr[ar] = filtering.bgr(ar=img_arr[ar], header=r[0], antfreq=r[0]['antfreq'][ar], win=win,
-                                        verbose=verbose)
+            img_arr[ar] = filtering.bgr(ar=img_arr[ar], header=r[0], win=win, verbose=verbose)
         else:
             win = None
         if reverse:

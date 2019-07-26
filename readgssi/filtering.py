@@ -9,10 +9,14 @@ Mathematical filtering routines for array manipulation
 Written in part by François-Xavier Simon (@fxsimon)
 """
 
-def bgr(ar, header, antfreq, win=0, verbose=False):
+def bgr(ar, header, win=0, verbose=False):
     """
-    Instrument background removal (BGR)
-    Subtracts off row averages
+    Horizontal background removal (BGR). Subtracts off row averages for full-width or window-length slices. For usage see :ref:`Getting rid of horizontal noise`.
+
+    :param numpy.ndarray ar: The radar array
+    :param dict header: The file header dictionary
+    :param int win: The window length to process. 0 resolves to full-width, whereas positive integers dictate the window size in post-stack traces.
+    :rtype: :py:class:`numpy.ndarray`
     """
     if (int(win) > 1) & (int(win) < ar.shape[1]):
         window = int(win)
@@ -39,8 +43,13 @@ def bgr(ar, header, antfreq, win=0, verbose=False):
 
 def dewow(ar, verbose=False):
     """
-    Polynomial dewow filter
-    Written by fxsimon
+    Polynomial dewow filter. Written by fxsimon.
+    
+    .. warning:: This filter is still experimental.
+
+    :param numpy.ndarray ar: The radar array
+    :param bool verbose: Verbose, default is False
+    :rtype: :py:class:`numpy.ndarray`
     """
     fx.printmsg('WARNING: dewow filter is experimental')
     if verbose:
@@ -56,7 +65,17 @@ def dewow(ar, verbose=False):
 
 def bp(ar, header, freqmin, freqmax, zerophase=True, verbose=False):
     """
-    Vertical butterworth bandpass
+    Vertical butterworth bandpass. This filter is not as effective as :py:func:`triangular` and thus is not available through the command line interface or through :py:func:`readgssi.readgssi.readgssi`.
+
+    Filter design and implementation are dictated by :py:func:`obspy.signal.filter.bandpass`.
+
+    :param np.ndarray ar: The radar array
+    :param dict header: The file header dictionary
+    :param int freqmin: The lower corner of the bandpass
+    :param int freqmax: The upper corner of the bandpass
+    :param bool zerophase: Whether to run the filter forwards and backwards in order to counteract the phase shift
+    :param bool verbose: Verbose, defaults to False
+    :rtype: :py:class:`numpy.ndarray`
     """
     if verbose:
         fx.printmsg('vertical butterworth bandpass filter')
@@ -83,7 +102,19 @@ def bp(ar, header, freqmin, freqmax, zerophase=True, verbose=False):
 
 def triangular(ar, header, freqmin, freqmax, zerophase=True, verbose=False):
     """
-    Vertical triangular FIR bandpass
+    Vertical triangular FIR bandpass. This filter is designed to closely emulate that of RADAN.
+
+    Filter design is implemented by :py:func:`scipy.signal.firwin` with :code:`numtaps=25` and implemented with :py:func:`scipy.signal.lfilter`.
+
+    .. note:: This function is not compatible with scipy versions prior to 1.3.0.
+
+    :param np.ndarray ar: The radar array
+    :param dict header: The file header dictionary
+    :param int freqmin: The lower corner of the bandpass
+    :param int freqmax: The upper corner of the bandpass
+    :param bool zerophase: Whether to run the filter forwards and backwards in order to counteract the phase shift
+    :param bool verbose: Verbose, defaults to False
+    :rtype: :py:class:`numpy.ndarray`
     """
     if verbose:
         fx.printmsg('vertical triangular FIR bandpass filter')

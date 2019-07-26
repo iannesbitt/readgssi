@@ -20,16 +20,16 @@ Alain Plattner's GPRPy software (https://github.com/NSGeophysics/GPRPy).
 
 def readtime(bytes):
     """
-    function to read dates
-    have i mentioned yet that this is not a great way of storing dates in 2019,
-    where the rest of my files are tens or hundreds of MB large, while dates are stored as 4-byte binary strings(??)
-    
-    DZT rfDateBytes are 32 bits of binary (01001010111110011010011100101111)
-    structured as little endian u5u6u5u5u4u7 where
-    all numbers are base 2 unsigned int (uX) composed of X number of bits
+    Function to read dates from the :code:`rfDateByte` binary objects in DZT headers. 
 
-    so we read (seconds/2, min, hr, day, month, year-1980)
-    then do seconds*2 and year+1980 and return a datetime object
+    DZT :code:`rfDateByte` objects are 32 bits of binary (01001010111110011010011100101111), structured as little endian u5u6u5u5u4u7 where all numbers are base 2 unsigned int (uX) composed of X number of bits. It's an unnecessarily high level of compression for a single date object in a filetype that often contains tens or hundreds of megabytes of array information anyway.
+
+    So this function reads (seconds/2, min, hr, day, month, year-1980) then does seconds*2 and year+1980 and returns a datetime object.
+
+    For more information on :code:`rfDateByte`, see page 55 of `GSSI's SIR 3000 manual <https://support.geophysical.com/gssiSupport/Products/Documents/Control%20Unit%20Manuals/GSSI%20-%20SIR-3000%20Operation%20Manual.pdf>`_.
+
+    :param bytes bytes: The :code:`rfDateByte` to be decoded
+    :rtype: :py:class:`datetime.datetime`
     """
     dtbits = ''
     rfDateByte = (b for b in bytes)
@@ -47,21 +47,25 @@ def readtime(bytes):
 
 def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
     """
-    function to unpack and return things we need from the header, and the data itself
-    currently unused but potentially useful lines:
+    Function to unpack and return things the program needs from the file header, and the data itself.
 
-    # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s' # the structure of the bytewise header and "gps data" as I understand it - 1024 bytes
-
-    # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2) # the variable size of bytes in the header (most of the time) - 128 bytes
-
-    # fx.printmsg('total header structure size: '+str(calcsize(headerstruct)))
-
-    # packed_size = 0
-
-    # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
-
-    # fx.printmsg('fixed header size: '+str(packed_size)+'\\n')
+    :param str infile: The DZT file location
+    :param bool gps: Whether a GPS file exists. Defaults to False, but changed to :py:class:`pandas.DataFrame` if a DZG file with the same name as :code:`infile` exists.
+    :param float spm: User value of samples per meter, if specified. Defaults to None.
+    :param float epsr: User value of relative permittivity, if specified. Defaults to None.
+    :param bool verbose: Verbose, defaults to False
+    :rtype: header (:py:class:`dict`), radar array (:py:class:`numpy.ndarray`), gps (False or :py:class:`pandas.DataFrame`)
     """
+
+    '''
+    currently unused but potentially useful lines:
+    # headerstruct = '<5h 5f h 4s 4s 7h 3I d I 3c x 3h d 2x 2c s s 14s s s 12s h 816s 76s' # the structure of the bytewise header and "gps data" as I understand it - 1024 bytes
+    # readsize = (2,2,2,2,2,4,4,4,4,4,2,4,4,4,2,2,2,2,2,4,4,4,8,4,3,1,2,2,2,8,1,1,14,1,1,12,2) # the variable size of bytes in the header (most of the time) - 128 bytes
+    # fx.printmsg('total header structure size: '+str(calcsize(headerstruct)))
+    # packed_size = 0
+    # for i in range(len(readsize)): packed_size = packed_size+readsize[i]
+    # fx.printmsg('fixed header size: '+str(packed_size)+'\\n')
+    '''
     infile_gps = os.path.splitext(infile)[0] + ".DZG"
     infile = open(infile, 'rb')
     header = {}
@@ -213,7 +217,10 @@ def readdzt_gprpy(infile):
 
 def header_info(header, data):
     """
-    function to print relevant header data
+    Function to print relevant header data.
+
+    :param dict header: The header dictionary
+    :param numpy.ndarray data: The data array
     """
     fx.printmsg('system:             %s (system code %s)' % (UNIT[header['rh_system']], header['rh_system']))
     fx.printmsg('antennas:           %s' % header['rh_antname'])

@@ -41,8 +41,18 @@ def readdzg(fi, frmt, header, verbose=False):
     :param str frmt: GPS information format ('dzg' = DZG file containing gps sentence strings (see below); 'csv' = comma separated file with: lat,lon,elev,time)
     :param dict header: File header produced by :py:func:`readgssi.dzt.readdzt`
     :param bool verbose: Verbose, defaults to False
-    :rtype: pandas.DataFrame
-    
+    :rtype: GPS data (pandas.DataFrame)
+
+        The dataframe contains the following fields:
+        * datetimeutc (:py:class:`datetime.datetime`)
+        * trace (:py:class:`int` trace number)
+        * longitude (:py:class:`float`)
+        * latitude (:py:class:`float`)
+        * altitude (:py:class:`float`)
+        * velocity (:py:class:`float`)
+        * sec_elapsed (:py:class:`float`)
+        * meters (:py:class:`float` meters traveled)
+
     """
     if header['rhf_spm'] == 0:
         spu = header['rhf_sps']

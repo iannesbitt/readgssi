@@ -8,7 +8,7 @@ def flip(ar, verbose=False):
     
     :param numpy.ndarray ar: Input data array
     :param bool verbose: Verbose, defaults to False
-    :rtype: :py:class:`numpy.ndarray`
+    :rtype: radar array (:py:class:`numpy.ndarray`)
 
     """
     if verbose:
@@ -26,7 +26,7 @@ def reducex(ar, by=1, chnum=1, number=1, verbose=False):
     :param int chnum: Chunk number to display in console. Default is 1.
     :param int number: Number of chunks to display in console. Default is 1.
     :param bool verbose: Verbose, defaults to False.
-    :rtype: :py:class:`numpy.ndarray`
+    :rtype: radar array (:py:class:`numpy.ndarray`)
 
     """
     if verbose:
@@ -43,7 +43,7 @@ def stack(ar, stack='auto', verbose=False):
 
     :param numpy.ndarray ar: Input data array
     :param int by: Factor to stack by. Default is "auto".
-    :rtype: :py:class:`numpy.ndarray`
+    :rtype: radar array (:py:class:`numpy.ndarray`)
 
     """
     stack0 = stack
@@ -89,7 +89,7 @@ def distance_normalize(header, ar, gps, verbose=False):
     :param numpy.ndarray ar: Input data array
     :param pandas.DataFrame gps: GPS data from :py:func:`readgssi.gps.readdzg`. This is used to calculate the expansion and compression needed to normalize traces to distance.
     :param bool verbose: Verbose, defaults to False.
-    :rtype: :py:class:`dict`, :py:class:`numpy.ndarray`, :py:class:`pandas.DataFrame`
+    :rtype: header (:py:class:`dict`), radar array (:py:class:`numpy.ndarray`), gps (False or :py:class:`pandas.DataFrame`)
 
     """
     if ar[2] == []:

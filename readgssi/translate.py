@@ -11,7 +11,11 @@ contains translations to common formats
 
 def json_header(header, outfile_abspath, verbose=False):
     """
-    save header values as a .json so another script can take what it needs
+    Save header values as a .json so another script can take what it needs. This is used to export to `GPRPy <https://github.com/NSGeophysics/gprpy>`_.
+
+    :param dict header: The file header dictionary
+    :param str outfile_abspath: Output file path
+    :param bool verbose: Verbose, defaults to False
     """
     with open('%s.json' % (outfile_abspath), 'w') as f:
         if verbose:
@@ -20,7 +24,12 @@ def json_header(header, outfile_abspath, verbose=False):
 
 def csv(ar, outfile_abspath, header=None, verbose=False):
     """
-    outputting to csv is simple. we read into a dataframe, then use pandas' to_csv() builtin function.
+    Output to csv. Data is read into a :py:class:`pandas.DataFrame`, then written using :py:func:`pandas.DataFrame.to_csv`.
+
+    :param numpy.ndarray ar: Radar array
+    :param str outfile_abspath: Output file path
+    :param dict header: File header dictionary to write, if desired. Defaults to None.
+    :param bool verbose: Verbose, defaults to False
     """
     if verbose:
         t = ''
@@ -34,7 +43,12 @@ def csv(ar, outfile_abspath, header=None, verbose=False):
 
 def numpy(ar, outfile_abspath, header=None, verbose=False):
     """
-    save as .npy binary numpy file
+    Output to binary numpy binary file (.npy) with the option of writing the header to .json as well.
+
+    :param numpy.ndarray ar: Radar array
+    :param str outfile_abspath: Output file path
+    :param dict header: File header dictionary to write, if desired. Defaults to None.
+    :param bool verbose: Verbose, defaults to False
     """
     if verbose:
         t = ''
@@ -48,35 +62,45 @@ def numpy(ar, outfile_abspath, header=None, verbose=False):
 
 def gprpy(ar, header, outfile_abspath, verbose=False):
     """
-    save in a format GPRPy (https://github.com/NSGeophysics/GPRPy) can open
+    Save in a format `GPRPy <https://github.com/NSGeophysics/gprpy>`_ can open (numpy binary .npy and a .json formatted header file).
+    
+    .. note:: GPRPy support for this feature is forthcoming (https://github.com/NSGeophysics/GPRPy/issues/3#issuecomment-460462612).
 
-    currently, that's numpy binary .npy and a .json formatted header file
-    (https://github.com/NSGeophysics/GPRPy/issues/3#issuecomment-460462612)
+    :param numpy.ndarray ar: Radar array
+    :param str outfile_abspath: Output file path
+    :param dict header: File header dictionary to write, if desired. Defaults to None.
+    :param bool verbose: Verbose, defaults to False
     """
     numpy(ar=ar, header=header, outfile_abspath=outfile_abspath, verbose=verbose)
 
-def segy(ar, outfile_abspath, verbose=False):
+def segy(ar, outfile_abspath, header, verbose=False):
     """
-    segy output is not yet available
+    .. warning:: SEGY output is not yet available.
+
+    In the future, this function will output to SEGY format.
+
+    :param numpy.ndarray ar: Radar array
+    :param str outfile_abspath: Output file path
+    :param dict header: File header dictionary to write, if desired. Defaults to None.
+    :param bool verbose: Verbose, defaults to False
     """
     fx.printmsg('ERROR: SEG-Y is not yet supported, please choose another format.')
     raise NotImplementedError('SEG-Y is not yet supported.')
 
-def h5(ar, infile_basename, outfile_abspath, verbose=False):
+def h5(ar, infile_basename, outfile_abspath, header, verbose=False):
     """
-    Now we gather gps data.
-    Full GPS data are in .DZG files of same name if they exist (see below).
-    If .DZG does not exist, then locations are determined from correlating
-    waypoint marks with scan numbers (end of .DZX files).
-    In this case we must have some way of relating location to mark or
-    directly to scan number so best option may be .csv with:
-    mark name, lat, lon
-    CSV file is then read to np array and matched with mark nums in .DZX
-    and number of scans between marks calculated. Then we can
-    interpolate lat and lon in np array for all scans between marks
-    with gps. Problems will arise in cases where marks on GPS and SIR
-    do not total the same number, so care must be taken to cull or add
-    points where necessary.
+    .. warning:: HDF5 output is not yet available.
+
+    In the future, this function will output to HDF5 format.
+
+    :param numpy.ndarray ar: Radar array
+    :param str infile_basename: Input file basename
+    :param str outfile_abspath: Output file path
+    :param dict header: File header dictionary to write, if desired. Defaults to None.
+    :param bool verbose: Verbose, defaults to False
+    """
+
+    '''
     Assumptions:
     - constant velocity between marks (may be possible to add a check)
     - marks are made at same time on GPS and SIR
@@ -86,7 +110,7 @@ def h5(ar, infile_basename, outfile_abspath, verbose=False):
     /line_x/location_n/datacapture_0/echogram_0 (/group/group/group/dataset)
     each dataset has an 'attributes' item attached, formatted in 'collections.defaultdict' style:
     [('PCSavetimestamp', str), ('GPS Cluster- MetaData_xml', str), ('Digitizer-MetaData_xml', str), ('GPS Cluster_UTM-MetaData_xml', str)]
-    """
+    '''
 
     if verbose:
         fx.printmsg('output format is IceRadar HDF5. writing file to: %s' % outfile_abspath)

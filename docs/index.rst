@@ -33,8 +33,8 @@ Welcome to readgssi's documentation. This program was written to read and proces
     gps
     plot
     translate
-    config
     constants
+    config
 
 Indices and tables
 ==================
