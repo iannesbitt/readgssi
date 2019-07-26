@@ -4,7 +4,12 @@ import pandas as pd
 
 def flip(ar, verbose=False):
     """
-    flip radargram horizontally (read backwards)
+    Read the array backwards. Used to reverse line direction. Usage covered in the :ref:`Reversing` tutorial section.
+    
+    :param numpy.ndarray ar: Input data array
+    :param bool verbose: Verbose, defaults to False
+    :rtype: :py:class:`numpy.ndarray`
+
     """
     if verbose:
         fx.printmsg('flipping radargram...')
@@ -12,9 +17,17 @@ def flip(ar, verbose=False):
 
 def reducex(ar, by=1, chnum=1, number=1, verbose=False):
     """
-    reduce the number of traces in the array by a number
+    Reduce the number of traces in the array by a number. Not the same as :py:func:`stack` since it doesn't sum adjacent traces, however :py:func:`stack` uses it to resize the array prior to stacking.
 
-    not the same as stacking since it doesn't sum adjacent traces
+    Used by :py:func:`stack` and :py:func:`distance_normalize` but not accessible from the command line or :py:func:`readgssi.readgssi`.
+
+    :param numpy.ndarray ar: Input data array
+    :param int by: Factor to reduce by. Default is 1.
+    :param int chnum: Chunk number to display in console. Default is 1.
+    :param int number: Number of chunks to display in console. Default is 1.
+    :param bool verbose: Verbose, defaults to False.
+    :rtype: :py:class:`numpy.ndarray`
+
     """
     if verbose:
         fx.printmsg('%s/%s reducing %sx%s chunk by a factor of %s...' % (chnum, number, ar.shape[0], ar.shape[1], by))
@@ -22,9 +35,16 @@ def reducex(ar, by=1, chnum=1, number=1, verbose=False):
 
 def stack(ar, stack='auto', verbose=False):
     """
-    stacking algorithm
+    Stacking algorithm. Stacking is the process of summing adjacent traces in order to reduce noise --- the thought being that random noise around zero will cancel out and data will either add or subtract, making it easier to discern.
 
-    stack='auto' results in an approximately 2.5:1 x:y axis ratio
+    It is also useful for displaying long lines on a computer screen. Usage is covered in the :ref:`stacking` section of the tutorial.
+
+    :py:data:`stack='auto'` results in an approximately 2.5:1 x:y axis ratio. :py:data:`stack=3` sums three adjacent traces into a single trace across the width of the array.
+
+    :param numpy.ndarray ar: Input data array
+    :param int by: Factor to stack by. Default is "auto".
+    :rtype: :py:class:`numpy.ndarray`
+
     """
     stack0 = stack
     if str(stack).lower() in 'auto':
@@ -61,7 +81,16 @@ def stack(ar, stack='auto', verbose=False):
 
 def distance_normalize(header, ar, gps, verbose=False):
     """
-    distance normalization (not pretty but gets the job done)
+    Distance normalization algorithm. Uses a GPS array to calculate expansion and contraction needed to convert from time-triggered to distance-normalized sampling interval. Then, the samples per meter is recalculated and inserted into the header for proper plotting.
+
+    Usage described in the :ref:`Distance normalization` section of the tutorial.
+
+    :param dict header: Input data array
+    :param numpy.ndarray ar: Input data array
+    :param pandas.DataFrame gps: GPS data from :py:func:`readgssi.gps.readdzg`. This is used to calculate the expansion and compression needed to normalize traces to distance.
+    :param bool verbose: Verbose, defaults to False.
+    :rtype: :py:class:`dict`, :py:class:`numpy.ndarray`, :py:class:`pandas.DataFrame`
+
     """
     if ar[2] == []:
         if verbose:

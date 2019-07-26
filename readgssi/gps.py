@@ -14,30 +14,35 @@ contains functions for reading gps data from various formats
 
 def msgparse(msg):
     """
+    .. deprecated:: 0.0.12
+
     This function returns the NMEA message variables shared by both RMC and GGA.
+
+    :param pynmea2.nmea.NMEASentence msg: A pynmea2 sentence object.
+    :rtype: :py:class:`datetime.datetime`, :py:class:`float`, :py:class:`float`
     """
     return msg.timestamp, msg.latitude, msg.longitude
 
 def readdzg(fi, frmt, header, verbose=False):
     """
     A parser to extract gps data from DZG file format. DZG contains raw NMEA sentences, which should include at least RMC and GGA.
-    fi = str - file containing gps information
-    frmt = str - format ('dzg' = DZG file containing gps sentence strings (see below); 'csv' = comma separated file with: lat,lon,elev,time)
-    header = dict - file header
-    verbose = bool - verbose output on (True) or off (False)
-    Reading DZG
-    We need to relate gpstime to scan number then interpolate for each scan between gps measurements.
+
+    NMEA RMC sentence string format:
+    :py:data:`$xxRMC,UTC hhmmss,status,lat DDmm.sss,lon DDDmm.sss,SOG,COG,date ddmmyy,checksum \*xx`
 
     NMEA GGA sentence string format:
-    $xxGGA,UTC hhmmss.s,lat DDmm.sss,lon DDDmm.sss,fix qual,numsats,hdop,mamsl,wgs84 geoid ht,fix age,dgps sta.,checksum \*xx
+    :py:data:`$xxGGA,UTC hhmmss.s,lat DDmm.sss,lon DDDmm.sss,fix qual,numsats,hdop,mamsl,wgs84 geoid ht,fix age,dgps sta.,checksum \*xx`
     
-    NMEA RMC sentence string format:
-    $xxRMC,UTC hhmmss,status,lat DDmm.sss,lon DDDmm.sss,SOG,COG,date ddmmyy,checksum \*xx
+    Shared message variables between GGA and RMC: timestamp, latitude, and longitude
 
-    shared message vars:
-    timestamp, latitude, longitude, 
+    RMC contains a datestamp which makes it preferable, but this parser will read either.
 
-    we prefer RMC because it has datestamp, but this parser will read either.
+    :param str fi: File containing gps information
+    :param str frmt: GPS information format ('dzg' = DZG file containing gps sentence strings (see below); 'csv' = comma separated file with: lat,lon,elev,time)
+    :param dict header: File header produced by :py:func:`readgssi.dzt.readdzt`
+    :param bool verbose: Verbose, defaults to False
+    :rtype: pandas.DataFrame
+    
     """
     if header['rhf_spm'] == 0:
         spu = header['rhf_sps']
