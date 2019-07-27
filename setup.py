@@ -13,7 +13,7 @@ setuptools.setup(
     description="Python tool to read and plot Geophysical Survey Systems Incorporated (GSSI) radar data in DZT format",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/iannesbitt/readgssi",
+    url="https://readgssi.readthedocs.org/",
     packages=setuptools.find_packages(),
     install_requires=['obspy', 'numpy', 'scipy', 'geopy', 'matplotlib', 'pandas', 'h5py', 'pynmea2', 'pytz'],
     entry_points='''
