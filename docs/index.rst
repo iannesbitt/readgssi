@@ -3,7 +3,8 @@
 
 Welcome to readgssi's documentation. This program was written to read and process ground-penetrating radar files from instruments made by Geophysical Survey Systems Incorporated (GSSI), although I have no affiliation with nor endorsement for the afforementioned organization.
 
-`readgssi` is a tool intended for use as an open-source reader and preprocessing module for subsurface data collected with GSSI ground-penetrating radar (GPR) devices. It has the capability to read DZT and DZG files with the same pre-extension name and plot the data contained in those files.
+The demands of ice- and ground-penetrating radar (GPR) surveying, as in many types of scientific fieldwork, require that both quality control and time savings are critical to a successful field campaign. This software provides a way to quickly read, process, and display radar data produced by Geophysical Survey Systems Incorporated (GSSI) radar antennas and control units. GSSI's own RADAN software is bulky, closed-source, non-free, and not meant to handle folders full of GPR data files at once. `readgssi` was designed to be used in the field to quality-check entire folders of data files by converting radar profiles to portable network graphics (PNG) images, saving users valuable time versus performing the equivalent actions by hand in RADAN, especially in the case of projects with large file counts.
+
 
 .. toctree::
     :numbered:
