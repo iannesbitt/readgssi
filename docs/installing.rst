@@ -8,7 +8,7 @@ Installing
 Requirements
 *********************************
 
-I strongly recommend installing the following dependencies via Anaconda (https://www.anaconda.com/distribution/).
+I strongly recommend installing the following dependencies via Anaconda (https://www.anaconda.com/distribution/). These and other requirements are available in the `environment.yml <https://github.com/iannesbitt/readgssi/blob/master/environment.yml>`_ file in the project's `GitHub repository <https://github.com/iannesbitt/readgssi>`_.
 
 * :py:data:`obspy` (https://docs.obspy.org)
 * :py:mod:`numpy` (https://docs.scipy.org/doc/numpy)
