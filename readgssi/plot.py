@@ -1,5 +1,4 @@
 import os
-import obspy.imaging.spectrogram as sg
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -44,6 +43,7 @@ def spectrogram(ar, header, freq, tr='auto', verbose=True):
     :param tr: The trace to display the spectrogram for. Defaults to "auto" but can be an integer representing the trace number to plot. "auto" will pick a trace roughly halfway through the array.
     :param bool verbose: Verbose, defaults to False
     """
+    import obspy.imaging.spectrogram as sg # buried here, to avoid obspy compatibility issues
     if tr == 'auto':
         tr = int(ar.shape[1] / 2)
     if verbose:

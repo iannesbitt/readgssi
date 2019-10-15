@@ -30,10 +30,13 @@ from readgssi.constants import *
 from readgssi.dzt import *
 
 
-def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python', plotting=False, figsize=7, dpi=150,
-             stack=1, x='seconds', z='nanoseconds', histogram=False, colormap='gray', colorbar=False,
-             zero=[None,None,None,None], gain=1, freqmin=None, freqmax=None, reverse=False, bgr=False, win=0, dewow=False,
-             normalize=False, specgram=False, noshow=False, spm=None, epsr=None, title=True, zoom=[0,0,0,0]):
+def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
+             plotting=False, figsize=7, dpi=150, stack=1, x='seconds',
+             z='nanoseconds', histogram=False, colormap='gray', colorbar=False,
+             zero=[None,None,None,None], gain=1, freqmin=None, freqmax=None, 
+             reverse=False, bgr=False, win=0, dewow=False,
+             normalize=False, specgram=False, noshow=False, spm=None,
+             start_scan=0, num_scans=-1, epsr=None, title=True, zoom=[0,0,0,0]):
     """
     This is the primary directive function. It coordinates calls to reading, filtering, translation, and plotting functions, and should be used as the overarching processing function in most cases.
 
@@ -64,6 +67,8 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python', p
     :param bool specgram: Produce a spectrogram of a trace in the array using :py:func:`readgssi.plot.spectrogram`. Defaults to :py:data:`False` (if :py:data:`True`, defaults to a trace roughly halfway across the profile). This is mostly for debugging and is not currently accessible from the command line.
     :param bool noshow: If :py:data:`True`, this will suppress the matplotlib interactive window and simply save a file. This is useful for processing many files in a folder without user input.
     :param float spm: User-set samples per meter. This overrides the value read from the header, and typically doesn't need to be set if the samples per meter value was set correctly at survey time. This value does not need to be set if GPS input (DZG file) is present and the user sets :py:data:`normalize=True`.
+    :param int start_scan: zero based start scan to read data from. Defaults to zero.
+    :param int num_scans: number of scans to read from the file, Defaults to -1, which reads from start_scan to end of file.
     :param float epsr: Epsilon_r, otherwise known as relative permittivity, or dielectric constant. This determines the speed at which waves travel through the first medium they encounter. It is used to calculate the profile depth if depth units are specified on the Z-axis of plots.
     :param bool title: Whether to display descriptive titles on plots. Defaults to :py:data:`True`.
     :param list[int,int,int,int] zoom: Zoom extents to set programmatically for matplotlib plots. Must pass a list of four integers: :py:data:`[left, right, up, down]`. Since the z-axis begins at the top, the "up" value is actually the one that displays lower on the page. All four values are axis units, so if you are working in nanoseconds, 10 will set a limit 10 nanoseconds down. If your x-axis is in seconds, 6 will set a limit 6 seconds from the start of the survey. It may be helpful to display the matplotlib interactive window at full extents first, to determine appropriate extents to set for this parameter. If extents are set outside the boundaries of the image, they will be set back to the boundaries. If two extents on the same axis are the same, the program will default to plotting full extents for that axis.
@@ -76,7 +81,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python', p
             if verbose:
                 fx.printmsg('reading...')
                 fx.printmsg('input file:         %s' % (infile))
-            r = readdzt(infile, gps=normalize, spm=spm, epsr=epsr, verbose=verbose)
+            r = readdzt(infile, gps=normalize, spm=spm, start_scan=start_scan, num_scans=num_scans, epsr=epsr, verbose=verbose)
             # time zero per channel
             r[0]['timezero'] = [None, None, None, None]
             for i in range(r[0]['rh_nchan']):

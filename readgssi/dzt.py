@@ -45,7 +45,7 @@ def readtime(bytes):
     yr = int(dtbits[0:7], 2) + 1980     # year, stored as 1980+(0:127)
     return datetime(yr, mo, day, hr, mins, sec2, 0, tzinfo=pytz.UTC)
 
-def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
+def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, verbose=False):
     """
     Function to unpack and return things the program needs from the file header, and the data itself.
 
@@ -161,9 +161,31 @@ def readdzt(infile, gps=False, spm=None, epsr=None, verbose=False):
         dtype = np.uint16 # 16-bit unsigned
     else:
         dtype = np.int32 # 32-bit signed
-
+    
+    if start_scan != 0:
+        try:
+            # calculate start offset in bytes:
+            start_offset = int(start_scan * header['rh_nchan'] * header['rh_nsamp'] * header['rh_bits']/8)
+        except ValueError:
+            # if this fails, then fall back to 0 offset.
+            start_offset = 0
+            fx.printmsg('WARNING: ValueError for scan offset: {start_scan} (reading from start of data)')
+            # consider returning No Data?
+    else:
+        start_offset = 0
+    
+    if num_scans != -1:
+        try:
+            num_items = int(num_scans * header['rh_nsamp']*header['rh_nchan'])
+        except ValueError:
+            # if this fails then get all scans...
+            fx.printmsg('WARNING: ValueError for number of scans: {num_scans} (reading all items from {start_scan} scans)')
+            num_items = -1
+    else:
+        num_items = -1
+            
     # read in and transpose data
-    data = np.fromfile(infile, dtype).reshape(-1,(header['rh_nsamp']*header['rh_nchan'])).T
+    data = np.fromfile(infile, dtype, offset=start_offset, count=num_items).reshape(-1,(header['rh_nsamp']*header['rh_nchan'])).T
 
     header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
     header['cr_true'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['dzt_epsr'])
