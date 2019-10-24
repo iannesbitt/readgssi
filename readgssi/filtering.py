@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.ndimage.filters import uniform_filter1d
 from scipy.signal import firwin, lfilter
-from obspy.signal.filter import bandpass
 import readgssi.functions as fx
 
 """
@@ -77,6 +76,8 @@ def bp(ar, header, freqmin, freqmax, zerophase=True, verbose=False):
     :param bool verbose: Verbose, defaults to False
     :rtype: :py:class:`numpy.ndarray`
     """
+    from obspy.signal.filter import bandpass
+
     if verbose:
         fx.printmsg('vertical butterworth bandpass filter')
         fx.printmsg('NOTE: better results are achieved with readgssi.filtering.triangular()')
