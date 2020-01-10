@@ -124,7 +124,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     freq = [None, None, None, None]
     for i in range(header['rh_nchan']):
         try:
-            freq[i] = int(list(antfreq)[i])
+            freq[i] = antfreq[i]
         except (TypeError, IndexError):
             freq[i] = 200
 
@@ -144,7 +144,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
             try:
                 header['antfreq'][chan] = int("".join(takewhile(str.isdigit, header['rh_ant'][chan].replace('D5','').replace('D6','')))) # hoping this works
             except ValueError:
-                header['antfreq'][chan] = freq
+                header['antfreq'] = freq
             #header['antfreq'][chan] = int(header['rh_antname'][chan].replace('D5','').replace('D6',''))
 
     infile.seek(113) # skip to something that matters
@@ -256,7 +256,8 @@ def header_info(header, data):
     """
     fx.printmsg('system:             %s (system code %s)' % (UNIT[header['rh_system']], header['rh_system']))
     fx.printmsg('antennas:           %s' % header['rh_antname'])
-    fx.printmsg('time zeros:         %s' % header['timezero'])
+    fx.printmsg('ant freqs. (MHz):   %s' % header['antfreq'])
+    fx.printmsg('ant time zeros:     %s' % header['timezero'])
 
     for i in range(header['rh_nchan']):
         if header['known_ant'][i] == True:

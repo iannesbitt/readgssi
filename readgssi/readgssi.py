@@ -111,7 +111,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
         except KeyError as e:
             print('--------------------WARNING - PLEASE READ---------------------')
             fx.printmsg('WARNING: could not read frequency for antenna name "%s"' % e)
-            if antfreq:
+            if antfreq is not None:
                 fx.printmsg('using user-specified antenna frequency. Please ensure frequency value or list of values is correct.')
                 r[0]['antfreq'] = antfreq
             else:
@@ -281,13 +281,15 @@ def main():
         if opt in ('-a', '--antfreq'):
             try:
                 antfreq = [None, None, None, None]
-                for i in range(len(list(arg))):
-                    antfreq[i] = round(abs(float(arg)),1)
-                fx.printmsg('user specified frequency value of %s MHz will be overwritten if DZT header has valid antenna information.' % antfreq)
+                freq_arg = arg.split(',')
+                for i in range(len(freq_arg)):
+                    antfreq[i] = round(abs(float(freq_arg[i])))
             except ValueError:
-                fx.printmsg('ERROR: %s is not a valid decimal or integer frequency value.' % arg)
+                fx.printmsg('ERROR: %s is not a valid number or list of frequency values.' % arg)
                 fx.printmsg(config.help_text)
                 sys.exit(2)
+            fx.printmsg('user specified frequency values of %s MHz will be overwritten if DZT header has valid antenna information.' % antfreq)
+
         if opt in ('-f', '--format'): # the format string
             # check whether the string is a supported format
             if arg:
