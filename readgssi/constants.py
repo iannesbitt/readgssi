@@ -81,6 +81,7 @@ ANT = {
     '62300XT': 2300,
     '52600': 2600,
     '52600S': 2600,
+    'SSMINIXT': 2700
 }
 
 # whether or not the file is GPS-enabled (does not guarantee presence of GPS data in file)
