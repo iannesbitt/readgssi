@@ -231,8 +231,8 @@ def readdzg(fi, frmt, header, verbose=False):
     array['datetimeutc'] = pd.to_datetime(array['datetimeutc'], format='%Y-%m-%d %H:%M:%S.%f +0000', utc=True)
     array.set_index('datetimeutc', inplace=True)
     ## testing purposes
-    # if True:
-    #     if verbose:
-    #         fx.printmsg('writing GPS to %s-gps.csv' % (fi))
-    #     array.to_csv('%s-gps.csv' % (fi))
+    if True:
+        if verbose:
+            fx.printmsg('writing GPS to %s-gps.csv' % (fi))
+        array.to_csv('%s-gps.csv' % (fi))
     return array
