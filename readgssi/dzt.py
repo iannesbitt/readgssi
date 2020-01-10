@@ -45,7 +45,7 @@ def readtime(bytes):
     yr = int(dtbits[0:7], 2) + 1980     # year, stored as 1980+(0:127)
     return datetime(yr, mo, day, hr, mins, sec2, 0, tzinfo=pytz.UTC)
 
-def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, verbose=False):
+def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, antfreq=[None,None,None,None], verbose=False):
     """
     Function to unpack and return things the program needs from the file header, and the data itself.
 
@@ -121,6 +121,13 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     header['rhf_depth'] = header['dzt_depth'] * (math.sqrt(header['dzt_epsr']) / math.sqrt(header['rhf_epsr'])) # range based on user epsr
     #rhf_coordx = struct.unpack('<ff', infile.read(8))[0] # this is definitely useless
 
+    freq = [None, None, None, None]
+    for i in range(header['rh_nchan']):
+        try:
+            freq[i] = int(list(antfreq)[i])
+        except (TypeError, IndexError):
+            freq[i] = 200
+
     # read frequencies for multiple antennae
     for chan in list(range(header['rh_nchan'])):
         if chan == 0:
@@ -134,7 +141,10 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
             header['known_ant'][chan] = True
         except KeyError:
             header['known_ant'][chan] = False
-            header['antfreq'][chan] = int("".join(takewhile(str.isdigit, header['rh_ant'][chan].replace('D5','').replace('D6','')))) # hoping this works
+            try:
+                header['antfreq'][chan] = int("".join(takewhile(str.isdigit, header['rh_ant'][chan].replace('D5','').replace('D6','')))) # hoping this works
+            except ValueError:
+                header['antfreq'][chan] = freq
             #header['antfreq'][chan] = int(header['rh_antname'][chan].replace('D5','').replace('D6',''))
 
     infile.seek(113) # skip to something that matters
@@ -185,7 +195,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
         num_items = -1
             
     # read in and transpose data
-    data = np.fromfile(infile, dtype, offset=start_offset, count=num_items).reshape(-1,(header['rh_nsamp']*header['rh_nchan'])).T
+    data = np.fromfile(infile, dtype, count=num_items).reshape(-1,(header['rh_nsamp']*header['rh_nchan'])).T # offset=start_offset,
 
     header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
     header['cr_true'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['dzt_epsr'])

@@ -81,7 +81,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
             if verbose:
                 fx.printmsg('reading...')
                 fx.printmsg('input file:         %s' % (infile))
-            r = readdzt(infile, gps=normalize, spm=spm, start_scan=start_scan, num_scans=num_scans, epsr=epsr, verbose=verbose)
+            r = readdzt(infile, gps=normalize, spm=spm, start_scan=start_scan, num_scans=num_scans, epsr=epsr, antfreq=antfreq, verbose=verbose)
             # time zero per channel
             r[0]['timezero'] = [None, None, None, None]
             for i in range(r[0]['rh_nchan']):
@@ -110,12 +110,12 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
             ANT[r[0]['rh_antname'][chan]]
         except KeyError as e:
             print('--------------------WARNING - PLEASE READ---------------------')
-            fx.printmsg('WARNING: could not read frequency for antenna name %s' % e)
+            fx.printmsg('WARNING: could not read frequency for antenna name "%s"' % e)
             if antfreq:
-                fx.printmsg('using user-specified antenna frequency.')
+                fx.printmsg('using user-specified antenna frequency. Please ensure frequency value or list of values is correct.')
                 r[0]['antfreq'] = antfreq
             else:
-                fx.printmsg('WARNING: trying to use frequency of %s MHz (estimated)...' % (r[0]['antfreq'][chan]))
+                fx.printmsg('WARNING: trying to use frequencies of %s MHz (estimated)...' % (r[0]['antfreq'][chan]))
             fx.printmsg('more info: rh_ant=%s' % (r[0]['rh_ant']))
             fx.printmsg('           known_ant=%s' % (r[0]['known_ant']))
             fx.printmsg("please submit a bug report with this warning, the antenna name and frequency")
@@ -191,7 +191,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
                                 gain=gain)
 
         if plotting:
-            plot.radargram(ar=img_arr[ar], header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose,
+            plot.radargram(ar=img_arr[ar], ant=ar, header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose,
                            figsize=figsize, dpi=dpi, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
                            colorbar=colorbar, noshow=noshow, outfile=outfile, win=win, title=title,
                            zero=r[0]['timezero'][ar], zoom=zoom)
@@ -280,7 +280,9 @@ def main():
                     outfile = os.path.expanduser(outfile) # expand tilde, see above
         if opt in ('-a', '--antfreq'):
             try:
-                antfreq = round(abs(float(arg)),1)
+                antfreq = [None, None, None, None]
+                for i in range(len(list(arg))):
+                    antfreq[i] = round(abs(float(arg)),1)
                 fx.printmsg('user specified frequency value of %s MHz will be overwritten if DZT header has valid antenna information.' % antfreq)
             except ValueError:
                 fx.printmsg('ERROR: %s is not a valid decimal or integer frequency value.' % arg)

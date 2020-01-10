@@ -53,13 +53,14 @@ def spectrogram(ar, header, freq, tr='auto', verbose=True):
     sg.spectrogram(data=trace, samp_rate=samp_rate, wlen=samp_rate/1000, per_lap = 0.99, dbscale=True,
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
 
-def radargram(ar, header, freq, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
+def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
               colormap='gray', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', zero=2,
               zoom=[0,0,0,0], dpi=150, verbose=False):
     """
     Function that creates, modifies, and saves matplotlib plots of radargram images. For usage information, see :doc:`plotting`.
 
     :param numpy.ndarray ar: The radar array
+    :param int ant: Antenna channel number
     :param dict header: Radar file header dictionary
     :param int freq: Antenna frequency
     :param float plotsize: The height of the output plot in inches
@@ -196,8 +197,12 @@ def radargram(ar, header, freq, figsize='auto', gain=1, stack=1, x='seconds', z=
     if colorbar:
         fig.colorbar(img)
     if title:
+        try:
+            antfreq = freq[ant]
+        except TypeError:
+            antfreq = freq
         title = '%s - %s MHz - stacking: %s - gain: %s' % (
-                    os.path.basename(header['infile']), freq, stack, gain)
+                    os.path.basename(header['infile']), antfreq, stack, gain)
         if win:
             if win == 0:
                 win = 'full'
