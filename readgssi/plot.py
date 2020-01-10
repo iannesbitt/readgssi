@@ -54,7 +54,7 @@ def spectrogram(ar, header, freq, tr='auto', verbose=True):
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
 
 def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
-              colormap='gray', colorbar=False, noshow=False, win=None, outfile='readgssi_plot', zero=2,
+              colormap='gray', colorbar=False, absval=False, noshow=False, win=None, outfile='readgssi_plot', zero=2,
               zoom=[0,0,0,0], dpi=150, verbose=False):
     """
     Function that creates, modifies, and saves matplotlib plots of radargram images. For usage information, see :doc:`plotting`.
@@ -71,6 +71,7 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
     :param bool title: Whether to add a title to the figure. Defaults to True.
     :param matplotlib.colors.Colormap colormap: The matplotlib colormap to use, defaults to 'gray' which is to say: the same as the default RADAN colormap
     :param bool colorbar: Whether to draw the colorbar. Defaults to False.
+    :param bool absval: Whether to draw the array with an absolute value scale. Defaults to False.
     :param bool noshow: Whether to suppress the matplotlib figure GUI window. Defaults to False, meaning the dialog will be displayed.
     :param int win: Window size for background removal filter :py:func:`readgssi.filtering.bgr` to display in plot title.
     :param str outfile: The name of the output file. Defaults to 'readgssi_plot.png' in the current directory.
@@ -96,20 +97,29 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
             fx.printmsg('plotting with gain=%s...' % gain)
         fig, ax = plt.subplots()
 
-    zmin = 0
     mean = np.mean(ar)
-    if mean > 1000:
-        fx.printmsg('WARNING: mean pixel value is very high. consider filtering with -t')
-    std = np.std(ar)
-    ll = mean - (std * 3) # lower color limit
-    ul = mean + (std * 3) # upper color limit
     if verbose:
         fx.printmsg('image stats')
         fx.printmsg('size:               %sx%s' % (ar.shape[0], ar.shape[1]))
         fx.printmsg('mean:               %.3f' % mean)
+
+    if absval:
+        fx.printmsg('plotting absolute value of array gradient')
+        ar = np.abs(np.gradient(ar, axis=1))
+        flip = 1
+        ll = np.min(ar)
+        ul = np.max(ar)
+        std = np.std(ar)
+    else:
+        if mean > 1000:
+            fx.printmsg('WARNING: mean pixel value is very high. consider filtering with -t')
+        flip = 1
+        std = np.std(ar)
+        ll = mean - (std * 3) # lower color limit
+        ul = mean + (std * 3) # upper color limit
         fx.printmsg('stdev:              %.3f' % std)
-        fx.printmsg('lower color limit:  %.2f [mean - (3 * stdev)]' % ll)
-        fx.printmsg('upper color limit:  %.2f [mean + (3 * stdev)]' % ul)
+        fx.printmsg('lower color limit:  %.2f [mean - (3 * stdev)]' % (ll))
+        fx.printmsg('upper color limit:  %.2f [mean + (3 * stdev)]' % (ul))
 
     # X scaling routine
     if (x == None) or (x in 'seconds'): # plot x as time by default
@@ -135,6 +145,7 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
         xlabel = 'Time (s)'
         xscale = ar.shape[1]/xmax
 
+    zmin = 0
     # Z scaling routine
     if (z == None) or (z in 'nanoseconds'): # plot z as time by default
         zmax = header['ns_per_zsample'] * ar.shape[0] * 10**9
@@ -169,13 +180,13 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
         if verbose:
             fx.printmsg('attempting to plot with colormap %s' % (colormap))
         img = ax.imshow(ar, cmap=colormap, clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
-                     norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
+                     norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=flip,
                                             vmin=ll, vmax=ul), extent=extent)
     except:
         fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using gray instead' % colormap)
         fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
         img = ax.imshow(ar, cmap='gray', clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
-                     norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=1,
+                     norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=flip,
                                             vmin=ll, vmax=ul), extent=extent)
 
     # zooming

@@ -12,7 +12,8 @@ def printmsg(msg):
     print('%s - %s' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), msg))
 
 def naming(outfile=None, infile_basename=None, chans=[1], chan=0, normalize=False, zero=None, stack=1, reverse=False,
-           bgr=False, win=None, gain=None, dewow=None, freqmin=None, freqmax=None, plotting=None, zoom=None):
+           bgr=False, win=None, gain=None, dewow=None, freqmin=None, freqmax=None, plotting=None, zoom=None,
+           absval=False):
     """
     The Dr. Seth W. Campbell Honorary Naming Scheme
 
@@ -51,6 +52,7 @@ def naming(outfile=None, infile_basename=None, chans=[1], chan=0, normalize=Fals
     :param int freqmax: The upper corner of the bandpass filter if applicable. Defaults to None.
     :param int plotting: Stand-in for whether or not a plot was generated. The integer represents the plot height. Defaults to None.
     :param list[int,int,int,int] zoom: The zoom extents applied to the image. Defaults to None.
+    :param bool absval: Whether or not the plot is displayed with absolute value of gradient. Defaults to False.
     """
     if outfile == None:
         outfile = '%s' % (os.path.join(infile_basename))
@@ -73,6 +75,8 @@ def naming(outfile=None, infile_basename=None, chans=[1], chan=0, normalize=Fals
         outfile = '%sRv' % (outfile)
     if plotting:
         outfile = '%sG%s' % (outfile, int(gain))
+    if absval:
+        outfile = '%sAbs' % (outfile)
     if zoom:
         outfile = '%sZ' % (outfile)
         for ex in zoom:

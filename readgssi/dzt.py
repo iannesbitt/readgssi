@@ -152,7 +152,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     header['rh_version'] = ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
     header['rh_system'] = ord(vsbyte) >> 3 # the system type (values in UNIT={...} dictionary above)
 
-    if header['rh_system'] == 14:   # hardcoded because this is so frustrating
+    if header['rh_system'] == 14:   # hardcoded because this is so frustrating. assuming no other antennas can be paired with SS Mini XT
         header['rh_antname'] = ['SSMINIXT', None, None, None]
         header['antfreq'] = [2700, None, None, None]
         header['known_ant'] = [True, False, False, False]

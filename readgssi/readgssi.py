@@ -34,7 +34,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
              plotting=False, figsize=7, dpi=150, stack=1, x='seconds',
              z='nanoseconds', histogram=False, colormap='gray', colorbar=False,
              zero=[None,None,None,None], gain=1, freqmin=None, freqmax=None, 
-             reverse=False, bgr=False, win=0, dewow=False,
+             reverse=False, bgr=False, win=0, dewow=False, absval=False,
              normalize=False, specgram=False, noshow=False, spm=None,
              start_scan=0, num_scans=-1, epsr=None, title=True, zoom=[0,0,0,0]):
     """
@@ -63,6 +63,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
     :param int bgr: Background removal filter applied after stacking (:py:func:`readgssi.filtering.bgr`). Defaults to :py:data:`False` (off). :py:data:`bgr=True` must be accompanied by a valid value for :py:data:`win`.
     :param int win: Window size for background removal filter (:py:func:`readgssi.filtering.bgr`). If :py:data:`bgr=True` and :py:data:`win=0`, the full-width row average will be subtracted from each row. If :py:data:`bgr=True` and :py:data:`win=50`, a moving window will calculate the average of 25 cells on either side of the current cell, and subtract that average from the cell value, using :py:func:`scipy.ndimage.uniform_filter1d` with :py:data:`mode='constant'` and :py:data:`cval=0`. This is useful for removing non-uniform horizontal average, but the tradeoff is that it creates ghost data half the window size away from vertical figures, and that a window size set too low will obscure any horizontal layering longer than the window size.
     :param bool dewow: Whether to apply a vertical dewow filter (experimental). See :py:func:`readgssi.filtering.dewow`.
+    :param bool absval: Whether to apply absolute value to the array when plotting.
     :param bool normalize: Distance normalization (:py:func:`readgssi.arrayops.distance_normalize`). Defaults to :py:data:`False`.
     :param bool specgram: Produce a spectrogram of a trace in the array using :py:func:`readgssi.plot.spectrogram`. Defaults to :py:data:`False` (if :py:data:`True`, defaults to a trace roughly halfway across the profile). This is mostly for debugging and is not currently accessible from the command line.
     :param bool noshow: If :py:data:`True`, this will suppress the matplotlib interactive window and simply save a file. This is useful for processing many files in a folder without user input.
@@ -188,13 +189,13 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
             outfile = fx.naming(infile_basename=infile_basename, chans=chans, chan=ar, normalize=normalize,
                                 zero=r[0]['timezero'][ar], stack=stack, reverse=reverse, bgr=bgr, win=win,
                                 dewow=dewow, freqmin=freqmin, freqmax=freqmax, plotting=plotting,
-                                gain=gain)
+                                gain=gain, absval=absval)
 
         if plotting:
             plot.radargram(ar=img_arr[ar], ant=ar, header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose,
                            figsize=figsize, dpi=dpi, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
                            colorbar=colorbar, noshow=noshow, outfile=outfile, win=win, title=title,
-                           zero=r[0]['timezero'][ar], zoom=zoom)
+                           zero=r[0]['timezero'][ar], zoom=zoom, absval=absval)
 
         if histogram:
             plot.histogram(ar=img_arr[ar], verbose=verbose)
@@ -241,7 +242,7 @@ def main():
     zero = [None,None,None,None]
     zoom = [0,0,0,0]
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
-    reverse, freqmin, freqmax, specgram, normalize, spm, epsr = None, None, None, None, None, None, None
+    reverse, freqmin, freqmax, specgram, normalize, spm, epsr, absval = None, None, None, None, None, None, None, None
     colormap = 'gray'
     x, z = 'seconds', 'nanoseconds'
     gain = 1
@@ -249,10 +250,10 @@ def main():
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plotting=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hVqd:i:a:o:f:p:s:r:RNwnmc:bg:Z:E:t:x:z:Te:D:',
+        opts, args = getopt.getopt(sys.argv[1:],'hVqd:i:a:o:f:p:s:r:RNwnmc:bg:Z:E:t:x:z:Te:D:A',
             ['help', 'version', 'quiet','spm=','input=','antfreq=','output=','format=','plot=','stack=','bgr=',
             'reverse', 'normalize','dewow','noshow','histogram','colormap=','colorbar','gain=',
-            'zero=','epsr=','bandpass=', 'xscale=', 'zscale=', 'titleoff', 'zoom=', 'dpi='])
+            'zero=','epsr=','bandpass=', 'xscale=', 'zscale=', 'titleoff', 'zoom=', 'dpi=', 'absval'])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
         fx.printmsg('ERROR: invalid argument(s) supplied')
@@ -431,6 +432,8 @@ def main():
                 colormap = arg
         if opt in ('-b', '--colorbar'):
             colorbar = True
+        if opt in ('-A', '--absval'):
+            absval = True
         if opt in ('-g', '--gain'):
             if arg:
                 try:
@@ -468,7 +471,7 @@ def main():
                  figsize=figsize, stack=stack, verbose=verbose, histogram=histogram, x=x, z=z,
                  colormap=colormap, colorbar=colorbar, reverse=reverse, gain=gain, bgr=bgr, win=win,
                  zero=zero, normalize=normalize, dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax,
-                 spm=spm, epsr=epsr, title=title, zoom=zoom)
+                 spm=spm, epsr=epsr, title=title, zoom=zoom, absval=absval)
         if verbose:
             fx.printmsg('done with %s' % infile)
         print('')
