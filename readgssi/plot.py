@@ -152,7 +152,7 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
         zlabel = 'Two-way time (ns)'
     else:
         if z in ('mm', 'cm', 'm'): # plot z as TWTT based on unit and cr/rhf_epsr value
-            zmax = header['rhf_depth'] - header['rhf_top']
+            zmax = header['rhf_depth']
             if 'cm' in z:
                 zmax = zmax * 100.
             if 'mm' in z:
