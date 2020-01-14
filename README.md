@@ -270,7 +270,7 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 
 #### known bugs:
 - scipy 1.2.x causes errors when filtering. use scipy 1.3.0 to avoid.
-- improper handling of pauses during lines (issue [#20](https://github.com/readgssi/issues/20))
+- improper handling of pauses during lines (issue [#20](https://github.com/iannesbitt/readgssi/issues/20))
 
 ## future
 - explicit documentation
