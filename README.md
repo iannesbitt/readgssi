@@ -270,15 +270,15 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 
 #### known bugs:
 - scipy 1.2.x causes errors when filtering. use scipy 1.3.0 to avoid.
-- color bar shows up too large on some plots (matplotlib bug)
-- short lines have axis limits that end up tall and narrow, which may cut off titles (plot sizing information may need to be calculated differently)
+- improper handling of pauses during lines (issue [#20](https://github.com/readgssi/issues/20))
 
 ## future
 - explicit documentation
 - automatic script testing for smoother dev
 - create a class for surveyline objects, similar to [`obspy.core.trace.Trace`](https://docs.obspy.org/packages/autogen/obspy.core.trace.Trace.html)
 - GPS transcription from CSV with fields like `mark name, lon, lat, elev, time`
-- Use GPS altitude to adjust z position across profile
+- ability to use GPS altitude to adjust z position across profile
+- ability to highlight user marks as vertical dashed lines, and ground truth depths as horizontal lines
 - GUI-based geologic/dielectric layer picking
   - layer velocity calculation (using minimum of clustered hyperbola tail angle measurements, or manual input)
   - velocity-based depth adjustments
