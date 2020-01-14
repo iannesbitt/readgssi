@@ -223,15 +223,30 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
         plt.tight_layout()#pad=fig.get_size_inches()[1]/4.) # then it's ok to call tight_layout()
     else:
         try:
-            plt.tight_layout(w_pad=2, h_pad=1)
-            fx.printmsg('WARNING: axis lengths are funky. current axis sizes may cut off text. please adjust manually in matplotlib gui.')
+            # the old way of handling
+            #plt.tight_layout(w_pad=2, h_pad=1)
+
+            # the new way of handling
+            fx.printmsg('WARNING: axis lengths are funky. using alternative sizing method. please adjust manually in matplotlib gui.')
+            figManager = plt.get_current_fig_manager()
+            try:
+                figManager.window.showMaximized()
+            except:
+                figManager.resize(*figManager.window.maxsize())
+            for item in ([ax.xaxis.label, ax.yaxis.label] +
+                        ax.get_xticklabels() + ax.get_yticklabels()):
+                item.set_fontsize(5)
+            ax.title.set_fontsize(7)
+            plt.draw()
+            fig.canvas.start_event_loop(0.1)
+            plt.tight_layout()
         except:
             fx.printmsg('WARNING: tight_layout() raised an error because axis lengths are funky. please adjust manually in matplotlib gui.')
     if outfile != 'readgssi_plot':
         # if outfile doesn't match this then save fig with the outfile name
         if verbose:
             fx.printmsg('saving figure as %s.png' % (outfile))
-        plt.savefig('%s.png' % (outfile), bbox_inches='tight')
+        plt.savefig('%s.png' % (outfile), dpi=dpi, bbox_inches='tight')
     else:
         # else someone has called this function from outside and forgotten the outfile field
         if verbose:
