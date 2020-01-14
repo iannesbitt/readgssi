@@ -30,7 +30,8 @@ def reducex(ar, by=1, chnum=1, number=1, verbose=False):
 
     """
     if verbose:
-        fx.printmsg('%s/%s reducing %sx%s chunk by a factor of %s...' % (chnum, number, ar.shape[0], ar.shape[1], by))
+        if chnum/10 == int(chnum/10):
+            fx.printmsg('%s/%s reducing %sx%s chunk by a factor of %s...' % (chnum, number, ar.shape[0], ar.shape[1], by))
     return ar[:,::by]
 
 def stack(ar, stack='auto', verbose=False):
