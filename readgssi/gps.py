@@ -7,6 +7,7 @@ from geopy.distance import geodesic
 import readgssi.functions as fx
 from readgssi.constants import TZ
 from math import sin, cos, sqrt, atan2, radians
+from shutil import copyfile
 
 """
 contains functions for reading gps data from various formats
@@ -236,3 +237,21 @@ def readdzg(fi, frmt, header, verbose=False):
             fx.printmsg('writing GPS to %s-gps.csv' % (fi))
         array.to_csv('%s-gps.csv' % (fi))
     return array
+
+
+
+def pause_correct(gps, dzg_file, verbose=False):
+    output_file = dzg_file
+    backup_file = dzg_file + '.bak'
+    if os.path.isfile(dzg_file):
+        if not os.path.isfile(backup_file): # always make sure there is a backup
+            if verbose:
+                fx.printmsg('backing up original DZG file to %s' % (backup_file))
+            copyfile(dzg_file, backup_file)
+        else:
+            dzg_file = backup_file          # if there is a backup, we always want to draw from it because it is the original
+
+    else:
+        fx.printmsg('no dzg file found at (%s)' % (dzg_file))
+
+    return new_gps
