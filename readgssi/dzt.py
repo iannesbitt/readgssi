@@ -7,6 +7,7 @@ from itertools import takewhile
 from readgssi.gps import readdzg
 import readgssi.functions as fx
 from readgssi.constants import *
+from readgssi.dzx import get_user_marks, get_picks
 
 """
 helper module for reading information from GSSI DZT files
@@ -67,6 +68,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     # fx.printmsg('fixed header size: '+str(packed_size)+'\\n')
     '''
     infile_gps = os.path.splitext(infile)[0] + ".DZG"
+    infile_dzx = os.path.splitext(infile)[0] + ".DZX"
     infile = open(infile, 'rb')
     header = {}
     header['infile'] = infile.name
@@ -236,6 +238,23 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
                     gps = []
     else:
         fx.printmsg('WARNING: no DZG file found for GPS input')
+
+    header['marks'] = []
+    header['picks'] = {}
+
+    if os.path.isfile(infile_dzx):
+        header['marks'] = get_user_marks(infile_dzx, verbose=verbose)
+        header['picks'] = get_picks(infile_dzx, verbose=verbose)
+    else:
+        fx.printmsg('WARNING: could not find DZX file to read metadata. Trying to read array for marks...')
+
+        tnums = np.ndarray.tolist(data[0])  # the first row of the array is trace number
+        usr_marks = np.ndarray.tolist(data[1])  # when the system type is SIR3000, the second row should be user marks (otherwise these are in the DZX, see note below)
+        for t in tnums:
+            if usr_marks[t] > 0:
+                header['marks'].append(t)
+        fx.printmsg('DZT marks read successfully. marks: %s' % len(header['marks']))
+        fx.printmsg('                            traces: %s' % header['marks'])
 
     return [header, data, gps]
 

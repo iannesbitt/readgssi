@@ -11,6 +11,44 @@ def printmsg(msg):
     """
     print('%s - %s' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), msg))
 
+def genericerror(filetype='file'):
+    """Prints a standard message for a generic error using the `gpx2dzg.functions.printmsg()` function.
+    This is called from functions in `gpx2dzg.io`.
+
+    Parameters
+    ----------
+    filetype : str
+        The type of file this message is about. Used to format error string.
+    """
+    printmsg('please attach this %s to a new github issue (https://github.com/iannesbitt/readgssi/issues/new)' % filetype)
+    printmsg('        or send it to ian.nesbitt@gmail.com in order to have the format assessed. please also')
+    printmsg('        include the output of the program (i.e. copy and paste this text and the text above in')
+    printmsg('        the message) as this will drastically speed up my ability to help you! thanks!')
+    printmsg('  ~!~>  I am happy to help but please note that I am not responsible for the content of your')
+    printmsg('  ~!~>  files, only the working-ness of this software. I appreciate your understanding!')
+
+def dzxerror(e=''):
+    """Prints an error message then calls `gpx2dzg.functions.genericerror()` and passes `filetype='DZX'`.
+
+    Parameters
+    ----------
+    e : str
+        The error message to print.
+    """
+    printmsg('ERROR TEXT: %s' % e)
+    genericerror('DZX')
+
+def dzterror(e=''):
+    """Prints an error message then calls `gpx2dzg.functions.genericerror()` and passes `filetype='DZT'`.
+
+    Parameters
+    ----------
+    e : str
+        The error message to print.
+    """
+    printmsg('ERROR TEXT: %s' % e)
+    genericerror('DZT')
+
 def naming(outfile=None, infile_basename=None, chans=[1], chan=0, normalize=False, zero=None, stack=1, reverse=False,
            bgr=False, win=None, gain=None, dewow=None, freqmin=None, freqmax=None, plotting=None, zoom=None,
            absval=False):

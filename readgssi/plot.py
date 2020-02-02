@@ -55,7 +55,7 @@ def spectrogram(ar, header, freq, tr='auto', verbose=True):
 
 def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
               colormap='gray', colorbar=False, absval=False, noshow=False, win=None, outfile='readgssi_plot', zero=2,
-              zoom=[0,0,0,0], dpi=150, verbose=False):
+              zoom=[0,0,0,0], dpi=150, showmarks=False, verbose=False):
     """
     Function that creates, modifies, and saves matplotlib plots of radargram images. For usage information, see :doc:`plotting`.
 
@@ -78,6 +78,7 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
     :param int zero: The zero point. This represents the number of samples sliced off the top of the profile by the timezero option in :py:func:`readgssi.readgssi.readgssi`.
     :param list[int,int,int,int] zoom: Zoom extents for matplotlib plots. Must pass a list of four integers: :py:data:`[left, right, up, down]`. Since the z-axis begins at the top, the "up" value is actually the one that displays lower on the page. All four values are axis units, so if you are working in nanoseconds, 10 will set a limit 10 nanoseconds down. If your x-axis is in seconds, 6 will set a limit 6 seconds from the start of the survey. It may be helpful to display the matplotlib interactive window at full extents first, to determine appropriate extents to set for this parameter. If extents are set outside the boundaries of the image, they will be set back to the boundaries. If two extents on the same axis are the same, the program will default to plotting full extents for that axis.
     :param int dpi: The dots per inch value to use when creating images. Defaults to 150.
+    :param bool showmarks: Whether to plot user marks as vertical lines. Defaults to False.
     :param bool verbose: Verbose, defaults to False
     """
 
@@ -188,6 +189,13 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
         img = ax.imshow(ar, cmap='gray', clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=flip,
                                             vmin=ll, vmax=ul), extent=extent)
+
+    # user marks
+    if showmarks:
+        if verbose:
+            fx.printmsg('plotting marks at traces: %s' % header['marks'])
+        for mark in header['marks']:
+            plt.axvline(x=mark/xscale, color='r', linestyle=(0, (14,14)), linewidth=1, alpha=0.7)
 
     # zooming
     if zoom != [0,0,0,0]: # if zoom is set

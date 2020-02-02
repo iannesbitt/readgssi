@@ -117,9 +117,10 @@ def readdzg(fi, frmt, header, verbose=False):
                 fx.printmsg("         and attach the verbose output of this script plus a zip of the DZT and DZG files you're working with.")
                 rmcwarn = False
             if (rmc and gga) and (rowrmc != rowgga):
-                fx.printmsg('WARNING: GGA and RMC sentences are not recorded at the same rate! This could cause unforseen problems!')
-                fx.printmsg('    rmc: %i records' % rowrmc)
-                fx.printmsg('    gga: %i records' % rowgga)
+                if verbose:
+                    fx.printmsg('WARNING: GGA and RMC sentences are not recorded at the same rate! This could cause unforseen problems!')
+                    fx.printmsg('    rmc: %i records' % rowrmc)
+                    fx.printmsg('    gga: %i records' % rowgga)
             if verbose:
                 ss0, ss1, ss2 = '', '', ''
                 if gga:
@@ -278,7 +279,7 @@ def pause_correct(header, dzg_file, threshold=0.25, verbose=False):
         dzg_file = backup_file              # we always want to draw from the backup and write to the main DZG file
 
         # pandas ninja maneuvers to get a list of pause boundaries
-        orig_gps = readdzg(fi=backup_file, frmt='dzg', header=header, verbose=verbose)  # get original GPS values
+        orig_gps = readdzg(fi=backup_file, frmt='dzg', header=header, verbose=False)    # get original GPS values
         orig_gps['groups'] = pd.cut(orig_gps.velocity,[-1,threshold,100000])            # segment file into groups based on velocity
         orig_gps['cats'] = (orig_gps.groups != orig_gps.groups.shift()).cumsum()        # give each group a number
         orig_gps['threshold'] = 0                                                       # create threshold column

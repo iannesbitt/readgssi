@@ -38,7 +38,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
              reverse=False, bgr=False, win=0, dewow=False, absval=False,
              normalize=False, specgram=False, noshow=False, spm=None,
              start_scan=0, num_scans=-1, epsr=None, title=True, zoom=[0,0,0,0],
-             pausecorrect=False):
+             pausecorrect=False, showmarks=False):
     """
     This is the primary directive function. It coordinates calls to reading, filtering, translation, and plotting functions, and should be used as the overarching processing function in most cases.
 
@@ -77,6 +77,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
     :param list[int,int,int,int] zoom: Zoom extents to set programmatically for matplotlib plots. Must pass a list of four integers: :py:data:`[left, right, up, down]`. Since the z-axis begins at the top, the "up" value is actually the one that displays lower on the page. All four values are axis units, so if you are working in nanoseconds, 10 will set a limit 10 nanoseconds down. If your x-axis is in seconds, 6 will set a limit 6 seconds from the start of the survey. It may be helpful to display the matplotlib interactive window at full extents first, to determine appropriate extents to set for this parameter. If extents are set outside the boundaries of the image, they will be set back to the boundaries. If two extents on the same axis are the same, the program will default to plotting full extents for that axis.
     :rtype: header (:py:class:`dict`), radar array (:py:class:`numpy.ndarray`), gps (False or :py:class:`pandas.DataFrame`)
     :param bool pausecorrect: If :py:data:`True`, search the DZG file for pauses, where GPS keeps recording but radar unit does not, and correct them if necessary. Defaults to :py:data:`False`.
+    :param bool showmarks: If :py:data:`True`, display mark locations in plot. Defaults to :py:data:`False`.
     """
 
     if infile:
@@ -135,37 +136,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
 
     # set up list of arrays
     img_arr = arr[:r[0]['rh_nchan']*r[0]['rh_nsamp']] # test if we understand data structure. arrays should be stacked nchan*nsamp high
-    sys_marks = np.ndarray.tolist(arr[0])  # the first row of the array is trace number
-    usr_marks = np.ndarray.tolist(arr[1])  # when the system type is SIR3000, the second row should be user marks (otherwise these are in the DZX, see note below)
-    '''
-## user marks look like this in unproccesed DZX:
-<DZX xmlns="www.geophysical.com/DZX/1.02">
-    <File>
-        <Profile>
-            <WayPt>
-                <scan>1351</scan>
-                <mark>User</mark>
-                <name>Mark1</name>
-            </WayPt>
-        </Profile>
-    </File>
-</DZX>
 
-## user marks look like this in processed DZX:
-<DZX xmlns="www.geophysical.com/DZX/1.02">
-  <ProfileGroup>
-    <File>
-      <Profile>
-        <WayPt>
-          <scan>1351</scan>
-          <mark>User</mark>
-          <name>Mark1</name>
-        </WayPt>
-      </Profile>
-    </File>
-  </ProfileGroup>
-</DZX>
-    '''
     new_arr = {}
     for ar in chans:
         a = []
@@ -233,7 +204,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
             plot.radargram(ar=img_arr[ar], ant=ar, header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose,
                            figsize=figsize, dpi=dpi, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
                            colorbar=colorbar, noshow=noshow, outfile=outfile, win=win, title=title,
-                           zero=r[0]['timezero'][ar], zoom=zoom, absval=absval)
+                           zero=r[0]['timezero'][ar], zoom=zoom, absval=absval, showmarks=showmarks)
 
         if histogram:
             plot.histogram(ar=img_arr[ar], verbose=verbose)
@@ -280,7 +251,7 @@ def main():
     zero = [None,None,None,None]
     zoom = [0,0,0,0]
     infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
-    reverse, freqmin, freqmax, specgram, normalize, spm, epsr, absval, pausecorrect = None, None, None, None, None, None, None, None, None
+    reverse, freqmin, freqmax, specgram, normalize, spm, epsr, absval, pausecorrect, showmarks = None, None, None, None, None, None, None, None, None, None
     colormap = 'gray'
     x, z = 'seconds', 'nanoseconds'
     gain = 1
@@ -288,10 +259,11 @@ def main():
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
 # variables that can be passed to a body function: (infile, outfile, antfreq=None, frmt, plotting=False, stack=1)
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hVqd:i:a:o:f:p:s:r:RNwnmc:bg:Z:E:t:x:z:Te:D:AP',
+        opts, args = getopt.getopt(sys.argv[1:],'hVqd:i:a:o:f:p:s:r:RNwnmc:bg:Z:E:t:x:z:Te:D:APM',
             ['help', 'version', 'quiet','spm=','input=','antfreq=','output=','format=','plot=','stack=','bgr=',
             'reverse', 'normalize','dewow','noshow','histogram','colormap=','colorbar','gain=',
-            'zero=','epsr=','bandpass=', 'xscale=', 'zscale=', 'titleoff', 'zoom=', 'dpi=', 'absval','pausecorrect'])
+            'zero=','epsr=','bandpass=', 'xscale=', 'zscale=', 'titleoff', 'zoom=', 'dpi=', 'absval','pausecorrect',
+            'showmarks'])
     # the 'no option supplied' error
     except getopt.GetoptError as e:
         fx.printmsg('ERROR: invalid argument(s) supplied')
@@ -467,6 +439,8 @@ def main():
                 epsr = None
         if opt in ('-m', '--histogram'):
             histogram = True
+        if opt in ('-M', '--showmarks'):
+            showmarks = True
         if opt in ('-c', '--colormap'):
             if arg:
                 colormap = arg
@@ -511,7 +485,8 @@ def main():
                  figsize=figsize, stack=stack, verbose=verbose, histogram=histogram, x=x, z=z,
                  colormap=colormap, colorbar=colorbar, reverse=reverse, gain=gain, bgr=bgr, win=win,
                  zero=zero, normalize=normalize, dewow=dewow, noshow=noshow, freqmin=freqmin, freqmax=freqmax,
-                 spm=spm, epsr=epsr, title=title, zoom=zoom, absval=absval, pausecorrect=pausecorrect)
+                 spm=spm, epsr=epsr, title=title, zoom=zoom, absval=absval, pausecorrect=pausecorrect,
+                 showmarks=showmarks)
         if verbose:
             fx.printmsg('done with %s' % infile)
         print('')
