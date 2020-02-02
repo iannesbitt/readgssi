@@ -72,14 +72,12 @@ def get_user_marks(infile, verbose=False):
                                 if 'WayPt' in gchild.tag:
                                     usermark = False
                                     for ggchild in gchild:
-                                        print(ggchild.tag)
                                         if 'scan' in ggchild.tag:
                                             mark = int(ggchild.text)
                                         if 'mark' in ggchild.tag:
                                             if ggchild.text == 'User':
                                                 usermark = True
                                     if usermark:
-                                        print(mark)
                                         dzxmarks.append(mark)
 
             assert len(dzxmarks) > 1
