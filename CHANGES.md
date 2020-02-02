@@ -1,5 +1,16 @@
 # Changelog
 
+## changes since 0.0.16
+- merged [#19](https://github.com/iannesbitt/readgssi/pull/19) from [teshaw](https://github.com/teshaw) which allows the user to specify partial read parameters for DZT files
+- reintroduced a testing feature which creates CSV files from DZG records, in order to easily import location information to GIS
+- added support for the StructureScan Mini XT which suffered from the unfortunate fate of having an antenna named 'none'
+- improved handling of multiple user-specified frequencies
+- adding the ability to plot the absolute value of the down-trace gradient, which can increase faint layer visibility at the cost of wave front resolution
+- now use `rf_top` to correct depths, a major bug in previous versions
+- limited distance normalization console output to one message every ten chunks (in the future, this will be controlled with a \r statement)
+- added pause correction function to fix DZG/DZT trace number offset when collection is paused and GPS is active
+- added ability to plot user marks as vertical lines (similar to the output on the controller itself)
+
 ## changes since 0.0.15
 - fixed [#14](https://github.com/iannesbitt/readgssi/issues/14) which incorrectly asserted that user-set samples per meter was negative when it was not (sign was flipped) but processed the file correctly regardless
 - moved zoom calculation and automatic file naming to their own functions
