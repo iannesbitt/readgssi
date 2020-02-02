@@ -28,6 +28,7 @@ from readgssi import arrayops
 from readgssi import config
 from readgssi.constants import *
 from readgssi.dzt import *
+from readgssi.gps import pause_correct
 
 
 def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
@@ -155,11 +156,11 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
   <ProfileGroup>
     <File>
       <Profile>
-          <WayPt>
-            <scan>1351</scan>
-            <mark>User</mark>
-            <name>Mark1</name>
-          </WayPt>
+        <WayPt>
+          <scan>1351</scan>
+          <mark>User</mark>
+          <name>Mark1</name>
+        </WayPt>
       </Profile>
     </File>
   </ProfileGroup>
@@ -173,8 +174,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
 
     if pausecorrect:
         fx.printmsg('correcting GPS errors created by user-initiated recording pauses...')
-        pause_correct(gps=r[2], sys_marks=sys_marks, usr_marks=usr_marks, dzg_file=os.path.splitext(infile)[0] + ".DZG",
-                      verbose=verbose)
+        r[2] = pause_correct(header=r[0], dzg_file=os.path.splitext(infile)[0] + ".DZG", verbose=verbose)
 
     img_arr = new_arr # overwrite
     del arr, new_arr

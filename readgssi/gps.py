@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import pynmea2
 import math
+import os
 import numpy as np
 import pandas as pd
 from geopy.distance import geodesic
@@ -240,18 +241,99 @@ def readdzg(fi, frmt, header, verbose=False):
 
 
 
-def pause_correct(gps, dzg_file, verbose=False):
-    output_file = dzg_file
-    backup_file = dzg_file + '.bak'
-    if os.path.isfile(dzg_file):
-        if not os.path.isfile(backup_file): # always make sure there is a backup
+def pause_correct(header, dzg_file, threshold=0.25, verbose=False):
+    '''
+    This is a streamlined way of removing pauses from DZG files and re-assigning trace values.
+    GSSI controllers have a bug in which GPS sentences are collected with increasing trace numbers even though radar trace collection is stopped.
+    This results in a misalignment between GPS and radar traces of the same number.
+    This function attempts to realign the trace numbering in the GPS file by identifying stops via a calculated velocity field.
+
+    Disclaimer: this function will identify and remove ALL pauses longer than 3 epochs and renumber the traces accordingly.
+    Obviously this can have unintended consequences if the radar controller remains collecting data during these periods.
+    Please be extremely cautious and only use this functionality on files you know have radar pauses that are accompanied by movement pauses.
+    A backup of the original DZG file is made each time this function is run on a file, which means that if you make a mistake, you can simply copy the DZG backup (.DZG.bak) and overwrite the output (.DZG).
+
+    Any time you are working with original files, it is always good to have a "working" and "raw" copy of your data.
+    Experimental functionality in readgssi cannot be held responsible for its actions in modifying data. You are responsible for keeping a raw backup of your data just in case.
+
+    A detailed explanation of each step taken by this function is available in the code comments.
+
+    :param dict header: File header produced by :py:func:`readgssi.dzt.readdzt`
+    :param str dzg_file: DZG GPS file (the original .DZG, not the backup)
+    :param float threshold: Numerical velocities threshold, under which will be considered a "pause"
+    :param bool verbose: Verbose, defaults to False
+    :rtype: corrected, de-paused GPS data (pandas.DataFrame)
+    '''
+    output_file = dzg_file                  # we need RADAN and readgssi to find the modified DZG file
+    backup_file = dzg_file + '.bak'         # so we back it up and rewrite the original
+    # ensuring a DZG backup
+    if os.path.isfile(dzg_file):            # if there is a DZG
+        if not os.path.isfile(backup_file): # if there is not a backup, make one
             if verbose:
                 fx.printmsg('backing up original DZG file to %s' % (backup_file))
             copyfile(dzg_file, backup_file)
-        else:
-            dzg_file = backup_file          # if there is a backup, we always want to draw from it because it is the original
+        else:                               # if there already is a backup
+            if verbose:
+                fx.printmsg('found backed up DZG file %s' % (backup_file))
+        dzg_file = backup_file              # we always want to draw from the backup and write to the main DZG file
+
+        # pandas ninja maneuvers to get a list of pause boundaries
+        orig_gps = readdzg(fi=backup_file, frmt='dzg', header=header, verbose=verbose)  # get original GPS values
+        orig_gps['groups'] = pd.cut(orig_gps.velocity,[-1,threshold,100000])            # segment file into groups based on velocity
+        orig_gps['cats'] = (orig_gps.groups != orig_gps.groups.shift()).cumsum()        # give each group a number
+        orig_gps['threshold'] = 0                                                       # create threshold column
+        orig_gps.loc[3:-3, 'threshold'] = threshold                                     # ignoring start and end epochs, assign threshold
+        orig_gps['mask'] = orig_gps['velocity'] < orig_gps['threshold']                 # where does velocity fall beneath threshold
+        exceeds = orig_gps[orig_gps['mask'] == True]                                    # create a view based on non exceedence rows
+        bounds = []
+        if exceeds.cats.count() > 0:                                                    # test whether any exceedences were detected
+            for i in range(exceeds.cats.max() + 1):                                     # for each group in the view
+                if exceeds[exceeds['cats'] == i].count().cats > 3:                      # are there more than 3 epochs in the group?
+                    bounds.append([exceeds[exceeds['cats'] == i].iloc[0].name,          # if so create a data point in the list
+                                   exceeds[exceeds['cats'] == i].iloc[-1].name,         # with time and trace number of boundary
+                                   exceeds[exceeds['cats'] == i].iloc[0].trace,
+                                   exceeds[exceeds['cats'] == i].iloc[-1].trace])
+
+        def new_row_value(trace):   # quick and dirty function to figure out new trace number
+            subtract = 0
+            for pause in bounds:
+                if (trace >= pause[2]) and (trace >= pause[3]):
+                    subtract = subtract + pause[3] - pause[2]
+            return trace - subtract
+
+        if verbose:
+            fx.printmsg('found %s pause periods' % len(bounds))
+        if len(bounds) > 0:
+            i = 1
+            for pause in bounds:
+                fx.printmsg('pause %s' % i)
+                fx.printmsg('  start trace: %s (%s)' % (pause[2], pause[0]))
+                fx.printmsg('    end trace: %s (%s)' % (pause[3], pause[1]))
+                i += 1
+
+            if verbose:
+                fx.printmsg('transcribing DZG file with new trace values...')
+            with open(dzg_file, 'r') as gf:         # gps file
+                with open(output_file, 'w') as tf:  # transcription file
+                    subtract_amount = 0
+                    for ln in gf: # loop over backup file line by line
+                        if '$GSSIS' in ln:
+                            write = True            # assume this line will get written 
+                            # if it's a GSSI sentence, grab the scan/trace number
+                            trace = int(ln.split(',')[1])
+                            for pause in bounds:    # for each pause period
+                                if (trace >= pause[2]) and (trace <= pause[3]): # if trace is in pause bounds
+                                    write = False   # do not write this group of sentences to file
+                            if write:               # if it is outside of a pause period
+                                tf.write(ln.replace(str(trace), str(new_row_value(trace))))   # replace trace value and write line to file
+                        else:                       # if it's not a GSSI proprietary line
+                            if write:               # and it's outside a pause priod
+                                tf.write(ln)        # transcribe line to new file
+
+            if verbose:
+                fx.printmsg('done. reading new values into array...')
 
     else:
         fx.printmsg('no dzg file found at (%s)' % (dzg_file))
 
-    return new_gps
+    return readdzg(fi=output_file, frmt='dzg', header=header, verbose=verbose)
