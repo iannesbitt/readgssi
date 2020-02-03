@@ -250,9 +250,12 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
 
         tnums = np.ndarray.tolist(data[0])  # the first row of the array is trace number
         usr_marks = np.ndarray.tolist(data[1])  # when the system type is SIR3000, the second row should be user marks (otherwise these are in the DZX, see note below)
-        for t in tnums:
-            if usr_marks[t] > 0:
-                header['marks'].append(t)
+        i = 0
+        for m in usr_marks:
+            if m > 0:
+                print(m)
+                header['marks'].append(i)
+            i += 1
         fx.printmsg('DZT marks read successfully. marks: %s' % len(header['marks']))
         fx.printmsg('                            traces: %s' % header['marks'])
 
