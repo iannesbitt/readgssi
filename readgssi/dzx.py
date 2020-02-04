@@ -39,7 +39,8 @@ def get_user_marks(infile, verbose=False):
     '''
     Find and return a list of user marks from a dzx. Since there are multiple types of dzx without good documentation, this is prone to errors.
 
-    
+    :param str infile: The full DZX file path
+    :param bool verbose: Verbosity, defaults to False
     '''
     dzxmarks = []
     with open(infile, 'r') as f:

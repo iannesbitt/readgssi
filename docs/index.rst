@@ -28,6 +28,7 @@ The project's source repository is `here <https://github.com/iannesbitt/readgssi
 
     readgssi
     dzt
+    dzx
     arrayops
     filtering
     functions
