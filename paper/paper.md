@@ -23,9 +23,9 @@ bibliography: paper.bib
 
  `readgssi` contains functions to filter, stack, and distance-normalize radar data, and enhance gain of radargrams in similar manner to the equivalent functionality in RADAN. `readgssi` can be used from the command line and thus is scriptable in both Unix and Python environments, and can also be used as a translation tool to extract data as numpy arrays or save as text files.
 
- A pre-release version of `readgssi` has been used to quality-check radar data during field campaigns by the author and other geophysics students and faculty at the University of Maine and Colby College. The software has also been used to create presentation-quality radargram figures for conference publications [@Nesbitt:2018; @Nesbitt:2019]. The source code for `readgssi` is available on GitHub (https://github.com/iannesbitt/readgssi/) and has been archived to Zenodo [@zenodo].
+ A pre-release version of `readgssi` has been used to quality-check radar data during field campaigns by the author and other geophysics students and faculty at the University of Maine and Colby College. The software has also been used to create presentation-quality radargram figures for conference publications [@Nesbitt:2018; @Nesbitt:2019]. The source code for `readgssi` is available on GitHub (https://github.com/iannesbitt/readgssi/) and has been archived to Zenodo (doi:[10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)).
 
--![readgssi in action.](readgssi.png)
+![readgssi in action.](readgssi.png)
 
 # Acknowledgements
 
