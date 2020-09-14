@@ -10,6 +10,7 @@
 - limited distance normalization console output to one message every ten chunks (in the future, this will be controlled with a \r statement)
 - added pause correction function to fix DZG/DZT trace number offset when collection is paused and GPS is active
 - added ability to plot user marks as vertical lines (similar to the output on the controller itself)
+- corrected module call documentation for plotting ([#23](https://github.com/iannesbitt/readgssi/issues/23))
 
 ## changes since 0.0.15
 - fixed [#14](https://github.com/iannesbitt/readgssi/issues/14) which incorrectly asserted that user-set samples per meter was negative when it was not (sign was flipped) but processed the file correctly regardless
