@@ -271,7 +271,6 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 
 #### known bugs:
 - scipy 1.2.x causes errors when filtering. use scipy 1.3.0 to avoid.
-- improper handling of pauses during lines (issue [#20](https://github.com/iannesbitt/readgssi/issues/20))
 
 ## future
 - explicit documentation
@@ -279,7 +278,7 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 - create a class for surveyline objects, similar to [`obspy.core.trace.Trace`](https://docs.obspy.org/packages/autogen/obspy.core.trace.Trace.html)
 - GPS transcription from CSV with fields like `mark name, lon, lat, elev, time`
 - ability to use GPS altitude to adjust z position across profile
-- ability to highlight user marks as vertical dashed lines, and ground truth depths as horizontal lines
+- ability to ground truth depths as horizontal lines
 - GUI-based geologic/dielectric layer picking
   - layer velocity calculation (using minimum of clustered hyperbola tail angle measurements, or manual input)
   - velocity-based depth adjustments
