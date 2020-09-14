@@ -64,7 +64,8 @@ Gain is added using the :code:`gain=int` setting. Let's set that to 60, since th
 .. code-block:: python
 
     readgssi.readgssi(infile='DZT__001.DZT', outfile='0b.png', frmt=None,
-                      zero=[233], plotting=True, figsize=5, stack='auto', gain=60)
+                      zero=[233], plotting=True, figsize=5, stack='auto',
+                      gain=60)
 
 .. code-block:: bash
 
