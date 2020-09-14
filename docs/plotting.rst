@@ -25,7 +25,7 @@ Plotting in Python just means setting :code:`plot=7` or another integer, which r
 
     from readgssi import readgssi
     readgssi.readgssi(infile='DZT__001.DZT', outfile='0a.png', frmt=None,
-                      zero=[233], plot=5)
+                      zero=[233], plotting=True, figsize=5)
 
 .. image:: _static/0a.png
     :width: 100%
@@ -64,7 +64,7 @@ Gain is added using the :code:`gain=int` setting. Let's set that to 60, since th
 .. code-block:: python
 
     readgssi.readgssi(infile='DZT__001.DZT', outfile='0b.png', frmt=None,
-                      zero=[233], plot=5, stack='auto', gain=60)
+                      zero=[233], plotting=True, figsize=5, stack='auto', gain=60)
 
 .. code-block:: bash
 
@@ -92,8 +92,8 @@ To set the Z-axis to display material depth, we use two separate flags: :code:`e
 .. code-block:: python
 
     readgssi.readgssi(infile='DZT__001.DZT', outfile='0c.png', frmt=None,
-                      zero=[233], plot=5, stack='auto', gain=60,
-                      epsr=80, z='m')
+                      zero=[233], plotting=True, figsize=5, stack='auto',
+                      gain=60, epsr=80, z='m')
 
 .. code-block:: bash
 
@@ -127,8 +127,8 @@ Let's say you are really enamored with the way that last figure looks, and you n
 .. code-block:: python
 
     readgssi.readgssi(infile='DZT__001.DZT', outfile='0d.png', frmt=None,
-                      zero=[233], plot=5, stack='auto', gain=60,
-                      epsr=80, z='m', title=False, dpi=300)
+                      zero=[233], plotting=True, figsize=5, stack='auto',
+                      gain=60, epsr=80, z='m', title=False, dpi=300)
 
 .. code-block:: bash
 
@@ -152,8 +152,8 @@ Changing colormaps is as simple as specifying a valid :class:`matplotlib.colors.
 .. code-block:: python
 
     readgssi.readgssi(infile='DZT__001.DZT', outfile='0e.png', frmt=None,
-                      zero=[233], plot=5, stack='auto', gain=60,
-                      epsr=80, z='m', title=False, dpi=300,
+                      zero=[233], plotting=True, figsize=5, stack='auto',
+                      epsr=80, z='m', title=False, dpi=300, gain=60,
                       colormap='seismic')
 
 .. code-block:: bash
