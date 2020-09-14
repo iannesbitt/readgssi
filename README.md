@@ -264,6 +264,7 @@ This command will process only the 16 files in the numeric sequence between and 
 - Ian Nesbitt ([@iannesbitt](https://github.com/iannesbitt), author)
 - François-Xavier Simon ([@fxsimon](https://github.com/fxsimon))
 - Thomas Paulin ([@thomaspaulin](https://github.com/thomaspaulin))
+- teshaw ([@teshaw](https://github.com/teshaw))
 
 ### citation suggestion:
 Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-source tool to read and plot GSSI ground-penetrating radar data. [doi:10.5281/zenodo.1439119](https://dx.doi.org/10.5281/zenodo.1439119)
