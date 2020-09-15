@@ -277,5 +277,3 @@ def dzt(ar, outfile_abspath, header, verbose=False):
     infile.close()
     outfile.close()
 
-
-int(bin(int(vsbyte, base=16)).lstrip('0b')[0:3], 2)
