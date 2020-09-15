@@ -230,6 +230,7 @@ def dzt(ar, outfile_abspath, header, verbose=False):
     outfile = open(outfile_abspath, 'wb')
 
     for i in range(header['rh_nchan']):
+        # header should read all values per-channel no matter what
         outfile.write(struct.pack('<h', header['rh_tag']))
         outfile.write(struct.pack('<h', header['rh_data']))
         outfile.write(struct.pack('<h', header['rh_nsamp']))
