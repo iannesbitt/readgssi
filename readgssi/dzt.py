@@ -19,21 +19,27 @@ readdzt_gprpy() restructures output for use specifically with
 Alain Plattner's GPRPy software (https://github.com/NSGeophysics/GPRPy).
 """
 
-def readtime(bytes):
+def readtime(bytez):
     """
-    Function to read dates from the :code:`rfDateByte` binary objects in DZT headers. 
+    Function to read dates from :code:`rfDateByte` binary objects in DZT headers. 
 
-    DZT :code:`rfDateByte` objects are 32 bits of binary (01001010111110011010011100101111), structured as little endian u5u6u5u5u4u7 where all numbers are base 2 unsigned int (uX) composed of X number of bits. It's an unnecessarily high level of compression for a single date object in a filetype that often contains tens or hundreds of megabytes of array information anyway.
+    DZT :code:`rfDateByte` objects are 32 bits of binary (01001010111110011010011100101111),
+    structured as little endian u5u6u5u5u4u7 where all numbers are base 2 unsigned int (uX)
+    composed of X number of bits. Four bytes is an unnecessarily high level of compression
+    for a single date object in a filetype that often contains tens or hundreds of megabytes
+    of array information anyway.
 
-    So this function reads (seconds/2, min, hr, day, month, year-1980) then does seconds*2 and year+1980 and returns a datetime object.
+    So this function reads (seconds/2, min, hr, day, month, year-1980) then does
+    seconds*2 and year+1980 and returns a datetime object.
 
-    For more information on :code:`rfDateByte`, see page 55 of `GSSI's SIR 3000 manual <https://support.geophysical.com/gssiSupport/Products/Documents/Control%20Unit%20Manuals/GSSI%20-%20SIR-3000%20Operation%20Manual.pdf>`_.
+    For more information on :code:`rfDateByte`, see page 55 of
+    `GSSI's SIR 3000 manual <https://support.geophysical.com/gssiSupport/Products/Documents/Control%20Unit%20Manuals/GSSI%20-%20SIR-3000%20Operation%20Manual.pdf>`_.
 
     :param bytes bytes: The :code:`rfDateByte` to be decoded
     :rtype: :py:class:`datetime.datetime`
     """
     dtbits = ''
-    rfDateByte = (b for b in bytes)
+    rfDateByte = (b for b in bytez)
     for byte in rfDateByte:                    # assemble the binary string
         for i in range(8):
             dtbits += str((byte >> i) & 1)
@@ -73,6 +79,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     header = {}
     header['infile'] = infile.name
     header['known_ant'] = [None, None, None, None]
+    header['dzt_ant'] = [None, None, None, None]
     header['rh_ant'] = [None, None, None, None]
     header['rh_antname'] = [None, None, None, None]
     header['antfreq'] = [None, None, None, None]
@@ -118,17 +125,36 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     else:
         header['rhf_epsr'] = struct.unpack('<f', infile.read(4))[0] # epsr (sometimes referred to as "dielectric permittivity")
         header['dzt_epsr'] = header['rhf_epsr']
-    header['rhf_top'] = struct.unpack('<f', infile.read(4))[0] # position in meters (useless?)
-    header['dzt_depth'] = struct.unpack('<f', infile.read(4))[0] # range in meters based on DZT rhf_epsr
-    header['rhf_depth'] = header['dzt_depth'] * (math.sqrt(header['dzt_epsr']) / math.sqrt(header['rhf_epsr'])) # range based on user epsr
-    #rhf_coordx = struct.unpack('<ff', infile.read(8))[0] # this is definitely useless
+    header['rhf_top'] = struct.unpack('<f', infile.read(4))[0] # from experimentation, it seems this is the data top position in meters
+    header['dzt_depth'] = struct.unpack('<f', infile.read(4))[0] # range in meters based on DZT rhf_epsr, before subtracting rhf_top
+    header['rhf_depth'] = header['dzt_depth'] * (math.sqrt(header['dzt_epsr']) / math.sqrt(header['rhf_epsr'])) # range based on user epsr, before subtracting rhf_top
+
+    # getting into largely useless territory (under "normal" operation)
+    header['rh_xstart'] = struct.unpack('<f', infile.read(4))[0] # starting x grid coordinate? part of rh_coordx
+    header['rh_xend'] = struct.unpack('<f', infile.read(4))[0] # ending x grid coordinate? part of rh_coordx
+    header['rhf_servo_level'] = struct.unpack('<f', infile.read(4))[0] # gain servo level
+    # 3 "reserved" bytes
+    infile.seek(81)
+    header['rh_accomp'] = struct.unpack('B', infile.read(1))[0] # Ant Conf component
+    header['rh_sconfig'] = struct.unpack('<h', infile.read(2))[0] # setup config number
+    header['rh_spp'] = struct.unpack('<h', infile.read(2))[0] # scans per pass
+    header['rh_linenum'] = struct.unpack('<h', infile.read(2))[0] # line number
+    header['rh_ystart'] = struct.unpack('<f', infile.read(4))[0] # starting y grid coordinate? part of rh_coordx
+    header['rh_yend'] = struct.unpack('<f', infile.read(4))[0] # ending y grid coordinate? part of rh_coordx
+    
+    header['rh_96'] = infile.read(1)
+    header['rh_lineorder'] = int('{0:08b}'.format(ord(vsbheader['rh_96']yte))[::-1][4:], 2)
+    header['rh_slicetype'] = int('{0:08b}'.format(ord(vsbheader['rh_96']yte))[::-1][:4], 2)
+    header['rh_dtype'] = struct.unpack('c', infile.read(1)) # no description of dtype
 
     freq = [None, None, None, None]
     for i in range(header['rh_nchan']):
         try:
             freq[i] = antfreq[i]
-        except (TypeError, IndexError):
+        except (TypeError, IndexError) as e:
             freq[i] = 200
+            print('WARNING: due to an error, antenna %s frequency was set to 200 MHz' % (i))
+            print('Error detail: %s' % (e))
 
     # read frequencies for multiple antennae
     for chan in list(range(header['rh_nchan'])):
@@ -136,7 +162,8 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
             infile.seek(98) # start of antenna section
         else:
             infile.seek(98 + (MINHEADSIZE*(chan))) # start of antenna bytes for channel n
-        header['rh_ant'][chan] = infile.read(14).decode('utf-8').split('\x00')[0]
+        header['dzt_ant'][chan] = infile.read(14)
+        header['rh_ant'][chan] = header['dzt_ant'][chan].decode('utf-8').split('\x00')[0]
         header['rh_antname'][chan] = header['rh_ant'][chan].rsplit('x')[0]
         try:
             header['antfreq'][chan] = ANT[header['rh_antname'][chan]]
@@ -151,8 +178,8 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
 
     infile.seek(113) # skip to something that matters
     vsbyte = infile.read(1) # byte containing versioning bits
-    header['rh_version'] = ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
-    header['rh_system'] = ord(vsbyte) >> 3 # the system type (values in UNIT={...} dictionary above)
+    header['rh_version'] = int('{0:08b}'.format(ord(vsbyte))[::-1][:3], 2) # ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
+    header['rh_system'] = int('{0:08b}'.format(ord(vsbyte))[::-1][3:], 2) # ord(vsbyte) >> 3 ## the system type (values in UNIT={...} dictionary in constants.py)
 
     if header['rh_system'] == 14:   # hardcoded because this is so frustrating. assuming no other antennas can be paired with SS Mini XT
         header['rh_antname'] = ['SSMINIXT', None, None, None]
