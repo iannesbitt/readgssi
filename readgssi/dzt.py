@@ -143,8 +143,8 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     header['rh_yend'] = struct.unpack('<f', infile.read(4))[0] # ending y grid coordinate? part of rh_coordx
     
     header['rh_96'] = infile.read(1)
-    header['rh_lineorder'] = int('{0:08b}'.format(ord(vsbheader['rh_96']yte))[::-1][4:], 2)
-    header['rh_slicetype'] = int('{0:08b}'.format(ord(vsbheader['rh_96']yte))[::-1][:4], 2)
+    header['rh_lineorder'] = int('{0:08b}'.format(ord(header['rh_96']))[::-1][4:], 2)
+    header['rh_slicetype'] = int('{0:08b}'.format(ord(header['rh_96']))[::-1][:4], 2)
     header['rh_dtype'] = struct.unpack('c', infile.read(1)) # no description of dtype
 
     freq = [None, None, None, None]
