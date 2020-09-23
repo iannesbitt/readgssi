@@ -233,7 +233,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
 
     header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
     header['cr_true'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['dzt_epsr'])
-    header['ns_per_zsample'] = (header['rhf_depth'] * 2) / (header['rh_nsamp'] * header['cr'])
+    header['ns_per_zsample'] = ((header['rhf_depth']-header['rhf_top']) * 2) / (header['rh_nsamp'] * header['cr'])
     header['samp_freq'] = 1 / ((header['dzt_depth'] * 2) / (header['rh_nsamp'] * header['cr_true']))
 
     try:
@@ -345,8 +345,9 @@ def header_info(header, data):
     if header['dzt_depth'] != header['rhf_depth']:
         fx.printmsg('sampling depth:     %.1f m (manually set - value from DZT: %.1f)' % (header['rhf_depth'], header['dzt_depth']))
     else:
-        fx.printmsg('sampling depth:     %.1f m' % (header['rhf_depth']))
+        fx.printmsg('sampling depth:     %.1f m' % (header['rhf_depth']-header['rhf_top']))
     fx.printmsg('"rhf_top":          %.1f m' % header['rhf_top'])
+    fx.printmsg('"rhf_depth":        %.1f m' % header['rhf_depth'])
     fx.printmsg('offset to data:     %i bytes' % header['data_offset'])
     if data.shape[1] == int(data.shape[1]):
         fx.printmsg('traces:             %i' % int(data.shape[1]/header['rh_nchan']))
