@@ -1,6 +1,9 @@
 # local
 testing/
 
+# visual studio
+.vscode/
+
 # taken from default python project gitignore
 
 # Byte-compiled / optimized / DLL files
