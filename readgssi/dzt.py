@@ -114,6 +114,12 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
         header['rhb_mdt'] = datetime(1980, 1, 1)
     header['rh_rgain'] = struct.unpack('<h', infile.read(2))[0] # offset to range gain function
     header['rh_nrgain'] = struct.unpack('<h', infile.read(2))[0] # size of range gain function
+    infile.seek(header['rh_rgain'])
+    try:
+        header['rgain_bytes'] = infile.read(header['rh_nrgain'])
+    except:
+        fx.printmsg('WARNING: Could not read range gain function')
+    infile.seek(44)
     header['rh_text'] = struct.unpack('<h', infile.read(2))[0] # offset to text
     header['rh_ntext'] = struct.unpack('<h', infile.read(2))[0] # size of text
     header['rh_proc'] = struct.unpack('<h', infile.read(2))[0] # offset to processing history
@@ -143,8 +149,8 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     header['rh_yend'] = struct.unpack('<f', infile.read(4))[0] # ending y grid coordinate? part of rh_coordx
     
     header['rh_96'] = infile.read(1)
-    header['rh_lineorder'] = int('{0:08b}'.format(ord(vsbheader['rh_96']yte))[::-1][4:], 2)
-    header['rh_slicetype'] = int('{0:08b}'.format(ord(vsbheader['rh_96']yte))[::-1][:4], 2)
+    header['rh_lineorder'] = int('{0:08b}'.format(ord(header['rh_96']))[::-1][4:], 2)
+    header['rh_slicetype'] = int('{0:08b}'.format(ord(header['rh_96']))[::-1][:4], 2)
     header['rh_dtype'] = struct.unpack('c', infile.read(1)) # no description of dtype
 
     freq = [None, None, None, None]
@@ -176,28 +182,32 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
                 header['antfreq'] = freq
             #header['antfreq'][chan] = int(header['rh_antname'][chan].replace('D5','').replace('D6',''))
 
-    infile.seek(113) # skip to something that matters
-    vsbyte = infile.read(1) # byte containing versioning bits
-    header['rh_version'] = int('{0:08b}'.format(ord(vsbyte))[::-1][:3], 2) # ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
-    header['rh_system'] = int('{0:08b}'.format(ord(vsbyte))[::-1][3:], 2) # ord(vsbyte) >> 3 ## the system type (values in UNIT={...} dictionary in constants.py)
+    header['rh_112'] = infile.read(1)
+    header['rh_lineorder'] = int('{0:08b}'.format(ord(header['rh_112']))[::-1][4:], 2)
+    header['rh_slicetype'] = int('{0:08b}'.format(ord(header['rh_112']))[::-1][:4], 2)
+
+    #infile.seek(113) # byte 113
+    header['vsbyte'] = infile.read(1) # byte containing versioning bits
+    header['rh_version'] = int('{0:08b}'.format(ord(header['vsbyte']))[::-1][:3], 2) # ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
+    header['rh_system'] = int('{0:08b}'.format(ord(header['vsbyte']))[::-1][3:], 2) # ord(vsbyte) >> 3 ## the system type (values in UNIT={...} dictionary in constants.py)
+    header['rh_name'] = infile.read(14)
+    header['rh_chksum'] = infile.read(1)
+    header['INFOAREA'] = infile.read(MINHEADSIZE-PAREASIZE-GPSAREASIZE)
+    header['rh_RGPS0'] = infile.read(RGPSSIZE)
+    header['rh_RGPS1'] = infile.read(RGPSSIZE)
 
     if header['rh_system'] == 14:   # hardcoded because this is so frustrating. assuming no other antennas can be paired with SS Mini XT
         header['rh_antname'] = ['SSMINIXT', None, None, None]
         header['antfreq'] = [2700, None, None, None]
         header['known_ant'] = [True, False, False, False]
 
-    infile.seek(header['rh_rgain'])
-    try:
-        header['rgain_bytes'] = infile.read(header['rh_nrgain'])
-    except:
-        pass
-
     if header['rh_data'] < MINHEADSIZE: # whether or not the header is normal or big-->determines offset to data array
-        infile.seek(MINHEADSIZE * header['rh_data'])
         header['data_offset'] = MINHEADSIZE * header['rh_data']
     else:
-        infile.seek(MINHEADSIZE * header['rh_nchan'])
         header['data_offset'] = MINHEADSIZE * header['rh_nchan']
+
+    curpos = infile.tell()
+    header['header_extra'] = infile.read(header['data_offset'] - curpos)
 
     if header['rh_bits'] == 8:
         dtype = np.uint8 # 8-bit unsigned

@@ -6,6 +6,9 @@ This module contains a number of variables that readgssi needs to perform physic
 
 MINHEADSIZE = 1024 # absolute minimum total header size
 PAREASIZE = 128 # fixed info header size
+RGPSSIZE = 9 # GPS record size
+GPSAREASIZE = RGPSSIZE * 2
+INFOAREASIZE = MINHEADSIZE - PAREASIZE - GPSAREASIZE
 
 TZ = pytz.timezone('UTC')
 
