@@ -215,6 +215,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
         dtype = np.uint16 # 16-bit unsigned
     else:
         dtype = np.int32 # 32-bit signed
+    header['dtype'] = dtype
     
     if start_scan != 0:
         try:
