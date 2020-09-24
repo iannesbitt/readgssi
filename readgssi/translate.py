@@ -262,7 +262,7 @@ def dzt(ar, outfile_abspath, header, verbose=False):
         outfile.write(struct.pack('<f', header('rh_xend'))) # part of rh_coordx
         outfile.write(struct.pack('<f', header('rhf_servo_level')))
         outfile.write(bytes(3)) # "reserved"
-        outfile.write(struct.pack('B', header['rh_accomp'])
+        outfile.write(struct.pack('B', header['rh_accomp']))
         outfile.write(struct.pack('<h', header['rh_sconfig']))
         outfile.write(struct.pack('<h', header['rh_spp']))
         outfile.write(struct.pack('<h', header['rh_linenum']))
