@@ -169,9 +169,12 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
                                                zerophase=True, verbose=verbose)
         if stack != 1:
             # horizontal stacking
-            img_arr[ar], stack = arrayops.stack(ar=img_arr[ar], stack=stack, verbose=verbose)
+            img_arr[ar], stack, r[0] = arrayops.stack(ar=img_arr[ar],
+                                                      header=header,
+                                                      stack=stack,
+                                                      verbose=verbose)
         else:
-            stack = 1
+            stack = 1 # just in case it's not an integer
         if bgr:
             # background removal
             img_arr[ar] = filtering.bgr(ar=img_arr[ar], header=r[0], win=win, verbose=verbose)

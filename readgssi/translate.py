@@ -273,16 +273,17 @@ def dzt(ar, outfile_abspath, header, verbose=False):
         outfile.write(struct.pack('c', header['rh_dtype']))
         outfile.write(header['dzt_ant'][i])
         outfile.write(header['rh_112'])
+        # byte 113
         outfile.write(header['vsbyte'])
         outfile.write(header['rh_name'])
         outfile.write(header['rh_chksum'])
         outfile.write(header['rh_chksum'])
+        # byte 128
         outfile.write(header['INFOAREA'])
         outfile.write(header['rh_RGPS0'])
         outfile.write(header['rh_RGPS1'])
         outfile.write(header['header_extra'])
-        ar.tofile(outfile, header['dtype'])
+        outfile.write(ar.tobytes(order=None))
 
-    infile.close()
     outfile.close()
 

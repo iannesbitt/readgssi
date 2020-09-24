@@ -15,7 +15,7 @@ def flip(ar, verbose=False):
         fx.printmsg('flipping radargram...')
     return ar.T[::-1].T
 
-def reducex(ar, by=1, chnum=1, number=1, verbose=False):
+def reducex(ar, header, by=1, chnum=1, number=1, verbose=False):
     """
     Reduce the number of traces in the array by a number. Not the same as :py:func:`stack` since it doesn't sum adjacent traces, however :py:func:`stack` uses it to resize the array prior to stacking.
 
@@ -32,9 +32,11 @@ def reducex(ar, by=1, chnum=1, number=1, verbose=False):
     if verbose:
         if chnum/10 == int(chnum/10):
             fx.printmsg('%s/%s reducing %sx%s chunk by a factor of %s...' % (chnum, number, ar.shape[0], ar.shape[1], by))
-    return ar[:,::by]
+    header['rhf_spm'] = header['rhf_spm'] / by
+    header['rhf_sps'] = header['rhf_sps'] / by
+    return ar[:,::by], header
 
-def stack(ar, stack='auto', verbose=False):
+def stack(ar, header, stack='auto', verbose=False):
     """
     Stacking algorithm. Stacking is the process of summing adjacent traces in order to reduce noise --- the thought being that random noise around zero will cancel out and data will either add or subtract, making it easier to discern.
 
@@ -69,7 +71,7 @@ def stack(ar, stack='auto', verbose=False):
             fx.printmsg('stacking %sx %s...' % (stack, am))
         i = list(range(stack))
         l = list(range(int(ar.shape[1]/stack)))
-        arr = np.copy(reducex(ar=ar, by=stack, verbose=verbose))
+        arr, header = np.copy(reducex(ar=ar, by=stack, header=header, verbose=verbose))
         for s in l:
             arr[:,s] = arr[:,s] + ar[:,s*stack+1:s*stack+stack].sum(axis=1)
     else:
@@ -78,7 +80,7 @@ def stack(ar, stack='auto', verbose=False):
             pass
         else:
             fx.printmsg('WARNING: no stacking applied. this can result in very large and awkwardly-shaped figures.')
-    return arr, stack
+    return arr, stack, header
 
 def distance_normalize(header, ar, gps, verbose=False):
     """
