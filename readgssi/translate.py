@@ -226,15 +226,17 @@ def dzt(ar, outfile_abspath, header, verbose=False):
     Assumptions:
     - constant velocity between marks (may be possible to add a check)
     '''
-    
-    outfile = open(outfile_abspath, 'wb')
+    if len(ar) > 1:
+        outfile_abspath = outfile_abspath.replace('c1', '')
+    outfile = open(outfile_abspath + '.DZT', 'wb')
 
-    for i in range(header['rh_nchan']):
+    for a in ar:
+        fx.printmsg('writing DZT header')
         # header should read all values per-channel no matter what
         outfile.write(struct.pack('<h', header['rh_tag']))
         outfile.write(struct.pack('<h', header['rh_data']))
         outfile.write(struct.pack('<h', header['rh_nsamp']))
-        outfile.write(struct.pack('<h', header['rh_bits']))
+        outfile.write(struct.pack('<h', 32))
         outfile.write(struct.pack('<h', header['rh_zero']))
         # byte 10
         outfile.write(struct.pack('<f', header['rhf_sps']))
@@ -259,8 +261,8 @@ def dzt(ar, outfile_abspath, header, verbose=False):
         outfile.write(struct.pack('<f', header['rhf_depth']))
         # byte 66
         outfile.write(struct.pack('<f', header['rh_xstart'])) # part of rh_coordx
-        outfile.write(struct.pack('<f', header('rh_xend'))) # part of rh_coordx
-        outfile.write(struct.pack('<f', header('rhf_servo_level')))
+        outfile.write(struct.pack('<f', header['rh_xend'])) # part of rh_coordx
+        outfile.write(struct.pack('<f', header['rhf_servo_level']))
         outfile.write(bytes(3)) # "reserved"
         outfile.write(struct.pack('B', header['rh_accomp']))
         outfile.write(struct.pack('<h', header['rh_sconfig']))
@@ -271,19 +273,35 @@ def dzt(ar, outfile_abspath, header, verbose=False):
         outfile.write(struct.pack('<f', header['rh_yend'])) # part of rh_coordy
         outfile.write(header['rh_96'])
         outfile.write(struct.pack('c', header['rh_dtype']))
-        outfile.write(header['dzt_ant'][i])
+        outfile.write(header['dzt_ant'][a])
         outfile.write(header['rh_112'])
         # byte 113
         outfile.write(header['vsbyte'])
         outfile.write(header['rh_name'])
         outfile.write(header['rh_chksum'])
-        outfile.write(header['rh_chksum'])
         # byte 128
         outfile.write(header['INFOAREA'])
         outfile.write(header['rh_RGPS0'])
         outfile.write(header['rh_RGPS1'])
-        outfile.write(header['header_extra'])
-        outfile.write(ar.tobytes(order=None))
+
+    outfile.write(header['header_extra'])
+
+    stack = []
+    for a in ar:
+        # replace zeroed rows
+        stack.append(np.zeros((header['timezero'][a], ar[a].shape[1]),
+                                    dtype=np.int32))
+        stack.append(ar[a])
+
+    writestack = np.vstack(tuple(stack))
+    sh = writestack.shape
+    writestack = writestack.T.reshape(-1)
+    print('writing %s data samples for %s channels (%s x %s)'
+          % (writestack.shape[0],
+             int(len(stack)/2),
+             sh[0], sh[1]))
+
+    outfile.write(writestack.tobytes(order=None))
 
     outfile.close()
 

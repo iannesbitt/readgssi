@@ -151,7 +151,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     header['rh_96'] = infile.read(1)
     header['rh_lineorder'] = int('{0:08b}'.format(ord(header['rh_96']))[::-1][4:], 2)
     header['rh_slicetype'] = int('{0:08b}'.format(ord(header['rh_96']))[::-1][:4], 2)
-    header['rh_dtype'] = struct.unpack('c', infile.read(1)) # no description of dtype
+    header['rh_dtype'] = infile.read(1) # no description of dtype
 
     freq = [None, None, None, None]
     for i in range(header['rh_nchan']):
@@ -162,6 +162,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
             print('WARNING: due to an error, antenna %s frequency was set to 200 MHz' % (i))
             print('Error detail: %s' % (e))
 
+    curpos = infile.tell()
     # read frequencies for multiple antennae
     for chan in list(range(header['rh_nchan'])):
         if chan == 0:
@@ -182,6 +183,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
                 header['antfreq'] = freq
             #header['antfreq'][chan] = int(header['rh_antname'][chan].replace('D5','').replace('D6',''))
 
+    infile.seek(curpos+14)
     header['rh_112'] = infile.read(1)
     header['rh_lineorder'] = int('{0:08b}'.format(ord(header['rh_112']))[::-1][4:], 2)
     header['rh_slicetype'] = int('{0:08b}'.format(ord(header['rh_112']))[::-1][:4], 2)
@@ -190,8 +192,8 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     header['vsbyte'] = infile.read(1) # byte containing versioning bits
     header['rh_version'] = int('{0:08b}'.format(ord(header['vsbyte']))[::-1][:3], 2) # ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
     header['rh_system'] = int('{0:08b}'.format(ord(header['vsbyte']))[::-1][3:], 2) # ord(vsbyte) >> 3 ## the system type (values in UNIT={...} dictionary in constants.py)
-    header['rh_name'] = infile.read(14)
-    header['rh_chksum'] = infile.read(1)
+    header['rh_name'] = infile.read(12)
+    header['rh_chksum'] = infile.read(2)
     header['INFOAREA'] = infile.read(MINHEADSIZE-PAREASIZE-GPSAREASIZE)
     header['rh_RGPS0'] = infile.read(RGPSSIZE)
     header['rh_RGPS1'] = infile.read(RGPSSIZE)
@@ -206,8 +208,8 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     else:
         header['data_offset'] = MINHEADSIZE * header['rh_nchan']
 
-    curpos = infile.tell()
-    header['header_extra'] = infile.read(header['data_offset'] - curpos)
+    infile.seek(MINHEADSIZE * header['rh_nchan'])
+    header['header_extra'] = infile.read(header['data_offset'] - (MINHEADSIZE * header['rh_nchan']))
 
     if header['rh_bits'] == 8:
         dtype = np.uint8 # 8-bit unsigned
@@ -240,7 +242,9 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
         num_items = -1
             
     # read in and transpose data
-    data = np.fromfile(infile, dtype, count=num_items).reshape(-1,(header['rh_nsamp']*header['rh_nchan'])).T # offset=start_offset,
+    data = np.fromfile(infile, dtype, count=num_items)
+    data = data.reshape(-1,(header['rh_nsamp']*header['rh_nchan'])) # offset=start_offset,
+    data = data.T
 
     header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
     header['cr_true'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['dzt_epsr'])

@@ -238,6 +238,10 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
             elif frmt in 'gprpy':
                 translate.gprpy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
                                 header=r[0], verbose=verbose)
+            elif frmt in 'dzt':
+                if ar == 0:
+                    translate.dzt(ar=img_arr, outfile_abspath=outfile_abspath,
+                                  header=r[0], verbose=verbose)
         if frmt in ('object', 'python'):
             return r[0], img_arr, r[2]
     
@@ -308,7 +312,9 @@ def main():
             # check whether the string is a supported format
             if arg:
                 arg = arg.lower()
-                if arg in ('csv', '.csv'):
+                if arg in ('.dzt', 'dzt', 'gssi', 'radan'):
+                    frmt = 'dzt'
+                elif arg in ('csv', '.csv'):
                     frmt = 'csv'
                 elif arg in ('sgy', 'segy', 'seg-y', '.sgy', '.segy', '.seg-y'):
                     frmt = 'segy'
@@ -322,9 +328,11 @@ def main():
                     plotting = True
                 else:
                     # else the user has given an invalid format
+                    fx.printmsg('Invalid file format given.')
                     fx.printmsg(config.help_text)
                     sys.exit(2)
             else:
+                fx.printmsg('No file format specified.')
                 fx.printmsg(config.help_text)
                 sys.exit(2)
         if opt in ('-s', '--stack'):
