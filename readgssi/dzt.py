@@ -155,12 +155,14 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
 
     freq = [None, None, None, None]
     for i in range(header['rh_nchan']):
-        try:
-            freq[i] = antfreq[i]
-        except (TypeError, IndexError) as e:
-            freq[i] = 200
-            print('WARNING: due to an error, antenna %s frequency was set to 200 MHz' % (i))
-            print('Error detail: %s' % (e))
+        if (antfreq != None) and (antfreq != [None, None, None, None]):
+            try:
+                freq[i] = antfreq[i]
+            except (TypeError, IndexError) as e:
+                freq[i] = 200
+                print('WARNING: due to an error, antenna %s frequency was set to 200 MHz' % (i))
+                print('Error detail: %s' % (e))
+
 
     curpos = infile.tell()
     # read frequencies for multiple antennae
@@ -185,13 +187,13 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
 
     infile.seek(curpos+14)
     header['rh_112'] = infile.read(1)
-    header['rh_lineorder'] = int('{0:08b}'.format(ord(header['rh_112']))[::-1][4:], 2)
-    header['rh_slicetype'] = int('{0:08b}'.format(ord(header['rh_112']))[::-1][:4], 2)
+    header['rh_lineorder'] = int('{0:08b}'.format(ord(header['rh_112']))[4:], 2)
+    header['rh_slicetype'] = int('{0:08b}'.format(ord(header['rh_112']))[:4], 2)
 
     #infile.seek(113) # byte 113
     header['vsbyte'] = infile.read(1) # byte containing versioning bits
-    header['rh_version'] = int('{0:08b}'.format(ord(header['vsbyte']))[::-1][:3], 2) # ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
-    header['rh_system'] = int('{0:08b}'.format(ord(header['vsbyte']))[::-1][3:], 2) # ord(vsbyte) >> 3 ## the system type (values in UNIT={...} dictionary in constants.py)
+    header['rh_version'] = int('{0:08b}'.format(ord(header['vsbyte']))[5:], 2) # ord(vsbyte) >> 5 # whether or not the system is GPS-capable, 1=no 2=yes (does not mean GPS is in file)
+    header['rh_system'] = int('{0:08b}'.format(ord(header['vsbyte']))[:5], 2) # ord(vsbyte) >> 3 ## the system type (values in UNIT={...} dictionary in constants.py)
     header['rh_name'] = infile.read(12)
     header['rh_chksum'] = infile.read(2)
     header['INFOAREA'] = infile.read(MINHEADSIZE-PAREASIZE-GPSAREASIZE)

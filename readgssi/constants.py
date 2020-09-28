@@ -29,7 +29,7 @@ UNIT = {
     7: 'StructureScan Mini',
     8: 'SIR 4000',
     9: 'SIR 30',
-    10: 'SIR 30', # 10 is undefined in documentation but SIR 30 according to Lynn's DZX
+    10: 'unknown system type',
     11: 'unknown system type',
     12: 'UtilityScan DF',
     13: 'HS',

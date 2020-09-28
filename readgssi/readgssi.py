@@ -116,8 +116,10 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
         except KeyError as e:
             print('--------------------WARNING - PLEASE READ---------------------')
             fx.printmsg('WARNING: could not read frequency for antenna name "%s"' % e)
-            if antfreq is not None:
+            if (antfreq != None) and (antfreq != [None, None, None, None]):
                 fx.printmsg('using user-specified antenna frequency. Please ensure frequency value or list of values is correct.')
+                fx.printmsg('old values: %s' % (r[0]['antfreq']))
+                fx.printmsg('new values: %s' % (antfreq))
                 r[0]['antfreq'] = antfreq
             else:
                 fx.printmsg('WARNING: trying to use frequencies of %s MHz (estimated)...' % (r[0]['antfreq'][chan]))
