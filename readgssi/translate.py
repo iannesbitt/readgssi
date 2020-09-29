@@ -247,7 +247,7 @@ def dzt(ar, outfile_abspath, header, verbose=False):
 
     '''
     Assumptions:
-    - constant velocity between marks (may be possible to add a check)
+    - constant velocity or distance between marks (may be possible to add a check)
     '''
     if len(ar) > 1:
         outfile_abspath = outfile_abspath.replace('c1', '')

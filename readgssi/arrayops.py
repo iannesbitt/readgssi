@@ -79,10 +79,26 @@ def stack(ar, header, stack='auto', verbose=False):
         else:
             fx.printmsg('WARNING: no stacking applied. this can result in very large and awkwardly-shaped figures.')
 
-    if header['rhf_sps'] != 0:
-        header['rhf_sps'] = header['rhf_sps'] / stack
-    if header['rhf_spm'] != 0:
-        header['rhf_spm'] = header['rhf_spm'] / stack
+    if header['rh_nchan'] == 1:
+        # this is a hack to prevent the rhf_spx vars from being changed multiple times
+        # when stacking a multichannel file. this will go away when each array has its
+        # own header and thus each can be dealt with individually.
+        if header['rhf_sps'] != 0:
+            header['rhf_sps'] = header['rhf_sps'] / stack
+        if header['rhf_spm'] != 0:
+            header['rhf_spm'] = header['rhf_spm'] / stack
+    else:
+        try:
+            if header['spx_updates']:
+                pass
+            else:
+                if header['rhf_sps'] != 0:
+                    header['rhf_sps'] = header['rhf_sps'] / stack
+                if header['rhf_spm'] != 0:
+                    header['rhf_spm'] = header['rhf_spm'] / stack
+                header['spx_updates'] = True
+        except KeyError:
+            header['spx_updates'] = False
 
     return header, arr, stack
 

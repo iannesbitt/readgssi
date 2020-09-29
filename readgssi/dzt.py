@@ -115,6 +115,7 @@ def readdzt(infile, gps=DataFrame(), spm=None, start_scan=0, num_scans=-1,
     header['rh_bits'] = struct.unpack('<h', infile.read(2))[0] # bits per data word
     header['rh_zero'] = struct.unpack('<h', infile.read(2))[0] # if sir-30 or utilityscan df, then repeats per sample; otherwise 0x80 for 8bit and 0x8000 for 16bit
     header['rhf_sps'] = struct.unpack('<f', infile.read(4))[0] # scans per second
+    header['dzt_sps'] = header['rhf_sps']
     header['rhf_spm'] = struct.unpack('<f', infile.read(4))[0] # scans per meter
     header['dzt_spm'] = header['rhf_spm']
     if spm:
