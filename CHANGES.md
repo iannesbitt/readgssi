@@ -1,5 +1,11 @@
 # Changelog
 
+## changes since 0.0.17
+- fixed the read of the byte that contains `rh_system` and `rh_version` in the header ([#26](https://github.com/iannesbitt/readgssi/issues/26))
+- fixed sampling depth interpretation ([#28](https://github.com/iannesbitt/readgssi/issues/28))
+- added DZT file output ([#29](https://github.com/iannesbitt/readgssi/pull/29))
+- added documentation for displaying absolute value of down-trace gradient in plots
+
 ## changes since 0.0.16
 - merged [#19](https://github.com/iannesbitt/readgssi/pull/19) from [teshaw](https://github.com/teshaw) which allows the user to specify partial read parameters for DZT files
 - reintroduced a testing feature which creates CSV files from DZG records, in order to easily import location information to GIS
