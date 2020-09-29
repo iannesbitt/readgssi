@@ -155,9 +155,9 @@ def readdzt(infile, gps=DataFrame(), spm=None, start_scan=0, num_scans=-1,
     else:
         header['rhf_epsr'] = struct.unpack('<f', infile.read(4))[0] # epsr (sometimes referred to as "dielectric permittivity")
         header['dzt_epsr'] = header['rhf_epsr']
-    header['rhf_top'] = struct.unpack('<f', infile.read(4))[0] # position in meters (useless?)
-    header['dzt_depth'] = struct.unpack('<f', infile.read(4))[0] # range in meters based on DZT rhf_epsr
-    header['rhf_depth'] = header['dzt_depth'] * (math.sqrt(header['dzt_epsr']) / math.sqrt(header['rhf_epsr'])) # range based on user epsr
+    header['rhf_top'] = struct.unpack('<f', infile.read(4))[0] # from experimentation, it seems this is the data top position in meters
+    header['dzt_depth'] = struct.unpack('<f', infile.read(4))[0] # range in meters based on DZT rhf_epsr, before subtracting rhf_top
+    header['rhf_depth'] = header['dzt_depth'] * (math.sqrt(header['dzt_epsr']) / math.sqrt(header['rhf_epsr'])) # range based on user epsr, before subtracting rhf_top
 
     # getting into largely useless territory (under "normal" operation)
     header['rh_xstart'] = struct.unpack('<f', infile.read(4))[0] # starting x grid coordinate? part of rh_coordx
@@ -186,7 +186,6 @@ def readdzt(infile, gps=DataFrame(), spm=None, start_scan=0, num_scans=-1,
                 freq[i] = 200
                 print('WARNING: due to an error, antenna %s frequency was set to 200 MHz' % (i))
                 print('Error detail: %s' % (e))
-
 
     curpos = infile.tell()
     # read frequencies for multiple antennae
@@ -274,7 +273,7 @@ def readdzt(infile, gps=DataFrame(), spm=None, start_scan=0, num_scans=-1,
 
     header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
     header['cr_true'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['dzt_epsr'])
-    header['ns_per_zsample'] = (header['rhf_depth'] * 2) / (header['rh_nsamp'] * header['cr'])
+    header['ns_per_zsample'] = ((header['rhf_depth']-header['rhf_top']) * 2) / (header['rh_nsamp'] * header['cr'])
     header['samp_freq'] = 1 / ((header['dzt_depth'] * 2) / (header['rh_nsamp'] * header['cr_true']))
 
     try:
@@ -399,8 +398,9 @@ def header_info(header, data):
     if header['dzt_depth'] != header['rhf_depth']:
         fx.printmsg('sampling depth:     %.1f m (manually set - value from DZT: %.1f)' % (header['rhf_depth'], header['dzt_depth']))
     else:
-        fx.printmsg('sampling depth:     %.1f m' % (header['rhf_depth']))
+        fx.printmsg('sampling depth:     %.1f m' % (header['rhf_depth']-header['rhf_top']))
     fx.printmsg('"rhf_top":          %.1f m' % header['rhf_top'])
+    fx.printmsg('"rhf_depth":        %.1f m' % header['rhf_depth'])
     fx.printmsg('offset to data:     %i bytes' % header['data_offset'])
     if header['shape'][1] == int(header['shape'][1]):
         fx.printmsg('traces:             %i' % int(header['shape'][1]/header['rh_nchan']))
