@@ -29,13 +29,13 @@ Output to DZT is easy.
 
 .. code-block:: python
     
-    readgssi.readgssi(infile='DZT__001.DZT', outfile='DZT__001.DZT', frmt='dzt')
+    readgssi.readgssi(infile='DZT__001.DZT', outfile='DZT__001-out.DZT', frmt='dzt')
 
 `bash:`
 
 .. code-block:: bash
     
-    readgssi -i DZT__001.DZT -o DZT__001.DZT -f dzt
+    readgssi -i DZT__001.DZT -o DZT__001-out.DZT -f dzt
 
 DZT of processed data
 -----------------------
@@ -46,14 +46,14 @@ It's common to process data before outputting. Here, we distance-normalize and f
 
 .. code-block:: python
     
-    readgssi.readgssi(infile='DZT__001.DZT', outfile='DZT__001.DZT', frmt='dzt',
+    readgssi.readgssi(infile='DZT__001.DZT', outfile='DZT__001-out.DZT', frmt='dzt',
                       normalize=True, freqmin=80, freqmax=120, bgr=0)
 
 `bash:`
 
 .. code-block:: bash
     
-    readgssi -i DZT__001.DZT -o DZT__001.DZT -f dzt -N -t 80-120 -r 0
+    readgssi -i DZT__001.DZT -o DZT__001-out.DZT -f dzt -N -t 80-120 -r 0
 
 
 ===========================
