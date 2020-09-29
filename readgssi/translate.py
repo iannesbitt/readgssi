@@ -211,9 +211,32 @@ def writetime(d):
 
 def dzt(ar, outfile_abspath, header, verbose=False):
     """
-    .. warning:: DZT output is not yet available.
+    .. warning:: DZT output is only currently compatible with single-channel files.
 
-    In the future, this function will output to GSSI DZT format.
+    This function will output a RADAN-compatible DZT file after processing.
+    This is useful to circumvent RADAN's distance-normalization bug
+    when the desired outcome is array migration.
+
+    Users can set DZT output via the command line by setting the
+    :code:`-f dzt` flag, or in Python by doing the following: ::
+
+        from readgssi.dzt import readdzt
+        from readgssi import translate
+        from readgssi.arrayops import stack, distance_normalize
+
+        # first, read a data file
+        header, data, gps = readdzt('FILE__001.DZT')
+
+        # do some stuff
+        # (distance normalization must be done before stacking)
+        for a in data:
+            header, data[a], gps = distance_normalize(header=header, ar=data[a], gps=gps)
+            header, data[a], stack = stack(header=header, ar=data[a], stack=10)
+
+        # output as modified DZT
+        translate.dzt(ar=data, outfile_abspath='FILE__001-DnS10.DZT', header=header)
+
+    This will output :code:`FILE__001-DnS10.DZT` as a distance-normalized DZT.
 
     :param numpy.ndarray ar: Radar array
     :param str infile_basename: Input file basename
@@ -228,15 +251,19 @@ def dzt(ar, outfile_abspath, header, verbose=False):
     '''
     if len(ar) > 1:
         outfile_abspath = outfile_abspath.replace('c1', '')
-    outfile = open(outfile_abspath + '.DZT', 'wb')
+    if not outfile_abspath.endswith(('.DZT', '.dzt')):
+        outfile_abspath = outfile_abspath + '.DZT'
+    
+    outfile = open(outfile_abspath, 'wb')
+    fx.printmsg('writing to: %s' % outfile.name)
 
-    for a in ar:
-        fx.printmsg('writing DZT header')
+    for i in range(header['rh_nchan']):
+        fx.printmsg('writing DZT header for channel %s' % (i))
         # header should read all values per-channel no matter what
         outfile.write(struct.pack('<h', header['rh_tag']))
         outfile.write(struct.pack('<h', header['rh_data']))
         outfile.write(struct.pack('<h', header['rh_nsamp']))
-        outfile.write(struct.pack('<h', 32))
+        outfile.write(struct.pack('<h', 32)) # rhf_bits - for simplicity, just hard-coding 32 bit
         outfile.write(struct.pack('<h', header['rh_zero']))
         # byte 10
         outfile.write(struct.pack('<f', header['rhf_sps']))
@@ -273,7 +300,7 @@ def dzt(ar, outfile_abspath, header, verbose=False):
         outfile.write(struct.pack('<f', header['rh_yend'])) # part of rh_coordy
         outfile.write(header['rh_96'])
         outfile.write(struct.pack('c', header['rh_dtype']))
-        outfile.write(header['dzt_ant'][a])
+        outfile.write(header['dzt_ant'][i])
         outfile.write(header['rh_112'])
         # byte 113
         outfile.write(header['vsbyte'])
@@ -283,25 +310,29 @@ def dzt(ar, outfile_abspath, header, verbose=False):
         outfile.write(header['INFOAREA'])
         outfile.write(header['rh_RGPS0'])
         outfile.write(header['rh_RGPS1'])
+        i += 1
 
     outfile.write(header['header_extra'])
 
     stack = []
-    for a in ar:
+    i = 0
+    for i in range(header['rh_nchan']):
         # replace zeroed rows
-        stack.append(np.zeros((header['timezero'][a], ar[a].shape[1]),
+        stack.append(np.zeros((header['timezero'][i], ar[i].shape[1]),
                                     dtype=np.int32))
-        stack.append(ar[a])
+        stack.append(ar[i])
+        i += 1
 
     writestack = np.vstack(tuple(stack))
     sh = writestack.shape
     writestack = writestack.T.reshape(-1)
-    print('writing %s data samples for %s channels (%s x %s)'
+    fx.printmsg('writing %s data samples for %s channels (%s x %s)'
           % (writestack.shape[0],
              int(len(stack)/2),
              sh[0], sh[1]))
 
-    outfile.write(writestack.tobytes(order=None))
+    # hard coded to write 32 bit signed ints to keep lossiness to a minimum
+    outfile.write(writestack.round().astype(np.int32, casting='unsafe').tobytes(order='C'))
 
     outfile.close()
 

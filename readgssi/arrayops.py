@@ -32,9 +32,7 @@ def reducex(ar, header, by=1, chnum=1, number=1, verbose=False):
     if verbose:
         if chnum/10 == int(chnum/10):
             fx.printmsg('%s/%s reducing %sx%s chunk by a factor of %s...' % (chnum, number, ar.shape[0], ar.shape[1], by))
-    header['rhf_spm'] = header['rhf_spm'] / by
-    header['rhf_sps'] = header['rhf_sps'] / by
-    return ar[:,::by], header
+    return ar[:,::by]
 
 def stack(ar, header, stack='auto', verbose=False):
     """
@@ -71,7 +69,7 @@ def stack(ar, header, stack='auto', verbose=False):
             fx.printmsg('stacking %sx %s...' % (stack, am))
         i = list(range(stack))
         l = list(range(int(ar.shape[1]/stack)))
-        arr, header = np.copy(reducex(ar=ar, by=stack, header=header, verbose=verbose))
+        arr = np.copy(reducex(ar=ar, by=stack, header=header, verbose=verbose))
         for s in l:
             arr[:,s] = arr[:,s] + ar[:,s*stack+1:s*stack+stack].sum(axis=1)
     else:
@@ -80,7 +78,13 @@ def stack(ar, header, stack='auto', verbose=False):
             pass
         else:
             fx.printmsg('WARNING: no stacking applied. this can result in very large and awkwardly-shaped figures.')
-    return arr, stack, header
+
+    if header['rhf_sps'] != 0:
+        header['rhf_sps'] = header['rhf_sps'] / stack
+    if header['rhf_spm'] != 0:
+        header['rhf_spm'] = header['rhf_spm'] / stack
+
+    return header, arr, stack
 
 def distance_normalize(header, ar, gps, verbose=False):
     """
@@ -95,7 +99,7 @@ def distance_normalize(header, ar, gps, verbose=False):
     :rtype: header (:py:class:`dict`), radar array (:py:class:`numpy.ndarray`), gps (False or :py:class:`pandas.DataFrame`)
 
     """
-    if ar[2] == []:
+    if gps.empty:
         if verbose:
             fx.printmsg('no gps information for distance normalization')
     else:
@@ -110,7 +114,7 @@ def distance_normalize(header, ar, gps, verbose=False):
         newdf = pd.DataFrame(index=pd.date_range(start=start, periods=ar.shape[1], freq=str(nanosec_samp_rate)+'N', tz='UTC'))
         norm_vel = pd.concat([norm_vel, newdf], axis=1).interpolate('time').bfill()
         del newdf
-        norm_vel = norm_vel.round().astype(int, casting='unsafe')
+        norm_vel = norm_vel.round().astype(int, errors='ignore')#, casting='unsafe')
 
         try:
             rm = int(round(ar.shape[1] / (norm_vel.shape[0] - ar.shape[1])))
@@ -128,13 +132,15 @@ def distance_normalize(header, ar, gps, verbose=False):
         on, i = 0, 0
         for c in np.array_split(ar, nvm, axis=1):
             # takes (array, [transform values to broadcast], axis)
-            p = np.repeat(c, norm_vel['normalized'].astype(int, casting='unsafe').values[on:on+c.shape[1]], axis=1)
-            p = reducex(p, by=nvm, chnum=i, number=nvm, verbose=verbose)
+            p = np.repeat(c, norm_vel['normalized'].astype(int, errors='ignore').values[on:on+c.shape[1]], axis=1)
+            p = reducex(p, header=header, by=nvm, chnum=i, number=nvm, verbose=verbose)
             proc = np.concatenate((proc, p), axis=1)
             on = on + c.shape[1]
             i += 1
         if verbose:
+            fx.printmsg('total GPS distance: %.2f m' % gps['meters'].iloc[-1])
             fx.printmsg('replacing old traces per meter value of %s with %s' % (header['rhf_spm'],
                                                                             ar.shape[1] / gps['meters'].iloc[-1]))
         header['rhf_spm'] = proc.shape[1] / gps['meters'].iloc[-1]
+        header['rhf_sps'] = 0
     return header, proc, gps

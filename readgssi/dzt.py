@@ -2,6 +2,7 @@ import struct
 import math
 import os
 import numpy as np
+from pandas import DataFrame
 from datetime import datetime
 from itertools import takewhile
 from readgssi.gps import readdzg
@@ -52,7 +53,27 @@ def readtime(bytez):
     yr = int(dtbits[0:7], 2) + 1980     # year, stored as 1980+(0:127)
     return datetime(yr, mo, day, hr, mins, sec2, 0, tzinfo=pytz.UTC)
 
-def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, antfreq=[None,None,None,None], verbose=False):
+
+def arraylist(header, data):
+    # create a list of n arrays, where n is the number of channels
+    data = data.astype(np.int32)
+    chans = list(range(header['rh_nchan']))
+
+    # set up list of arrays
+    img_arr = data[:header['rh_nchan']*header['rh_nsamp']] # test if we understand data structure. arrays should be stacked nchan*nsamp high
+
+    new_arr = {}
+    for ar in chans:
+        a = []
+        a = img_arr[(ar)*header['rh_nsamp']:(ar+1)*header['rh_nsamp']] # break apart
+        new_arr[ar] = a[header['timezero'][ar]:,:int(img_arr.shape[1])] # put into dict form
+
+    return new_arr
+
+
+def readdzt(infile, gps=DataFrame(), spm=None, start_scan=0, num_scans=-1,
+            epsr=None, antfreq=[None,None,None,None], verbose=False,
+            zero=[None,None,None,None]):
     """
     Function to unpack and return things the program needs from the file header, and the data itself.
 
@@ -60,6 +81,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     :param bool gps: Whether a GPS file exists. Defaults to False, but changed to :py:class:`pandas.DataFrame` if a DZG file with the same name as :code:`infile` exists.
     :param float spm: User value of samples per meter, if specified. Defaults to None.
     :param float epsr: User value of relative permittivity, if specified. Defaults to None.
+    :param list[int,int,int,int] zero: List of time-zero values per channel. Defaults to a list of :code:`None` values, which resolves to :code:`rh_zero`.
     :param bool verbose: Verbose, defaults to False
     :rtype: header (:py:class:`dict`), radar array (:py:class:`numpy.ndarray`), gps (False or :py:class:`pandas.DataFrame`)
     """
@@ -83,6 +105,7 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
     header['rh_ant'] = [None, None, None, None]
     header['rh_antname'] = [None, None, None, None]
     header['antfreq'] = [None, None, None, None]
+    header['timezero'] = [None, None, None, None]
 
     # begin read
 
@@ -260,6 +283,14 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
 
     infile.close()
 
+
+    for i in range(header['rh_nchan']):
+        try:
+            header['timezero'][i] = int(list(zero)[i])
+        except (TypeError, IndexError):
+            fx.printmsg('WARNING: no time zero specified for channel %s, defaulting to rh_zero value (%s)' % (i, header['rh_zero']))
+            header['timezero'][i] = header['rh_zero']
+
     if os.path.isfile(infile_gps):
         try:
             if verbose:
@@ -279,9 +310,10 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
                     fx.printmsg('   details: %s' % e0)
                     fx.printmsg('            %s' % e1)
                     fx.printmsg('            %s' % e2)
-                    gps = []
+                    gps = DataFrame()
     else:
         fx.printmsg('WARNING: no DZG file found for GPS input')
+        gps = DataFrame()
 
     header['marks'] = []
     header['picks'] = {}
@@ -297,11 +329,15 @@ def readdzt(infile, gps=False, spm=None, start_scan=0, num_scans=-1, epsr=None, 
         i = 0
         for m in usr_marks:
             if m > 0:
-                print(m)
+                #print(m)
                 header['marks'].append(i)
             i += 1
         fx.printmsg('DZT marks read successfully. marks: %s' % len(header['marks']))
         fx.printmsg('                            traces: %s' % header['marks'])
+    
+    header['shape'] = data.shape
+    # make a list of data by channel
+    data = arraylist(header, data) 
 
     return [header, data, gps]
 
@@ -365,9 +401,9 @@ def header_info(header, data):
         fx.printmsg('sampling depth:     %.1f m' % (header['rhf_depth']))
     fx.printmsg('"rhf_top":          %.1f m' % header['rhf_top'])
     fx.printmsg('offset to data:     %i bytes' % header['data_offset'])
-    if data.shape[1] == int(data.shape[1]):
-        fx.printmsg('traces:             %i' % int(data.shape[1]/header['rh_nchan']))
+    if header['shape'][1] == int(header['shape'][1]):
+        fx.printmsg('traces:             %i' % int(header['shape'][1]/header['rh_nchan']))
     else:
-        fx.printmsg('traces:             %f' % int(data.shape[1]/header['rh_nchan']))
+        fx.printmsg('traces:             %f' % int(header['shape'][1]/header['rh_nchan']))
     fx.printmsg('seconds:            %.8f' % (header['sec']))
-    fx.printmsg('array dimensions:   %i x %i' % (data.shape[0], data.shape[1]))
+    fx.printmsg('array dimensions:   %i x %i' % (header['shape'][0], header['shape'][1]))

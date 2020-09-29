@@ -57,7 +57,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
     :type colormap: :py:class:`str` or :class:`matplotlib.colors.Colormap`
     :param colormap: Plot using a Matplotlib colormap. Defaults to :py:data:`gray` which is colorblind-friendly and behaves similarly to the RADAN default, but :py:data:`seismic` is a favorite of many due to its diverging nature.
     :param bool colorbar: Whether to display a graded color bar at plot time.
-    :param list[int,int,int,int] zero: A list of values representing the amount of samples to slice off each channel. Defaults to :py:data:`None` for all channels, which will end up being set as :py:data:`[2,2,2,2]` for a four-channel file (2 is the number of rows down that GSSI stores mark information in).
+    :param list[int,int,int,int] zero: A list of values representing the amount of samples to slice off each channel. Defaults to :py:data:`None` for all channels, which will end up being set by the :code:`rh_zero` variable in :py:func:`readgssi.dzt.readdzt`.
     :param int gain: The amount of gain applied to plots. Defaults to 1. Gain is applied as a ratio of the standard deviation of radargram values to the value set here.
     :param int freqmin: Minimum frequency value to feed to the vertical triangular FIR bandpass filter :py:func:`readgssi.filtering.triangular`. Defaults to :py:data:`None` (no filter).
     :param int freqmax: Maximum frequency value to feed to the vertical triangular FIR bandpass filter :py:func:`readgssi.filtering.triangular`. Defaults to :py:data:`None` (no filter).
@@ -86,19 +86,14 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
             if verbose:
                 fx.printmsg('reading...')
                 fx.printmsg('input file:         %s' % (infile))
-            r = readdzt(infile, gps=normalize, spm=spm, start_scan=start_scan, num_scans=num_scans, epsr=epsr, antfreq=antfreq, verbose=verbose)
-            # time zero per channel
-            r[0]['timezero'] = [None, None, None, None]
-            for i in range(r[0]['rh_nchan']):
-                try:
-                    r[0]['timezero'][i] = int(list(zero)[i])
-                except (TypeError, IndexError):
-                    fx.printmsg('WARNING: no time zero specified for channel %s, defaulting to 2' % i)
-                    r[0]['timezero'][i] = 2
+            header, data, gps = readdzt(infile, gps=normalize, spm=spm,
+                                        start_scan=start_scan, num_scans=num_scans,
+                                        epsr=epsr, antfreq=antfreq, zero=zero,
+                                        verbose=verbose)
             # print a bunch of header info
             if verbose:
                 fx.printmsg('success. header values:')
-                header_info(r[0], r[1])
+                header_info(header, data)
         except IOError as e: # the user has selected an inaccessible or nonexistent file
             fx.printmsg("ERROR: DZT file is inaccessable or does not exist at %s" % (os.path.abspath(infile)))
             raise IOError(e)
@@ -107,71 +102,59 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
     else:
         raise IOError('ERROR: no input file specified')
 
-    rhf_sps = r[0]['rhf_sps']
-    rhf_spm = r[0]['rhf_spm']
-    line_dur = r[0]['sec']
-    for chan in list(range(r[0]['rh_nchan'])):
+    rhf_sps = header['rhf_sps']
+    rhf_spm = header['rhf_spm']
+    line_dur = header['sec']
+    for chan in list(range(header['rh_nchan'])):
         try:
-            ANT[r[0]['rh_antname'][chan]]
+            ANT[header['rh_antname'][chan]]
         except KeyError as e:
             print('--------------------WARNING - PLEASE READ---------------------')
             fx.printmsg('WARNING: could not read frequency for antenna name "%s"' % e)
             if (antfreq != None) and (antfreq != [None, None, None, None]):
                 fx.printmsg('using user-specified antenna frequency. Please ensure frequency value or list of values is correct.')
-                fx.printmsg('old values: %s' % (r[0]['antfreq']))
+                fx.printmsg('old values: %s' % (header['antfreq']))
                 fx.printmsg('new values: %s' % (antfreq))
-                r[0]['antfreq'] = antfreq
+                header['antfreq'] = antfreq
             else:
-                fx.printmsg('WARNING: trying to use frequencies of %s MHz (estimated)...' % (r[0]['antfreq'][chan]))
-            fx.printmsg('more info: rh_ant=%s' % (r[0]['rh_ant']))
-            fx.printmsg('           known_ant=%s' % (r[0]['known_ant']))
+                fx.printmsg('WARNING: trying to use frequencies of %s MHz (estimated)...' % (header['antfreq'][chan]))
+            fx.printmsg('more info: rh_ant=%s' % (header['rh_ant']))
+            fx.printmsg('           known_ant=%s' % (header['known_ant']))
             fx.printmsg("please submit a bug report with this warning, the antenna name and frequency")
             fx.printmsg('at https://github.com/iannesbitt/readgssi/issues/new')
             fx.printmsg('or send via email to ian (dot) nesbitt (at) gmail (dot) com.')
             fx.printmsg('if possible, please attach a ZIP file with the offending DZT inside.')
             print('--------------------------------------------------------------')
 
+    chans = list(range(header['rh_nchan']))
 
-    # create a list of n arrays, where n is the number of channels
-    arr = r[1].astype(np.int32)
-    chans = list(range(r[0]['rh_nchan']))
-
-    # set up list of arrays
-    img_arr = arr[:r[0]['rh_nchan']*r[0]['rh_nsamp']] # test if we understand data structure. arrays should be stacked nchan*nsamp high
-
-    new_arr = {}
-    for ar in chans:
-        a = []
-        a = img_arr[(ar)*r[0]['rh_nsamp']:(ar+1)*r[0]['rh_nsamp']] # break apart
-        new_arr[ar] = a[r[0]['timezero'][ar]:,:int(img_arr.shape[1])] # put into dict form
-
-    if pausecorrect:
+    if (pausecorrect) and (not gps.empty):
         fx.printmsg('correcting GPS errors created by user-initiated recording pauses...')
-        r[2] = pause_correct(header=r[0], dzg_file=os.path.splitext(infile)[0] + ".DZG", verbose=verbose)
+        gps = pause_correct(header=header, dzg_file=os.path.splitext(infile)[0] + ".DZG", verbose=verbose)
+    elif (pausecorrect) and (gps.empty):
+        fx.printmsg("can't correct pauses without a valid DZG file to look for. are you sure the DZG has the same name as the DZT file?")
 
-    img_arr = new_arr # overwrite
-    del arr, new_arr
 
-    for ar in img_arr:
+    for ar in data:
         """
         filter and construct an output file or plot from the current channel's array
         """
         if verbose:
-            fx.printmsg('beginning processing for channel %s (antenna %s)' % (ar, r[0]['rh_antname'][ar]))
+            fx.printmsg('beginning processing for channel %s (antenna %s)' % (ar, header['rh_antname'][ar]))
         # execute filtering functions if necessary
         if normalize:
-            r[0], img_arr[ar], r[2] = arrayops.distance_normalize(header=r[0], ar=img_arr[ar], gps=r[2],
+            header, data[ar], gps = arrayops.distance_normalize(header=header, ar=data[ar], gps=gps,
                                                                   verbose=verbose)
         if dewow:
             # dewow
-            img_arr[ar] = filtering.dewow(ar=img_arr[ar], verbose=verbose)
+            data[ar] = filtering.dewow(ar=data[ar], verbose=verbose)
         if freqmin and freqmax:
             # vertical triangular bandpass
-            img_arr[ar] = filtering.triangular(ar=img_arr[ar], header=r[0], freqmin=freqmin, freqmax=freqmax,
+            data[ar] = filtering.triangular(ar=data[ar], header=header, freqmin=freqmin, freqmax=freqmax,
                                                zerophase=True, verbose=verbose)
         if stack != 1:
             # horizontal stacking
-            img_arr[ar], stack, r[0] = arrayops.stack(ar=img_arr[ar],
+            header, data[ar], stack = arrayops.stack(ar=data[ar],
                                                       header=header,
                                                       stack=stack,
                                                       verbose=verbose)
@@ -179,12 +162,12 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
             stack = 1 # just in case it's not an integer
         if bgr:
             # background removal
-            img_arr[ar] = filtering.bgr(ar=img_arr[ar], header=r[0], win=win, verbose=verbose)
+            data[ar] = filtering.bgr(ar=data[ar], header=header, win=win, verbose=verbose)
         else:
             win = None
         if reverse:
             # read array backwards
-            img_arr[ar] = arrayops.flip(img_arr[ar], verbose=verbose)
+            data[ar] = arrayops.flip(data[ar], verbose=verbose)
 
 
         ## file naming
@@ -201,51 +184,51 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
                 outfile = '%sc%s' % (outfile, ar) # avoid naming conflicts
         else:
             outfile = fx.naming(infile_basename=infile_basename, chans=chans, chan=ar, normalize=normalize,
-                                zero=r[0]['timezero'][ar], stack=stack, reverse=reverse, bgr=bgr, win=win,
+                                zero=header['timezero'][ar], stack=stack, reverse=reverse, bgr=bgr, win=win,
                                 dewow=dewow, freqmin=freqmin, freqmax=freqmax, plotting=plotting,
                                 gain=gain, absval=absval)
 
         if plotting:
-            plot.radargram(ar=img_arr[ar], ant=ar, header=r[0], freq=r[0]['antfreq'][ar], verbose=verbose,
+            plot.radargram(ar=data[ar], ant=ar, header=header, freq=header['antfreq'][ar], verbose=verbose,
                            figsize=figsize, dpi=dpi, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
                            colorbar=colorbar, noshow=noshow, outfile=outfile, win=win, title=title,
-                           zero=r[0]['timezero'][ar], zoom=zoom, absval=absval, showmarks=showmarks)
+                           zero=header['timezero'][ar], zoom=zoom, absval=absval, showmarks=showmarks)
 
         if histogram:
-            plot.histogram(ar=img_arr[ar], verbose=verbose)
+            plot.histogram(ar=data[ar], verbose=verbose)
 
         if specgram:
-            plot.spectrogram(ar=img_arr[ar], header=header, freq=r[0]['antfreq'][ar], verbose=verbose)
+            plot.spectrogram(ar=data[ar], header=header, freq=header['antfreq'][ar], verbose=verbose)
 
     if frmt != None:
         if verbose:
             fx.printmsg('outputting to %s...' % frmt)
-        for ar in img_arr:
+        for ar in data:
             # is there an output filepath given?
             outfile_abspath = os.path.abspath(outfile) # set output to given location
 
             # what is the output format
             if frmt in 'csv':
-                translate.csv(ar=img_arr[ar], outfile_abspath=outfile_abspath,
-                              header=r[0], verbose=verbose)
+                translate.csv(ar=data[ar], outfile_abspath=outfile_abspath,
+                              header=header, verbose=verbose)
             elif frmt in 'h5':
-                translate.h5(ar=img_arr[ar], infile_basename=infile_basename,
+                translate.h5(ar=data[ar], infile_basename=infile_basename,
                              outfile_abspath=outfile_abspath, verbose=verbose)
             elif frmt in 'segy':
-                translate.segy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
+                translate.segy(ar=data[ar], outfile_abspath=outfile_abspath,
                                verbose=verbose)
             elif frmt in 'numpy':
-                translate.numpy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
+                translate.numpy(ar=data[ar], outfile_abspath=outfile_abspath,
                                 verbose=verbose)
             elif frmt in 'gprpy':
-                translate.gprpy(ar=img_arr[ar], outfile_abspath=outfile_abspath,
-                                header=r[0], verbose=verbose)
+                translate.gprpy(ar=data[ar], outfile_abspath=outfile_abspath,
+                                header=header, verbose=verbose)
             elif frmt in 'dzt':
                 if ar == 0:
-                    translate.dzt(ar=img_arr, outfile_abspath=outfile_abspath,
-                                  header=r[0], verbose=verbose)
+                    translate.dzt(ar=data, outfile_abspath=outfile_abspath,
+                                  header=header, verbose=verbose)
         if frmt in ('object', 'python'):
-            return r[0], img_arr, r[2]
+            return header, data, gps
     
 def main():
     """
@@ -448,7 +431,7 @@ def main():
                 if epsr <= 1:
                     raise Exception
             except:
-                print('ERROR: invalid value for epsr (epsilon sub r "dielectric permittivity"). using DZT value instead.')
+                fx.printmsg('ERROR: invalid value for epsr (epsilon sub r "dielectric permittivity"). using DZT value instead.')
                 epsr = None
         if opt in ('-m', '--histogram'):
             histogram = True
