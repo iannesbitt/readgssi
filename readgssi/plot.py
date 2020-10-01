@@ -127,16 +127,20 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
         xmax = header['sec']
         xlabel = 'Time (s)'
     else:
-        if x in ('cm', 'm', 'km'): # plot as distance based on unit
-            xmax = (ar.shape[1] * float(stack)) / header['rhf_spm']
+        if (x in ('cm', 'm', 'km')) and (header['rhf_spm'] > 0): # plot as distance based on unit
+            xmax = ar.shape[1] / header['rhf_spm']
             if 'cm' in x:
                 xmax = xmax * 100.
             if 'km' in x:
                 xmax = xmax / 1000.
             xlabel = 'Distance (%s)' % (x)
         else: # else we plot in units of stacked traces
+            if header['rhf_spm'] == 0:
+                fx.printmsg('samples per meter value is zero. plotting trace numbers instead.')
             xmax = ar.shape[1] # * float(stack)
-            xlabel = 'Trace (after stacking)'
+            xlabel = 'Trace number'
+            if stack > 1:
+                xlabel = 'Trace number (after %sx stacking)' % (stack)
     # finally, relate max scale value back to array shape in order to set matplotlib axis scaling
     try:
         xscale = ar.shape[1]/xmax
