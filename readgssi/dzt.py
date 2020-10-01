@@ -402,9 +402,6 @@ def header_info(header, data):
     fx.printmsg('"rhf_top":          %.1f m' % header['rhf_top'])
     fx.printmsg('"rhf_depth":        %.1f m' % header['rhf_depth'])
     fx.printmsg('offset to data:     %i bytes' % header['data_offset'])
-    if header['shape'][1] == int(header['shape'][1]):
-        fx.printmsg('traces:             %i' % int(header['shape'][1]/header['rh_nchan']))
-    else:
-        fx.printmsg('traces:             %f' % int(header['shape'][1]/header['rh_nchan']))
+    fx.printmsg('traces:             %i' % int(header['shape'][1]/header['rh_nchan']))
     fx.printmsg('seconds:            %.8f' % (header['sec']))
     fx.printmsg('array dimensions:   %i x %i' % (header['shape'][0], header['shape'][1]))
