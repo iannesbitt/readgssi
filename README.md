@@ -36,8 +36,16 @@ Install via `pip`:
 
 ## installation
 
-Once you have [anaconda](https://www.anaconda.com/download) running, installing requirements is pretty easy.
+Once you have [anaconda](https://www.anaconda.com/download) running, installing is pretty easy.
 
+You can install via the [anaconda cloud](https://anaconda.org/iannesbitt/readgssi):
+```bash
+conda create -n readgssi -c iannesbitt readgssi
+# and then activate by doing:
+conda activate readgssi
+```
+
+or via [pip/PyPI](https://pypi.org/project/readgssi):
 ```bash
 conda config --add channels conda-forge
 conda create -n readgssi python==3.7 pandas h5py pytz obspy
@@ -49,7 +57,7 @@ That should allow you to run the commands below.
 
 #### installing from source:
 
-If you choose to install a specific commit rather than the [latest working release of this software](https://pypi.org/project/readgssi), you may download this package, unzip to your home folder, open a command line, then install in the following way:
+If you choose to install a specific commit rather than the latest working release of this software, you may download this package, unzip to your home folder, open a command line, then install in the following way:
 
 ```bash
 pip install ~/readgssi
