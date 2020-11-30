@@ -155,8 +155,17 @@ def readdzt(infile, gps=DataFrame(), spm=None, start_scan=0, num_scans=-1,
     else:
         header['rhf_epsr'] = struct.unpack('<f', infile.read(4))[0] # epsr (sometimes referred to as "dielectric permittivity")
         header['dzt_epsr'] = header['rhf_epsr']
+
+    # calculate relative wave celerity given epsr value(s)
+    header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
+    header['cr_true'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['dzt_epsr'])
+
     header['rhf_top'] = struct.unpack('<f', infile.read(4))[0] # from experimentation, it seems this is the data top position in meters
     header['dzt_depth'] = struct.unpack('<f', infile.read(4))[0] # range in meters based on DZT rhf_epsr, before subtracting rhf_top
+    if (header['dzt_depth'] == 0):
+        # if dzt depth is 0, we need to calculate it using cr and rhf_range (converted to seconds)
+        header['dzt_depth'] = header['cr'] * (header['rhf_range'] * (10 ** (-10)))
+
     header['rhf_depth'] = header['dzt_depth'] * (math.sqrt(header['dzt_epsr']) / math.sqrt(header['rhf_epsr'])) # range based on user epsr, before subtracting rhf_top
 
     # getting into largely useless territory (under "normal" operation)
@@ -270,9 +279,9 @@ def readdzt(infile, gps=DataFrame(), spm=None, start_scan=0, num_scans=-1,
     data = np.fromfile(infile, dtype, count=num_items)
     data = data.reshape(-1,(header['rh_nsamp']*header['rh_nchan'])) # offset=start_offset,
     data = data.T
+    header['shape'] = data.shape
 
-    header['cr'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['rhf_epsr'])
-    header['cr_true'] = 1 / math.sqrt(Mu_0 * Eps_0 * header['dzt_epsr'])
+    print('dzt_depth: %s\nrhf_depth: %s\nrh_nsamp: %s\n cr_true: %s\ndzt_epsr: %s\nrhf_range: %s\nrhf_position: %s' % (header['dzt_depth'], header['rhf_depth'], header['rh_nsamp'], header['cr_true'], header['dzt_epsr'], header['rhf_range'], header['rhf_position']))
     header['ns_per_zsample'] = ((header['rhf_depth']-header['rhf_top']) * 2) / (header['rh_nsamp'] * header['cr'])
     header['samp_freq'] = 1 / ((header['dzt_depth'] * 2) / (header['rh_nsamp'] * header['cr_true']))
 
@@ -332,10 +341,13 @@ def readdzt(infile, gps=DataFrame(), spm=None, start_scan=0, num_scans=-1,
                 #print(m)
                 header['marks'].append(i)
             i += 1
-        fx.printmsg('DZT marks read successfully. marks: %s' % len(header['marks']))
-        fx.printmsg('                            traces: %s' % header['marks'])
-    
-    header['shape'] = data.shape
+        if len(header['marks']) == header['shape'][1]:
+            fx.printmsg('number of marks matches the number of traces (%s). this is probably wrong, so throwing out the mark list.' % (len(header['marks'])))
+            header['marks'] = []
+        else:
+            fx.printmsg('DZT marks read successfully. marks: %s' % len(header['marks']))
+            fx.printmsg('                            traces: %s' % header['marks'])
+
     # make a list of data by channel
     data = arraylist(header, data) 
 
@@ -394,7 +406,8 @@ def header_info(header, data):
         fx.printmsg('user epsr:          %.1f (manually set - value from DZT: %.1f)' % (header['rhf_epsr'], header['dzt_epsr']))
     else:
         fx.printmsg('epsr:               %.1f' % header['rhf_epsr'])
-    fx.printmsg('speed of light:     %.2E m/sec (%.2f%% of vacuum)' % (header['cr'], header['cr'] / C * 100))
+    fx.printmsg('speed of wave:      %.2E m/sec (%.2f%% of vacuum)' % (header['cr'], header['cr'] / C * 100))
+    fx.printmsg('sampling range:     %.1f ns' % (header['rhf_range']))
     if header['dzt_depth'] != header['rhf_depth']:
         fx.printmsg('sampling depth:     %.1f m (manually set - value from DZT: %.1f)' % (header['rhf_depth'], header['dzt_depth']))
     else:
