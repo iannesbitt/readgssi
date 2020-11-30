@@ -153,7 +153,7 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
     zmin = 0
     # Z scaling routine
     if (z == None) or (z in 'nanoseconds'): # plot z as time by default
-        zmax = header['ns_per_zsample'] * ar.shape[0] * 10**9
+        zmax = header['rhf_range'] #header['ns_per_zsample'] * ar.shape[0] * 10**10
         zlabel = 'Two-way time (ns)'
     else:
         if z in ('mm', 'cm', 'm'): # plot z as TWTT based on unit and cr/rhf_epsr value
