@@ -406,7 +406,7 @@ def header_info(header, data):
     else:
         fx.printmsg('epsr:               %.1f' % header['rhf_epsr'])
     fx.printmsg('speed of wave:      %.2E m/sec (%.2f%% of vacuum)' % (header['cr'], header['cr'] / C * 100))
-    fx.printmsg('sampling range:     %.1f ns' % (header['rhf_range']))
+    fx.printmsg('time range (TWTT):  %.1f ns' % (header['rhf_range']))
     if header['dzt_depth'] != header['rhf_depth']:
         fx.printmsg('sampling depth:     %.1f m (manually set - value from DZT: %.1f)' % (header['rhf_depth'], header['dzt_depth']))
     else:
