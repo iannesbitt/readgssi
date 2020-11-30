@@ -281,7 +281,6 @@ def readdzt(infile, gps=DataFrame(), spm=None, start_scan=0, num_scans=-1,
     data = data.T
     header['shape'] = data.shape
 
-    print('dzt_depth: %s\nrhf_depth: %s\nrh_nsamp: %s\n cr_true: %s\ndzt_epsr: %s\nrhf_range: %s\nrhf_position: %s' % (header['dzt_depth'], header['rhf_depth'], header['rh_nsamp'], header['cr_true'], header['dzt_epsr'], header['rhf_range'], header['rhf_position']))
     header['ns_per_zsample'] = ((header['rhf_depth']-header['rhf_top']) * 2) / (header['rh_nsamp'] * header['cr'])
     header['samp_freq'] = 1 / ((header['dzt_depth'] * 2) / (header['rh_nsamp'] * header['cr_true']))
 
