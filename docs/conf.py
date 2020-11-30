@@ -16,8 +16,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 from datetime import datetime
-import readgssi
-
+import os, sys
 
 # -- Project information -----------------------------------------------------
 
@@ -26,7 +25,10 @@ copyright = '%s, Ian Nesbitt' % datetime.now().year
 author = 'Ian Nesbitt'
 
 # The short X.Y version
-version = readgssi.__version__
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _version import version
+
+
 # The full version, including alpha/beta/rc tags
 release = ''
 
