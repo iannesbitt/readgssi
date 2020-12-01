@@ -33,13 +33,7 @@ Installation guide
 
 .. note:: The console commands outlined here use Linux bash script. Mac users should be able to use all the same commands as I do, but Windows users will need to install and understand the Windows Subsystem for Linux (WSL) in order to execute these commands successfully. If you'd like information about installing and using WSL, see this guide for more details: https://docs.microsoft.com/en-us/windows/wsl/install-win10
 
-
-Installing from Anaconda Cloud
-================================
-
-Anaconda cloud is `conda's package index <https://anaconda.org/>`_.
-
-Open a Terminal interface (UNIX) or the Anaconda Prompt (Windows) and make sure Anaconda works:
+Use of Anaconda is strongly recommended. After you've installed Anaconda, open a Terminal interface (UNIX) or the Anaconda Prompt (Windows) and make sure Anaconda works:
 
 .. code-block:: bash
 
@@ -47,15 +41,21 @@ Open a Terminal interface (UNIX) or the Anaconda Prompt (Windows) and make sure 
 
 You should get output that displays the conda version (4.8.5 in this case). If not, `please see note 1 above <#installation-guide>`_.
 
-If conda is installed and working, installing readgssi to its own conda environment is just a one-liner:
+
+Installing from Anaconda Cloud
+================================
+
+Anaconda cloud is `conda's package index <https://anaconda.org/>`_.
+readgssi is `available as a conda package <https://anaconda.org/iannesbitt/readgssi>`_! This allows for a one-liner installation as indicated below.
 
 .. code-block:: bash
 
+    # create an environment named readgssi and install readgssi from the iannesbitt channel:
     conda create -n readgssi -c iannesbitt readgssi
-    # and then activate by doing:
+    # and then activate the environment by doing:
     conda activate readgssi
 
-Remember, you will need to activate the readgssi conda environment each time you open a new terminal window in order for the readgssi commands to work (see note below for a brief explanation).
+Remember, you will need to activate the readgssi conda environment (i.e. :bash:`conda activate readgssi`) each time you open a new terminal window in order for the readgssi commands to work (see note below for a brief explanation).
 
 This should allow you to run the commands in the next section (:doc:`general`).
 
@@ -69,16 +69,7 @@ Installing from PyPI
 
 *PyPI is the* `Python Package Index <https://pypi.org>`_.
 
-
-Open a Terminal interface (UNIX) or the Anaconda Prompt (Windows) and make sure Anaconda works:
-
-.. code-block:: bash
-
-    conda --version
-
-You should get output that displays the conda version. If not, `please see note 1 above <#installation-guide>`_.
-
-Once you have conda running, installing requirements is pretty easy. All dependencies are available through conda or pip. 
+Once you have `conda running <#installation-guide>`_, installing requirements is pretty easy. All dependencies are available through conda or pip. 
 
 .. code-block:: bash
 
