@@ -5,6 +5,13 @@
 - fixed sampling depth interpretation ([#28](https://github.com/iannesbitt/readgssi/issues/28))
 - added DZT file output ([#29](https://github.com/iannesbitt/readgssi/pull/29))
 - added documentation for displaying absolute value of down-trace gradient in plots
+- fixed a bug that incorrectly displayed long axis units on stacked arrays
+- added conda installation method to documentation
+- switched version handling to file (`_version.py`)
+- fixed a bug that did not handle `rhf_depth == 0` cases correctly
+- added support for the 3102 antenna (500 MHz)
+- fixed a bug that incorrectly plotted TWTT
+- updated examples in Readme and fixed the autogen script (`make_plots.sh`)
 
 ## changes since 0.0.16
 - merged [#19](https://github.com/iannesbitt/readgssi/pull/19) from [teshaw](https://github.com/teshaw) which allows the user to specify partial read parameters for DZT files
