@@ -21,7 +21,7 @@ readgssi -i $indir/$process_ex1 -o $outdir/1d.png -n -Z 233 -p 5 -s auto -g 60 -
 # 1e - stack, gain, z-axis, titleoff, and colormap
 readgssi -i $indir/$process_ex1 -o $outdir/1e.png -n -Z 233 -p 5 -s auto -g 20 -r 75 -z m -E 80 -c seismic
 # 1f - vertical gradient absval with fir
-readgssi -i $indir/$process_ex1 -o $outdir/1f.png -n -Z 233 -p 5 -s auto -g 100 -r 75 -z m -E 80 -A -t 80-120
+readgssi -i $indir/$process_ex1 -o $outdir/1f.png -n -Z 233 -p 5 -s auto -g 100 -r 75 -z m -E 80 -c gray_r -A -t 80-120
 
 # example 1g - autostacking
 #readgssi -i $indir/$process_ex1 -o $outdir/1f.png -n -Z 233 -p 5 -g 60 -s auto

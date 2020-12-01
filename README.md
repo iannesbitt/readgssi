@@ -224,9 +224,9 @@ Here, a horizontal background removal is applied, but gain is turned down (`-g 2
 
 #### example 1F: absolute value of vertical gradient
 ```bash
-readgssi -i DZT__001.DZT -o 1f.png -p 5 -s auto -g 100 -r 75 -z m -E 80 -A -t 80-120
+readgssi -i DZT__001.DZT -o 1f.png -p 5 -s auto -g 100 -r 75 -z m -E 80 -c gray_r -A -t 80-120
 ```
-While we're on the topic of colormaps, it's worth pointing out that you can tell readgssi to calculate the vertical derivative (the "gradient") of the profile and display its absolute value using the `-A` flag. This gradient display is a good way to highlight areas of polarity change regardless of positive or negative values. It is particularly useful for highlighting glacial bed material through ice, for example. Here (in a lake profile) we set both `-A` to plot the absolute value of vertical gradient and also a FIR filter (`-t 80-120`) explained [below](#example-2d-vertical-triangular-fir-filter).
+While we're on the topic of colormaps, it's worth pointing out that you can tell readgssi to calculate the vertical derivative (the "gradient") of the profile and display its absolute value using the `-A` flag. This gradient display is a good way to highlight areas of polarity change regardless of positive or negative values. It is particularly useful for highlighting glacial bed material through ice, for example. Here (in a lake profile) we set both `-A` to plot the absolute value of vertical gradient and also a FIR filter (`-t 80-120`) explained [below](#example-2d-vertical-triangular-fir-filter). We also set the colormap to the reverse of the usual one (`-c gray_r`) so that black indicates high values.
 ![Example 1f](https://github.com/iannesbitt/readgssi/raw/master/examples/1f.png)
 
 ### filtering
