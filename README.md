@@ -142,9 +142,34 @@ readgssi -i DZT__001.DZT -o test.csv -f CSV
 Translates radar data array to CSV format, if that's your cup of tea. One might use this to export to Matlab. One CSV will be written per channel. The script will rename the output to 'test_100MHz.csv' automatically. No header information is included in the CSV.
 
 ```bash
-readgssi -i DZT__001.DZT -s 8 -w -r 0 -o test.csv -f CSV
+readgssi -i DZT__001.DZT -s 8 -r 0 -o test.csv -f CSV
 ```
-Applies 8x stacking, dewow, and background removal filters before exporting to CSV.
+Applies 8x stacking, and background removal filters before exporting to CSV (see explanations below).
+
+### DZT output (experimental)
+```bash
+readgssi -i DZT__001.DZT -R -Z 0 -o test.DZT -f DZT
+```
+This exports the array as a second DZT file after reversing the direction of the survey line.
+
+The following operations will stick when writing files:
+- stacking
+- filtering
+- distance normalization
+- reversing direction
+- zero (top of array will be shaved off; to avoid this, set `-Z 0`. this will be fixed in the future.)
+- manually setting header values, ror example samples per meter (`-d 10`), epsilon_r (`-E 3.1`), and antenna frequency (`-a 100`)
+
+The following operations will **not** stick:
+- absolute value of gradient
+- gain
+- zoom
+- plot features like axis units (obviously)
+
+Please note the following about DZT output:
+
+- While DZTs will be written, there will be no accompanying DZX written. This functionality may be implemented in the future but for now is a bit too complex of an operation for readgssi. This could have consequences if you're planning to re-import to RADAN after this operation.
+- **Single channel files only** are supported at this time. Multi-channel files will be written but the values on the second channel will not be correct. If you wish to use readgssi to re-write multiple channels, you will have to separate the channels using RADAN or another software first.
 
 ### numpy object output
 ```bash
@@ -164,26 +189,53 @@ This command saves the array in numpy binary format, and preserves the header as
 ```bash
 readgssi -i DZT__001.DZT -o 1a.png -p 5 -s auto
 ```
-The above command will cause `readgssi` to save and show a plot named "TEST__001c0Tz233S6G1.png" with a y-size of 5 inches at 150 dpi (`-p 5`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing on a monitor, approximately 2.5\*y (`-s auto`). The plot will be rendered in the `gray` color scheme.
+The above command will cause `readgssi` to save and show a plot named "DZT__001c0Tz233S6G1.png" with a y-size of 5 inches at 150 dpi (`-p 5`) and the autostacking algorithm will stack the x-axis to some multiple of times shorter than the original data array for optimal viewing on a monitor, approximately 2.5\*y (`-s auto`). The plot will be rendered in the `gray` color scheme.
 ![Example 1a](https://github.com/iannesbitt/readgssi/raw/master/examples/1a.png)
 
 #### example 1B: with gain
 ```bash
-readgssi -i DZT__001.DZT -o 1b.png -p 5 -s auto -g 50 -r 0
+readgssi -i DZT__001.DZT -o 1b.png -p 5 -s auto -g 60 -r 75
 ```
-This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. Next `readgssi` will run the background removal (`-r 0`) filter.
+This will cause `readgssi` to create a plot from the same file, but matplotlib will save the plot as "1b.png" (`-o 1b.png`). The script will plot the y-axis size (`-p 5`) and automatically stack the x-axis to (`-s auto`). The script will plot the data with a gain value of 50 (`-g 50`), which will increase the plot contrast by a factor of 50. Next `readgssi` will run the background removal (`-r 75`) filter. (To apply this horizontal background removal filter across the entire line horizontally, use `-r 0`. More about this in examples [2b](#example-2b-horizontal-mean-bgr-algorithm-applied) and [2c](#example-2c-moving-window-horizontal-mean).)
 ![Example 1b](https://github.com/iannesbitt/readgssi/raw/master/examples/1b.png)
 
-#### example 1C: the right gain settings can be slightly different depending on your colormap
+#### example 1C: display the vertical axis in meters and manually set the Epsilon_r
 ```bash
-readgssi -i DZT__001.DZT -o 1c.png -p 5 -s auto -r 0 -g 20 -c seismic
+readgssi -i DZT__001.DZT -o 1c.png -p 5 -s auto -g 60 -r 75 -z m -E 80
+```
+This will set the Epsilon_r—that is, the relative permittivity of the first layer medium—to 80 (`-E 80`) and the Z axis to meters (`-z m`). The resulting plot will have a depth scale in meters.
+Epsilon_r should be set in the header, but if it is set incorrectly, this is the way to adjust it on the fly.
+![Example 1c](https://github.com/iannesbitt/readgssi/raw/master/examples/1c.png)
+
+#### example 1D: make a high-quality figure
+```bash
+readgssi -i DZT__001.DZT -o 1d.png -p 5 -s auto -g 60 -r 75 -z m -E 80 -T -D 300
+```
+Okay, now our figure looks great and we want to put it in a publication! Time to turn off the title (`-T`) and pump up the DPI to printer quality (`-D 300`). For AGU poster-quality images, you may even need `-D 600`.
+One tricky thing to keep in mind is that the smaller the plot size (`-p`) the larger the relative size of the text in the figure.
+![Example 1d](https://github.com/iannesbitt/readgssi/raw/master/examples/1d.png)
+
+#### example 1E: changing colormaps and gain settings
+```bash
+readgssi -i DZT__001.DZT -o 1e.png -p 5 -s auto -g 20 -r 75 -z m -E 80 -c seismic
 ```
 Here, a horizontal background removal is applied, but gain is turned down (`-g 20`). The script uses matplotlib's "seismic" colormap (`-c seismic`) which is specifically designed for this type of waterfall array plotting. Even without gain, you will often be able to easily see very slight signal perturbations. Given its use of red, however, it is not terribly colorblind-friendly for either of the two most common types of human colorblindness, which is why it is not used as the default colormap.
-![Example 1c](https://github.com/iannesbitt/readgssi/raw/master/examples/1c.png)
+![Example 1e](https://github.com/iannesbitt/readgssi/raw/master/examples/1e.png)
+
+#### example 1F: absolute value of vertical gradient
+```bash
+readgssi -i DZT__001.DZT -o 1f.png -p 5 -s auto -g 100 -r 75 -z m -E 80 -A -t 80-120
+```
+While we're on the topic of colormaps, it's worth pointing out that you can tell readgssi to calculate the vertical derivative (the "gradient") of the profile and display its absolute value using the `-A` flag. This gradient display is a good way to highlight areas of polarity change regardless of positive or negative values. It is particularly useful for highlighting glacial bed material through ice, for example. Here (in a lake profile) we set both `-A` to plot the absolute value of vertical gradient and also a FIR filter (`-t 80-120`) explained [below](#example-2d-vertical-triangular-fir-filter).
+![Example 1f](https://github.com/iannesbitt/readgssi/raw/master/examples/1f.png)
+
+### filtering
+
+Each of the plots in this section is displayed with a histogram to illustrate changing array values.
 
 #### example 2A: no background removal
 ```bash
-readgssi -i DZT__002.DZT -o 2a.png -p 5 -s 5 -n -m
+readgssi -i DZT__002.DZT -o 2a.png -p 5 -s auto -g 30 -m
 ```
 Sometimes, files will look "washed out" due to a skew relative to the mean of the data. This is easily correctable. Here `readgssi` will create a plot of size 5 and stack 5x (`-p 5 -s 5`). Matplotlib will use the default "gray" colormap and save a PNG of the figure, but the script will suppress the matplotlib window (using the `-n` flag, useful for processing an entire directory full of DZTs at once). Finally, the `-m` flag will draw a histogram for each data channel. Note how the histogram changes when filters are applied.
 ![Example 2a](https://github.com/iannesbitt/readgssi/raw/master/examples/2a.png)
@@ -194,7 +246,7 @@ The flag to get rid of the skew (or any horizontally uniform noise) is `-r`, als
 
 The command below does the same thing as [example 2A](#example-2a-no-background-removal), except `-r 0` applies full width horizontal mean background removal to the profile. Note the difference in ringing artifacts and skew between examples 2a and 2b.
 ```bash
-readgssi -i DZT__002.DZT -o 2b.png -p 5 -s 5 -n -m -r 0
+readgssi -i DZT__002.DZT -o 2b.png -p 5 -s auto -g 30 -m -r 0
 ```
 ![Example 2b](https://github.com/iannesbitt/readgssi/raw/master/examples/2b.png)
 ![Example 2b histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/2b-h.png)
@@ -202,13 +254,34 @@ readgssi -i DZT__002.DZT -o 2b.png -p 5 -s 5 -n -m -r 0
 #### example 2C: moving window horizontal mean
 
 ```bash
-readgssi -i DZT__002.DZT -o 2c.png -p 5 -s 5 -n -m -r 75 -g 8
+readgssi -i DZT__002.DZT -o 2c.png -p 5 -s auto -g 30 -m -r 75
 ```
-Same as above but with a 75-trace wide moving window mean (`-r 75`). This width represents post-stack traces. This is, for all intents and purposes, the same as RADAN's "BOXCAR" method of horizontal noise removal, but much, much faster. Areas beyond the left and right edges are treated as zeros. Notice that the noise in the water column is nearly entirely wiped out, but real data is extended with lateral wisps the size of half of the window, which is a side-effect of this method. Note that the histogram (`-m`) has a fairly even distribution around the mean, which generally indicates that the image should be fairly readable.
+Same as above but with a 75-trace wide moving window mean (`-r 75`). This width represents post-stack traces. This is, for all intents and purposes, the same as RADAN's "BOXCAR" method of horizontal noise removal, but much, much faster because it's [implemented with scipy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.uniform_filter1d.html). Areas beyond the left and right edges are treated as zeros. Notice that the noise in the water column is nearly entirely wiped out, but real data is extended with lateral wisps the size of half of the window, which is a side-effect of this method. Note that the histogram (`-m`) has a fairly even distribution around the mean, which generally indicates that the image should be fairly readable.
 
 ![Example 2c](https://github.com/iannesbitt/readgssi/raw/master/examples/2c.png)
 ![Example 2c histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/2c-h.png)
 
+#### example 2D: vertical triangular FIR filter
+
+```bash
+readgssi -i DZT__002.DZT -o 2d.png -p 5 -s auto -g 30 -m -t 80-120
+```
+This function is functionally the same as RADAN's vertical triangular FIR filter, but again [implemented with scipy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.firwin.html#scipy.signal.firwin). It is used to filter out unwanted frequencies on a per-shot basis, which makes it very effective as a profile cleaning tool. The most effective results are achieved by filtering a tight window of frequencies around the center frequency of the antenna you are using. In this case, we are using a 100 MHz antenna and filtering from 80-120 MHz.
+
+![Example 2d](https://github.com/iannesbitt/readgssi/raw/master/examples/2d.png)
+![Example 2d histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/2d-h.png)
+
+#### example 2E: combining filters for a cleaner profile
+
+```bash
+readgssi -i DZT__002.DZT -o 2e.png -p 5 -s auto -g 30 -m -r 75 -t 80-120
+```
+In this example, we use two concurrent filters (the horizontal windowed BGR and the vertical triangular FIR) to try and clean the image up as much as possible without overcooking it.
+
+![Example 2e](https://github.com/iannesbitt/readgssi/raw/master/examples/2e.png)
+![Example 2e histogram](https://github.com/iannesbitt/readgssi/raw/master/examples/2e-h.png)
+
+### array manipulation
 #### example 3A: (without) distance normalization
 The default behavior of `readgssi` is to plot the X-axis in survey time units (seconds). This can be changed using the `-x` flag. To display in distance units, you must either have GPS information in DZG format, or specify the number of radar traces per meter using the `-d` flag. `-d 24 -x meters` will change the traces per meter value in the header to 24.0 and display the profile with distance in meters along the X-axis.
 
@@ -216,7 +289,7 @@ Files with GPS information are handled in a slightly different way. First, `read
 
 Here a file is processed and displayed without distance normalization:
 ```bash
-readgssi -i DZT__003.DZT -o 3a.png -p 10 -s 5 -r 0 -g 50
+readgssi -i DZT__003.DZT -o 3a.png -p 5 -s auto -r 0 -g 60
 ```
 ![Example 3a](https://github.com/iannesbitt/readgssi/raw/master/examples/3a.png)
 
@@ -225,9 +298,16 @@ readgssi -i DZT__003.DZT -o 3a.png -p 10 -s 5 -r 0 -g 50
 To use DZG GPS information to distance normalize the profile and display in meters traveled, use the `-N` and `-x meters` flags. `readgssi` will normalize the file in chunks to reduce memory usage. Here is the same file with distance normalization applied:
 
 ```bash
-readgssi -i DZT__003.DZT -o 3b.png -p 10 -s 5 -r 0 -g 50 -N -x meters
+readgssi -i DZT__003.DZT -o 3b.png -p 5 -s auto -r 0 -g 60 -N -x meters
 ```
 ![Example 3b](https://github.com/iannesbitt/readgssi/raw/master/examples/3b.png)
+
+#### example 3c: reverse line direction
+
+A simple but sometimes necessary operation is flipping a survey line back to front in order to display it congruently with others in a set. This can be done easily using `-R`.
+
+![Example 3b](https://github.com/iannesbitt/readgssi/raw/master/examples/3c.png)
+
 
 ## advanced usage
 
@@ -245,7 +325,7 @@ The structure of this command is easy to understand if you know a little bit abo
 
 ```bash
 -p 8    # plot with size 8
--n      # suppress the matplotlib window; useful if you do not want the operation interrupted
+-n      # suppress the matplotlib window; useful if you do not want the operation interrupted by plot windows
 -r 0    # full-width background removal
 -g 40   # gain of 40
 -Z 233  # time zero at 233 samples
@@ -281,7 +361,6 @@ Ian M. Nesbitt, François-Xavier Simon, Thomas Paulin, 2018. readgssi - an open-
 - scipy 1.2.x causes errors when filtering. use scipy 1.3.0 to avoid.
 
 ## future
-- explicit documentation
 - automatic script testing for smoother dev
 - create a class for surveyline objects, similar to [`obspy.core.trace.Trace`](https://docs.obspy.org/packages/autogen/obspy.core.trace.Trace.html)
 - GPS transcription from CSV with fields like `mark name, lon, lat, elev, time`
