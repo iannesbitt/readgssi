@@ -39,7 +39,7 @@ Use of Anaconda is strongly recommended. After you've installed Anaconda, open a
 
     conda --version
 
-You should get output that displays the conda version (4.8.5 in this case). If not, `please see note 1 above <#installation-guide>`_.
+You should get output that displays the conda version (4.8.5 in my case). If not, `please see note 1 above <#installation-guide>`_.
 
 
 Installing from Anaconda Cloud
