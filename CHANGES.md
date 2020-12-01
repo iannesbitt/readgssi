@@ -6,7 +6,7 @@
 - added DZT file output ([#29](https://github.com/iannesbitt/readgssi/pull/29))
 - added documentation for displaying absolute value of down-trace gradient in plots
 - fixed a bug that incorrectly displayed long axis units on stacked arrays
-- added conda installation method to documentation
+- added [conda installation method](https://readgssi.readthedocs.io/en/latest/installing.html#installing-from-anaconda-cloud) and streamlined installation documentation
 - switched version handling to file (`_version.py`)
 - fixed a bug that did not handle `rhf_depth == 0` cases correctly
 - added support for the 3102 antenna (500 MHz)
