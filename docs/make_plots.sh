@@ -48,6 +48,6 @@ readgssi -i $indir/$process_ex3 -o $outdir/3b.png -n -Z 233 -p 5 -s auto -g 60 -
 # example 3c - reversing
 readgssi -i $indir/$process_ex3 -o $outdir/3c.png -n -Z 233 -p 5 -s auto -g 60 -N -x m -R
 
-## Header image
-readgssi -i $indir/$header -o $outdir/main.png -n -Z 233 -N -p 7 -s auto -g 20 -r 75 -c seismic -x m -e 320,880,1200,500
+## Header image (using preset zoom LRDU 320,880,1300,500)
+readgssi -i $indir/$header -o $outdir/main.png -n -Z 233 -N -p 7 -s auto -g 20 -r 75 -c seismic -x m -e 320,880,1300,500
 mv $outdir/mainZ.320.880.1300.500.png $outdir/main.png
