@@ -9,6 +9,7 @@
 [![Build Status](https://travis-ci.org/iannesbitt/readgssi.svg?branch=master)](https://travis-ci.org/iannesbitt/readgssi)
 [![Documentation Status](https://readthedocs.org/projects/readgssi/badge/?version=latest)](https://readgssi.readthedocs.io/en/latest/?badge=latest)
 [![Downloads per month](https://img.shields.io/pypi/dm/readgssi.svg)](https://pypi.org/project/readgssi/)
+[![conda version](https://anaconda.org/iannesbitt/readgssi/badges/version.svg)](https://anaconda.org/iannesbitt/readgssi)
 
 This program was written to read and process ground-penetrating radar files from instruments made by Geophysical Survey Systems Incorporated (GSSI), although I have no affiliation with nor endorsement for the afforementioned organization.
 
