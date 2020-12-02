@@ -12,6 +12,7 @@
 - added support for the 3102 antenna (500 MHz)
 - fixed a bug that incorrectly plotted TWTT
 - updated examples in Readme and fixed the autogen script (`make_plots.sh`)
+- corrected an error with how `setup.py` got the version number, which prevented the creation of a conda skeleton
 
 ## changes since 0.0.16
 - merged [#19](https://github.com/iannesbitt/readgssi/pull/19) from [teshaw](https://github.com/teshaw) which allows the user to specify partial read parameters for DZT files
