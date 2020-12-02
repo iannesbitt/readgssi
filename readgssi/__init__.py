@@ -1,4 +1,4 @@
-import pkg_resources
+from . import _version
 
 name = 'readgssi'
-__version__ = pkg_resources.require(name)[0].version
+__version__ = _version.version

@@ -1,12 +1,12 @@
 import setuptools
-from _version import version
+from readgssi import _version
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="readgssi",
-    version=version,
+    version=_version.version,
     author="Ian Nesbitt",
     author_email="ian.nesbitt@gmail.com",
     license='AGPL',
