@@ -186,13 +186,13 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
             fx.printmsg('attempting to plot with colormap %s' % (colormap))
         img = ax.imshow(ar, cmap=colormap, clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=flip,
-                                            vmin=ll, vmax=ul), extent=extent)
+                                            vmin=ll, vmax=ul, base=np.e), extent=extent)
     except:
         fx.printmsg('ERROR: matplotlib did not accept colormap "%s", using gray instead' % colormap)
         fx.printmsg('see examples here: https://matplotlib.org/users/colormaps.html#grayscale-conversion')
         img = ax.imshow(ar, cmap='gray', clim=(ll, ul), interpolation='bicubic', aspect=float(zscale)/float(xscale),
                      norm=colors.SymLogNorm(linthresh=float(std)/float(gain), linscale=flip,
-                                            vmin=ll, vmax=ul), extent=extent)
+                                            vmin=ll, vmax=ul, base=np.e), extent=extent)
 
     # user marks
     if showmarks:
