@@ -6,6 +6,18 @@ import matplotlib.colors as colors
 import readgssi.functions as fx
 from readgssi.constants import *
 
+# figure out what formats are available
+def get_supported_filetypes():
+    fig = plt.Figure()
+    fmts = fig.canvas.get_supported_filetypes()
+    plt.close('all')
+    fmtst = ''
+    for fmt in fmts:
+        fmtst += '    %-10s  |  %s\n' % (fmt, fmts[fmt])
+    return fmts, fmtst
+
+fmts, fmtst = get_supported_filetypes()
+
 """
 contains several plotting functions
 """
@@ -54,8 +66,8 @@ def spectrogram(ar, header, freq, tr='auto', verbose=True):
              title='Trace %s Spectrogram - Antenna Frequency: %.2E Hz - Sampling Frequency: %.2E Hz' % (tr, freq, samp_rate))
 
 def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds', z='nanoseconds', title=True,
-              colormap='gray', colorbar=False, absval=False, noshow=False, win=None, outfile='readgssi_plot', zero=2,
-              zoom=[0,0,0,0], dpi=150, showmarks=False, verbose=False):
+              colormap='gray', colorbar=False, absval=False, noshow=False, win=None, outfile='readgssi_plot',
+              fmt='png', zero=2, zoom=[0,0,0,0], dpi=150, showmarks=False, verbose=False):
     """
     Function that creates, modifies, and saves matplotlib plots of radargram images. For usage information, see :doc:`plotting`.
 
@@ -74,7 +86,8 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
     :param bool absval: Whether to draw the array with an absolute value scale. Defaults to False.
     :param bool noshow: Whether to suppress the matplotlib figure GUI window. Defaults to False, meaning the dialog will be displayed.
     :param int win: Window size for background removal filter :py:func:`readgssi.filtering.bgr` to display in plot title.
-    :param str outfile: The name of the output file. Defaults to 'readgssi_plot.png' in the current directory.
+    :param str outfile: The name of the output file. Defaults to :py:data:`fmt=readgssi_plot` (a filename :py:data:`readgssi_plot`, not including the extension which is determined by the :py:data:`fmt` variable, in the current directory).
+    :param str fmt: The format of the output file. Defaults to :py:data:`fmt='png'`. Acceptable values come from :py:func:`matplotlib.backend_bases.FigureCanvasBase.get_supported_filetypes`.
     :param int zero: The zero point. This represents the number of samples sliced off the top of the profile by the timezero option in :py:func:`readgssi.readgssi.readgssi`.
     :param list[int,int,int,int] zoom: Zoom extents for matplotlib plots. Must pass a list of four integers: :py:data:`[left, right, up, down]`. Since the z-axis begins at the top, the "up" value is actually the one that displays lower on the page. All four values are axis units, so if you are working in nanoseconds, 10 will set a limit 10 nanoseconds down. If your x-axis is in seconds, 6 will set a limit 6 seconds from the start of the survey. It may be helpful to display the matplotlib interactive window at full extents first, to determine appropriate extents to set for this parameter. If extents are set outside the boundaries of the image, they will be set back to the boundaries. If two extents on the same axis are the same, the program will default to plotting full extents for that axis.
     :param int dpi: The dots per inch value to use when creating images. Defaults to 150.
@@ -257,13 +270,13 @@ def radargram(ar, ant, header, freq, figsize='auto', gain=1, stack=1, x='seconds
     if outfile != 'readgssi_plot':
         # if outfile doesn't match this then save fig with the outfile name
         if verbose:
-            fx.printmsg('saving figure as %s.png' % (outfile))
-        plt.savefig('%s.png' % (outfile), dpi=dpi, bbox_inches='tight')
+            fx.printmsg('saving figure as %s.%s' % (outfile, fmt))
+        plt.savefig('%s.%s' % (outfile, fmt), dpi=dpi, bbox_inches='tight')
     else:
         # else someone has called this function from outside and forgotten the outfile field
         if verbose:
-            fx.printmsg('saving figure as %s_%sMHz.png with dpi=%s' % (os.path.splitext(header['infile'])[0], freq, dpi))
-        plt.savefig('%s_%sMHz.png' % (os.path.splitext(header['infile'])[0], freq), bbox_inches='tight')
+            fx.printmsg('saving figure as %s_%sMHz.%s with dpi=%s' % (os.path.splitext(header['infile'])[0], freq, fmt, dpi))
+        plt.savefig('%s_%sMHz.%s' % (os.path.splitext(header['infile'])[0], freq, fmt), bbox_inches='tight')
     if noshow:
         if verbose:
             fx.printmsg('not showing matplotlib')

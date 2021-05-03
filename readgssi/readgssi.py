@@ -191,7 +191,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
         if plotting:
             plot.radargram(ar=data[ar], ant=ar, header=header, freq=header['antfreq'][ar], verbose=verbose,
                            figsize=figsize, dpi=dpi, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
-                           colorbar=colorbar, noshow=noshow, outfile=outfile, win=win, title=title,
+                           colorbar=colorbar, noshow=noshow, outfile=outfile, fmt=frmt, win=win, title=title,
                            zero=header['timezero'][ar], zoom=zoom, absval=absval, showmarks=showmarks)
 
         if histogram:
@@ -309,7 +309,11 @@ def main():
                     frmt = 'numpy'
                 elif arg in ('gprpy'):
                     frmt = 'gprpy'
-                elif arg in ('plot', 'png'):
+                elif arg in ('plot'):
+                    frmt = 'png'
+                    plotting = True
+                elif arg in (plot.fmtst):
+                    frmt = arg
                     plotting = True
                 else:
                     # else the user has given an invalid format

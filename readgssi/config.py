@@ -1,6 +1,7 @@
 from datetime import datetime
 from readgssi.__init__ import __version__, name
 import pkg_resources
+import readgssi.plot as plot
 
 """
 This module contains some things readgssi needs to operate, both command line and python-related.
@@ -54,7 +55,7 @@ optional flags:
 -Z, --zero      | +int or list of int |  timezero: skip samples before direct wave. samples are removed from the top of the trace. use list for multi-channel
 
 naming scheme for exports:
-  CHARACTERS    |      MEANING
+  CHARACTERS    |    MEANING
     Ch0         |  Profile from channel 0 (can range from 0 - 3)
     Dn          |  Distance normalization
     Tz233       |  Time zero at 233 samples
@@ -66,6 +67,9 @@ naming scheme for exports:
     G30         |  30x contrast gain
     Abs         |  Color scale represents absolute value of vertical gradient
     Z10.20.7.5  |  zoom from 10-20 axis units on the x-axis and 5-7 on the z-axis
-''' % (__version__, u'\U0001F12F', author, year, affil)
+
+matplotlib output formats supported by current backend:
+   EXTENSION    |    FILE FORMAT
+%s''' % (__version__, u'\U0001F12F', author, year, affil, plot.fmtst)
 
 version_text = '%s %s' % (name, __version__)
