@@ -139,6 +139,46 @@ Let's say you are really enamored with the way that last figure looks, and you n
     :width: 100%
     :alt: No plot title and figure-quality DPI
 
+Output formats
+--------------------------------
+
+readgssi can output to any format supported by the underlying matplotlib base.
+Usually, this means the following file formats:
+
+.. code-block::
+    EXTENSION    |    FILE FORMAT
+     eps         |  Encapsulated Postscript
+     jpg         |  Joint Photographic Experts Group
+     jpeg        |  Joint Photographic Experts Group
+     pdf         |  Portable Document Format
+     pgf         |  PGF code for LaTeX
+     png         |  Portable Network Graphics
+     ps          |  Postscript
+     raw         |  Raw RGBA bitmap
+     rgba        |  Raw RGBA bitmap
+     svg         |  Scalable Vector Graphics
+     svgz        |  Scalable Vector Graphics
+     tif         |  Tagged Image File Format
+     tiff        |  Tagged Image File Format
+
+Say you'd like to output to the vector format SVG.
+Many journals prefer this format because the vectors will allow them
+to typeset the figure and the optimal resolution for both print and digital.
+Let's take a look at how we do that.
+
+.. code-block:: python
+
+    readgssi.readgssi(infile='DZT__001.DZT', outfile='0d.svg', frmt='svg',
+                      zero=[233], plotting=True, figsize=5, stack='auto',
+                      gain=60, epsr=80, z='m', title=False, dpi=300)
+
+.. code-block:: bash
+
+    readgssi -i DZT__001.DZT -o 0d.svg -f svg -Z 233 -p 5 -s auto -g 60 -z m -E 80 -T -D 300
+
+The output file will look identical to the above figure, but will be in SVG format
+(which not all browsers can handle, so no preview is given here).
+
 `Back to top ↑ <#top>`_
 
 
