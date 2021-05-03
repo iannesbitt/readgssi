@@ -146,6 +146,7 @@ readgssi can output to any format supported by the underlying matplotlib base.
 Usually, this means the following file formats:
 
 .. code-block::
+
     EXTENSION    |    FILE FORMAT
      eps         |  Encapsulated Postscript
      jpg         |  Joint Photographic Experts Group
