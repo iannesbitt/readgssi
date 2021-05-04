@@ -218,6 +218,41 @@ Changing colormaps is as simple as specifying a valid :class:`matplotlib.colors.
 `Back to top ↑ <#top>`_
 
 
+================================
+Absolute value of gradient
+================================
+
+While we're on the topic of colormaps, it's worth pointing out that you can tell readgssi to calculate
+the vertical derivative (the "gradient") of the profile and display its absolute value using the :code:`-A` flag.
+This gradient display is a good way to highlight areas of polarity change regardless of positive or negative values.
+It is particularly useful for highlighting glacial bed material through ice, for example.
+Here (in a lake profile) we set both :code:`-A` (or :code:`absval=True` in Python) to plot the absolute value of vertical gradient
+and the colormap to the reverse of the usual one (:code:`-c gray_r` in bash, :code:`colormap='gray_r'` in Python)
+so that darker values indicate steeper gradient.
+
+.. code-block:: python
+
+    readgssi.readgssi(infile='DZT__001.DZT', outfile='0e.png', frmt=None,
+                      zero=[233], plotting=True, figsize=5, stack='auto',
+                      epsr=80, z='m', title=False, dpi=300, gain=100,
+                      absval=True, colormap='gray_r',
+                      freqmin=70, freqmax=130, bgr=True, win=75)
+
+.. code-block:: bash
+
+    readgssi -i DZT__001.DZT -o 0f.png -n -Z 233 -p 5 -s auto -g 100 -z m -E 80 -r 75 -t 70-130 -A -c gray_r
+
+.. image:: _static/0f.png
+    :width: 100%
+    :alt: Absolute value of gradient (darker = steeper gradient)
+
+This presentation is absolutely critical in certain ice environments where electrical contrast is extremely low.
+The conversion of each column into gradients rather than +-+ and -+- waves allows users to see where change is happening
+fastest in each profile (i.e. where the gradient is the steepest--positive or negative).
+This allows easier viewing of certain types of data where vertical change is difficult to differentiate,
+such as surveys of cold, relatively uniform Antarctic blue ice.
+
+
 ===================================
 Suppressing the Matplotlib window
 ===================================

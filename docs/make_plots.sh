@@ -16,9 +16,10 @@ readgssi -i $indir/$plot_ex0 -o $outdir/0b.png -n -Z 233 -p 5 -s auto -g 60
 readgssi -i $indir/$plot_ex0 -o $outdir/0c.png -n -Z 233 -p 5 -s auto -g 60 -z m -E 80
 # 0d - stack, gain, z-axis, and titleoff
 readgssi -i $indir/$plot_ex0 -o $outdir/0d.png -n -Z 233 -p 5 -s auto -g 60 -z m -E 80 -T -D 300 -r 75 -t 70-130
-# 0d - stack, gain, z-axis, titleoff, and colormap
+# 0e - stack, gain, z-axis, titleoff, and colormap
 readgssi -i $indir/$plot_ex0 -o $outdir/0e.png -n -Z 233 -p 5 -s auto -g 60 -z m -E 80 -T -D 300 -r 75 -t 70-130 -c seismic
-
+# 0f - stack, gain, z-axis, titleoff, and gradient absval
+readgssi -i $indir/$plot_ex0 -o $outdir/0f.png -n -Z 233 -p 5 -s auto -g 100 -z m -E 80 -r 75 -t 70-130 -A -c gray_r
 
 # example 1a - autostacking
 readgssi -i $indir/$process_ex1 -o $outdir/1a.png -n -Z 233 -p 5 -g 60 -s auto
