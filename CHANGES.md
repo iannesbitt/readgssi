@@ -1,5 +1,13 @@
 # Changelog
 
+## changes since 0.0.18
+- fixed a problem that led to errors creating a conda skeleton
+- explicitly specify base _e_ (`numpy.e`) in `SymLogNorm` call in `readgssi:plot.radargram`
+- added the ability to output to any supporte matplotlib format
+- fixed `docs/make_plots.sh` and branched a `docs/make_readme_plots.sh` for README figure creation
+- corrected docs text and `docs/_static` images that incorrectly applied FIR and BGR (or didn't apply them at all)
+- added an example plot demonstrating the absolute value of gradient (`-A -c gray_r`) method
+
 ## changes since 0.0.17
 - fixed the read of the byte that contains `rh_system` and `rh_version` in the header ([#26](https://github.com/iannesbitt/readgssi/issues/26))
 - fixed sampling depth interpretation ([#28](https://github.com/iannesbitt/readgssi/issues/28))
