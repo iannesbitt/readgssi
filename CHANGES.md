@@ -3,7 +3,7 @@
 ## changes since 0.0.18
 - fixed a problem that led to errors creating a conda skeleton
 - explicitly specify base _e_ (`numpy.e`) in `SymLogNorm` call in `readgssi:plot.radargram`
-- added the ability to output to any supporte matplotlib format
+- added the ability to output to any supported matplotlib format
 - fixed `docs/make_plots.sh` and branched a `docs/make_readme_plots.sh` for README figure creation
 - corrected docs text and `docs/_static` images that incorrectly applied FIR and BGR (or didn't apply them at all)
 - added an example plot demonstrating the absolute value of gradient (`-A -c gray_r`) method
