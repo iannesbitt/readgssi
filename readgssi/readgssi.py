@@ -242,10 +242,11 @@ def main():
     dpi = 150
     zero = [None,None,None,None]
     zoom = [0,0,0,0]
-    infile, outfile, antfreq, frmt, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None, None
+    infile, outfile, antfreq, plotting, figsize, histogram, colorbar, dewow, bgr, noshow = None, None, None, None, None, None, None, None, None, None
     reverse, freqmin, freqmax, specgram, normalize, spm, epsr, absval, pausecorrect, showmarks = None, None, None, None, None, None, None, None, None, None
     colormap = 'gray'
     x, z = 'seconds', 'nanoseconds'
+    frmt = 'png'
     gain = 1
 
 # some of this needs to be tweaked to formulate a command call to one of the main body functions
