@@ -108,7 +108,7 @@ Frequency filter (vertical triangular bandpass)
 
 The vertical filter is more sophisticated and requires proper identification of the antenna's center frequency. Because antennas emit bands of frequencies centered around the manufacturer's specified center frequency, data will often lie within those frequencies. However, noise at other frequency bands is sometimes picked up, whether due to the dielectric of the first layer, or external sources. Often it will be necessary to let pass only the frequencies around the center frequency. 
 
-For a 100 MHz antenna, this band can be as wide as 70-130 MHz at low dielectric values. Open water profiles are often much cleaner after being filtered approximately 80% as high as those in higher dielectric media, approximately 60-100 MHz.
+For a 100 MHz antenna, this band can be as wide as 70-130 MHz at low dielectric values. Open water profiles are often much cleaner after being filtered approximately 80% as high as those in higher dielectric media, approximately 70-130 MHz.
 
 .. code-block:: python
 
@@ -118,7 +118,7 @@ For a 100 MHz antenna, this band can be as wide as 70-130 MHz at low dielectric 
 
 .. code-block:: bash
 
-    readgssi -i DZT__001.DZT -o 2c.png -Z 233 -p 5 -s auto -g 60 -t 60-100
+    readgssi -i DZT__001.DZT -o 2c.png -Z 233 -p 5 -s auto -g 60 -t 70-130
 
 .. image:: _static/2c.png
     :width: 100%
@@ -138,7 +138,7 @@ It's typically worthwhile to play with combining filters, as often they can have
 
 .. code-block:: bash
 
-    readgssi -i DZT__001.DZT -o 2c.png -Z 233 -p 5 -s auto -g 60 -D 300 -r 100 -t 60-100
+    readgssi -i DZT__001.DZT -o 2c.png -Z 233 -p 5 -s auto -g 60 -D 300 -r 100 -t 70-130
 
 .. image:: _static/2d.png
     :width: 100%

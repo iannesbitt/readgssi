@@ -123,17 +123,20 @@ Making poster-quality figures
 
 Let's say you are really enamored with the way that last figure looks, and you now want to create a figure-quality image for a poster. You'll likely want to drop the title (:code:`title=False` in Python or :bash:`-T` in bash), and increase the DPI to something that will work well on a plotter (:code:`dpi=300` in Python or :bash:`-D 300` in bash). Pretty simple. Let's see it in action.
 
-.. note:: I use 300 DPI here to keep file size down, but if you are truly aiming for very high print quality, you may want to increase to 600 DPI to match the capability of most high-end plotters.
+.. note:: Just for fun in this section (to show off figure creation), we're using two extra flags that will be explained fully in :ref:`Getting rid of horizontal noise`, as mentioned above.
+
+.. note:: I use 300 DPI here to keep file size down, but if you are truly aiming for very high print quality (e.g. for a conference poster), you may want to increase to 600 DPI to match the capability of most high-end plotters.
 
 .. code-block:: python
 
     readgssi.readgssi(infile='DZT__001.DZT', outfile='0d.png', frmt=None,
                       zero=[233], plotting=True, figsize=5, stack='auto',
-                      gain=60, epsr=80, z='m', title=False, dpi=300)
+                      gain=60, epsr=80, z='m', title=False, dpi=300,
+                      freqmin=70, freqmax=130, bgr=True, win=75)
 
 .. code-block:: bash
 
-    readgssi -i DZT__001.DZT -o 0d.png -Z 233 -p 5 -s auto -g 60 -z m -E 80 -T -D 300
+    readgssi -i DZT__001.DZT -o 0d.png -Z 233 -p 5 -s auto -g 60 -z m -E 80 -T -D 300 -r 75 -t 70-130
 
 .. image:: _static/0d.png
     :width: 100%
@@ -171,11 +174,12 @@ Let's take a look at how we do that.
 
     readgssi.readgssi(infile='DZT__001.DZT', outfile='0d.svg', frmt='svg',
                       zero=[233], plotting=True, figsize=5, stack='auto',
-                      gain=60, epsr=80, z='m', title=False, dpi=300)
+                      gain=60, epsr=80, z='m', title=False, dpi=300,
+                      freqmin=70, freqmax=130, bgr=True, win=75)
 
 .. code-block:: bash
 
-    readgssi -i DZT__001.DZT -o 0d.svg -f svg -Z 233 -p 5 -s auto -g 60 -z m -E 80 -T -D 300
+    readgssi -i DZT__001.DZT -o 0d.svg -f svg -Z 233 -p 5 -s auto -g 60 -z m -E 80 -T -D 300 -r 75 -t 70-130
 
 The output file will look identical to the above figure, but will be in SVG format
 (which not all browsers can handle, so no preview is given here).
@@ -196,11 +200,12 @@ Changing colormaps is as simple as specifying a valid :class:`matplotlib.colors.
     readgssi.readgssi(infile='DZT__001.DZT', outfile='0e.png', frmt=None,
                       zero=[233], plotting=True, figsize=5, stack='auto',
                       epsr=80, z='m', title=False, dpi=300, gain=60,
-                      colormap='seismic')
+                      colormap='seismic',
+                      freqmin=70, freqmax=130, bgr=True, win=75)
 
 .. code-block:: bash
 
-    readgssi -i DZT__001.DZT -o 0e.png -Z 233 -p 5 -s auto -g 60 -z m -E 80 -T -D 300 -c seismic
+    readgssi -i DZT__001.DZT -o 0e.png -Z 233 -p 5 -s auto -g 60 -z m -E 80 -T -D 300 -r 75 -t 70-130 -c seismic
 
 
 .. image:: _static/0e.png
