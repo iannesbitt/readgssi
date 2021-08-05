@@ -183,43 +183,49 @@ def readdzg(fi, frmt, header, verbose=False):
                 else: # if no RMC, we hope there is no UTC 00:00:00 in the file.........
                     if 'GGA' in ln:
                         msg = pynmea2.parse(ln.rstrip())
-                        timestamp = TZ.localize(datetime.combine(header['rhb_cdt'], msg.timestamp)) # set t1 for this loop
-
-                        sec1 = timestamp.timestamp()
-                        x1, y1 = float(msg.longitude), float(msg.latitude)
-                        try:
-                            z1 = float(msg.altitude)
-                        except AttributeError:
-                            z1 = 0
-                        if msg.lon_dir in 'W':
-                            lonhem = 'west'
-                        if msg.lat_dir in 'S':
-                            lathem = 'south'
-                        if rowgga != 0:
-                            m += geodesic((y1, x1, z1), (y0, x0, z0)).meters
-                            if rmc == False:
-                                u = float((m - m0) / (sec1 - sec0))
-                            elapsedelta = timestamp - prevtime # t1 - t0 in timedelta format
-                            elapsed = float((timestamp-init_time).total_seconds()) # seconds elapsed
-                            if elapsed > 3600.0:
-                                fx.printmsg("WARNING: Time jumps by more than an hour in this GPS dataset and there are no RMC sentences to anchor the datestamp!")
-                                fx.printmsg("         This dataset may cross over the UTC midnight dateline!\nprevious timestamp: %s\ncurrent timestamp:  %s" % (prevtime, timestamp))
-                                fx.printmsg("         trace number:       %s" % trace)
-                        else:
-                            u = 0
-                            m = 0
-                            elapsed = 0
-                            if verbose:
-                                fx.printmsg('record starts in %s and %s hemispheres' % (lonhem, lathem))
-                        x0, y0, z0, sec0, m0 = x1, y1, z1, sec1, m # set xyzs0 for next loop
-                        prevtime = timestamp # set t0 for next loop
-                        if rowgga == 0:
-                            init_time = timestamp
-                        prevtrace = trace
-                        array = array.append({'datetimeutc':timestamp.strftime('%Y-%m-%d %H:%M:%S.%f %z'),
-                                              'trace':trace, 'longitude':x1, 'latitude':y1, 'altitude':z1,
-                                              'velocity':u, 'sec_elapsed':elapsed, 'meters':m}, ignore_index=True)
-                        rowgga += 1
+                        if  msg.timestamp:
+                            timestamp = TZ.localize(datetime.combine(header['rhb_cdt'], msg.timestamp)) # set t1 for this loop
+    
+                            sec1 = timestamp.timestamp()
+                            x1, y1 = float(msg.longitude), float(msg.latitude)
+                            try:
+                                z1 = float(msg.altitude)
+                            except AttributeError:
+                                z1 = 0
+                            if msg.lon_dir in 'W':
+                                lonhem = 'west'
+                            if msg.lat_dir in 'S':
+                                lathem = 'south'
+                            if rowgga != 0:
+								#If the difference in Altitude (z) between points is not 0, uses Pythagorean Theorem to better calculate the distance 
+                                if abs(z1 - z0) > 1e-6:
+                                    m_geodesic = geodesic((y1, x1), (y0, x0)).meters 
+                                    m += math.sqrt(m_geodesic**2 + (z1 - z0)**2)
+                                else:
+                                    m += geodesic((y1, x1, z1), (y0, x0, z0)).meters
+                                if rmc == False:
+                                    u = float((m - m0) / (sec1 - sec0))
+                                elapsedelta = timestamp - prevtime # t1 - t0 in timedelta format
+                                elapsed = float((timestamp-init_time).total_seconds()) # seconds elapsed
+                                if elapsed > 3600.0:
+                                    fx.printmsg("WARNING: Time jumps by more than an hour in this GPS dataset and there are no RMC sentences to anchor the datestamp!")
+                                    fx.printmsg("         This dataset may cross over the UTC midnight dateline!\nprevious timestamp: %s\ncurrent timestamp:  %s" % (prevtime, timestamp))
+                                    fx.printmsg("         trace number:       %s" % trace)
+                            else:
+                                u = 0
+                                m = 0
+                                elapsed = 0
+                                if verbose:
+                                    fx.printmsg('record starts in %s and %s hemispheres' % (lonhem, lathem))
+                            x0, y0, z0, sec0, m0 = x1, y1, z1, sec1, m # set xyzs0 for next loop
+                            prevtime = timestamp # set t0 for next loop
+                            if rowgga == 0:
+                                init_time = timestamp
+                            prevtrace = trace
+                            array = array.append({'datetimeutc':timestamp.strftime('%Y-%m-%d %H:%M:%S.%f %z'),
+                                                  'trace':trace, 'longitude':x1, 'latitude':y1, 'altitude':z1,
+                                                  'velocity':u, 'sec_elapsed':elapsed, 'meters':m}, ignore_index=True)
+                            rowgga += 1
 
             if verbose:
                 if rmc:
