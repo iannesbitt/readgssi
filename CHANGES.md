@@ -1,6 +1,7 @@
 # Changelog
 
 ## changes since 0.0.19
+- added support for the "42000S" antenna name ([#34](https://github.com/iannesbitt/readgssi/issues/34) from [@GGDRriedel](https://github.com/GGDRriedel))
 - added support for the "1.5/1.6GHz" antenna name ([#39](https://github.com/iannesbitt/readgssi/issues/39))
 - corrected a misuse of a great circle distance calculation using geopy ([#38](https://github.com/iannesbitt/readgssi/issues/38) from [@felippehsk](https://github.com/felippehsk))
 - allow for graceful handling of empty GGA strings ([#38](https://github.com/iannesbitt/readgssi/issues/38) from [@felippehsk](https://github.com/felippehsk))
