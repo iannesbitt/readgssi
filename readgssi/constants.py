@@ -42,6 +42,7 @@ ANT = {
     '100MHz': 100,
     '200MHz': 200,
     '270MHz': 270,
+    '300/800D': 300,    # technically two separate antennas and therefore, I think, a bug. users of this antenna will have to use `-a 300,800`
     '350MHz': 350,
     '400MHz': 400,
     '500MHz': 500,
@@ -81,6 +82,7 @@ ANT = {
     '51600': 1600,
     '51600S': 1600,
     'SS MINI': 1600,
+    '42000S': 2000,
     '62000': 2000,
     '62000-003': 2000,
     '62300': 2300,
@@ -88,7 +90,6 @@ ANT = {
     '52600': 2600,
     '52600S': 2600,
     'SSMINIXT': 2700,
-    '42000S': 2000
 }
 
 # whether or not the file is GPS-enabled (does not guarantee presence of GPS data in file)

@@ -102,9 +102,6 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
     else:
         raise IOError('ERROR: no input file specified')
 
-    rhf_sps = header['rhf_sps']
-    rhf_spm = header['rhf_spm']
-    line_dur = header['sec']
     for chan in list(range(header['rh_nchan'])):
         try:
             ANT[header['rh_antname'][chan]]
@@ -127,6 +124,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
             print('--------------------------------------------------------------')
 
     chans = list(range(header['rh_nchan']))
+    outfiles = {}
 
     if (pausecorrect) and (not gps.empty):
         fx.printmsg('correcting GPS errors created by user-initiated recording pauses...')
@@ -177,21 +175,14 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
         else:
             outfile = orig_outfile # recover the original
 
-        if outfile:
-            outfile_ext = os.path.splitext(outfile)[1]
-            outfile = '%s' % (os.path.join(os.path.splitext(outfile)[0]))
-            if len(chans) > 1:
-                outfile = '%sc%s' % (outfile, ar) # avoid naming conflicts
-        else:
-            outfile = fx.naming(infile_basename=infile_basename, chans=chans, chan=ar, normalize=normalize,
-                                zero=header['timezero'][ar], stack=stack, reverse=reverse, bgr=bgr, win=win,
-                                dewow=dewow, freqmin=freqmin, freqmax=freqmax, plotting=plotting,
-                                gain=gain, absval=absval)
-
+        outfiles[ar] = fx.naming(outfile=outfile, infile_basename=infile_basename, chans=chans, chan=ar,
+                                 normalize=normalize, zero=header['timezero'][ar], stack=stack, reverse=reverse,
+                                 bgr=bgr, win=win, dewow=dewow, freqmin=freqmin, freqmax=freqmax, plotting=plotting,
+                                 gain=gain, absval=absval)
         if plotting:
             plot.radargram(ar=data[ar], ant=ar, header=header, freq=header['antfreq'][ar], verbose=verbose,
                            figsize=figsize, dpi=dpi, stack=stack, x=x, z=z, gain=gain, colormap=colormap,
-                           colorbar=colorbar, noshow=noshow, outfile=outfile, fmt=frmt, win=win, title=title,
+                           colorbar=colorbar, noshow=noshow, outfile=outfiles[ar], fmt=frmt, win=win, title=title,
                            zero=header['timezero'][ar], zoom=zoom, absval=absval, showmarks=showmarks)
 
         if histogram:
@@ -205,7 +196,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
             fx.printmsg('outputting to %s...' % frmt)
         for ar in data:
             # is there an output filepath given?
-            outfile_abspath = os.path.abspath(outfile) # set output to given location
+            outfile_abspath = os.path.abspath(outfiles[ar]) # set output to given location
 
             # what is the output format
             if frmt in 'csv':
