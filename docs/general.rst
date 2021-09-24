@@ -100,7 +100,7 @@ Optional flags
     -D int, --dpi=int                   Set the plot DPI in :py:func:`readgssi.plot.radargram` (defaults to 150).
     -T, --titleoff                      Tells :py:func:`readgssi.plot.radargram` to turn the plot title off.
     -x m, --xscale=m                    X units for plotting. Will attempt to convert the x-axis to distance, time, or trace units based on header values. See :py:func:`readgssi.plot.radargram` for scale behavior. Combine with the :py:data:`-N` option to enable distance normalization, or :py:data:`-d int` to change the samples per meter.
-    -e, --zoom=[L,R,U,D]                Set a zoom to automatically jump to. Takes list as argument, in the order is [left,right,up,down] and units are the same as axis.
+    -e, --zoom=\[L,R,U,D\]                Set a zoom to automatically jump to. Takes list as argument, in the order is \[left,right,up,down\] and units are the same as axis.
     -z m, --zscale=m                    Z units for plotting. Will attempt to convert the x-axis to depth, time, or sample units based on header values. See :py:func:`readgssi.plot.radargram` for scale behavior. Combine with the :py:data:`-E int` option to change the dielectric.
     -n, --noshow                        Suppress matplotlib popup window and simply save a figure (useful for multi-file processing).
     -c str, --colormap=str              Specify the colormap to use in radargram creation function :py:func:`readgssi.plot.radargram`. For a list of values that can be used here, see https://matplotlib.org/users/colormaps.html#grayscale-conversion
@@ -118,7 +118,7 @@ Optional flags
     -d float, --spm=float               Specify the samples per meter (SPM). Overrides header value. Be careful using this option on distance-naive files, and files in which "time" was used as the main trigger for trace shots!
     -m, --histogram                     Produces a histogram of data values for each channel using :py:func:`readgssi.plot.histogram`.
     -E float, --epsr=float              User-defined epsilon_r (sometimes referred to as "dielectric"). If set, ignores value in DZT header in favor of the value set here by the user.
-    -Z int, -Z list, --zero=int, --zero=list   Timezero: skip this many samples before the direct wave arrives at the receiver. Samples are removed from the top of the trace. Use a four-integer list format for multi-channel time-zeroing. Example: :py:data:`-Z 40,145,233,21`.
+    -Z int, -Z \[int,int,int,int\], --zero=int, --zero=\[int,int,int,int\]   Timezero: skip this many samples before the direct wave arrives at the receiver. Samples are removed from the top of the trace. Use a four-integer list format for multi-channel time-zeroing. Example: :py:data:`-Z 40,145,233,21`.
 
 Command line functionality is explained further in the following sections.
 
