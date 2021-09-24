@@ -99,9 +99,9 @@ Optional flags
     -p int, --plot=int                  Tells :py:func:`readgssi.plot.radargram` to create a radargram plot int inches high (defaults to 7).
     -D int, --dpi=int                   Set the plot DPI in :py:func:`readgssi.plot.radargram` (defaults to 150).
     -T, --titleoff                      Tells :py:func:`readgssi.plot.radargram` to turn the plot title off.
-    -x m, --xscale=m                    X units for plotting. Will attempt to convert the x-axis to distance, time, or trace units based on header values. See :py:func:`readgssi.plot.radargram` for scale behavior. Combine with the :py:data:`-N` option to enable distance normalization, or :py:data:`-d int` to change the samples per meter.
-    -z m, --zscale=m                    Z units for plotting. Will attempt to convert the x-axis to depth, time, or sample units based on header values. See :py:func:`readgssi.plot.radargram` for scale behavior. Combine with the :py:data:`-E int` option to change the dielectric.
-    -e, --zoom=L,R,U,D                  Set a zoom to automatically jump to. Takes list in the order left,right,up,down as argument, and units are the same as axis.
+    -x str, --xscale=str                X units for plotting. Will attempt to convert the x-axis to distance, time, or trace units based on header values. See :py:func:`readgssi.plot.radargram` for scale behavior. Combine with the :py:data:`-N` option to enable distance normalization, or :py:data:`-d int` to change the samples per meter.
+    -z str, --zscale=str                Z units for plotting. Will attempt to convert the x-axis to depth, time, or sample units based on header values. See :py:func:`readgssi.plot.radargram` for scale behavior. Combine with the :py:data:`-E int` option to change the dielectric.
+    -e list, --zoom=list                Set zoom extents to plot. Takes list of integers in the order left,right,up,down as argument, and units are the same as axis scale.
     -n, --noshow                        Suppress matplotlib popup window and simply save a figure (useful for multi-file processing).
     -c str, --colormap=str              Specify the colormap to use in radargram creation function :py:func:`readgssi.plot.radargram`. For a list of values that can be used here, see https://matplotlib.org/users/colormaps.html#grayscale-conversion
     -g int, --gain=int                  Gain constant (higher=greater contrast, default: 1).
@@ -111,14 +111,14 @@ Optional flags
     -w, --dewow                         Trinomial dewow algorithm (experimental, use with caution). For details see :py:func:`readgssi.filtering.dewow`.
     -t int-int, --bandpass=int-int      Triangular FIR bandpass filter applied vertically (positive integer range in megahertz; ex. 70-130). For details see :py:func:`readgssi.filtering.triangular`.
     -b, --colorbar                      Adds a :py:class:`matplotlib.colorbar.Colorbar` to the radar figure.
-    -a, --antfreq=int                   Set the antenna frequency. Overrides header value in favor of the one set here by the user.
-    -s, --stack=int                     Set the trace stacking value or "auto" to autostack, which results in a ~2.5:1 x:y axis ratio.
+    -a int, --antfreq=int               Set the antenna frequency. Overrides header value in favor of the one set here by the user.
+    -s int, --stack=int                 Set the trace stacking value or "auto" to autostack, which results in a ~2.5:1 x:y axis ratio.
     -N, --normalize                     Distance normalize. :py:func:`readgssi.gps.readdzg` reads the .DZG NMEA data file if it exists, otherwise tries to read CSV with lat, lon, and time fields. Then, the radar array and GPS time series are passed to :py:func:`readgssi.arrayops.distance_normalize` where the array is expanded and contracted proportional to the distance traveled between each GPS distance mark. This is done in chunks to save memory.
     -P, --pausecorr                     Pause correction;. Fixes decoupling of DZG and DZT trace numbers during survey pauses using low velocity GPS marks
     -d float, --spm=float               Specify the samples per meter (SPM). Overrides header value. Be careful using this option on distance-naive files, and files in which "time" was used as the main trigger for trace shots!
     -m, --histogram                     Produces a histogram of data values for each channel using :py:func:`readgssi.plot.histogram`.
     -E float, --epsr=float              User-defined epsilon_r (sometimes referred to as "dielectric"). If set, ignores value in DZT header in favor of the value set here by the user.
-    -Z int, -Z int,int,int,int, --zero=int, --zero=int,int,int,int   Timezero: skip this many samples before the direct wave arrives at the receiver. Samples are removed from the top of the trace. Use a four-integer list format for multi-channel time-zeroing. Example: :py:data:`-Z 40,145,233,21`.
+    -Z int or list, -Z int or list      Timezero: skip this many samples before the direct wave arrives at the receiver. Samples are removed from the top of the trace. Takes a single integer for single channel files, or a four-integer list format for multi-channel time-zeroing. Example: :py:data:`-Z 40,145,233,21`.
 
 Command line functionality is explained further in the following sections.
 
