@@ -117,6 +117,7 @@ naming scheme for exports:
     Dw          |  Dewow filter
     Bp70-130    |  triangular FIR filter applied from 70 to 130 MHz
     G30         |  30x contrast gain
+    Abs         |  Color scale represents absolute value of vertical gradient
     Z10.20.7.5  |  zoom from 10-20 axis units on the x-axis and 5-7 on the z-axis
 ```
 

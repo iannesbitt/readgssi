@@ -98,14 +98,14 @@ Optional flags
     -f str, --format=str                Output file format (eg. "csv", "numpy", "gprpy"). See :py:mod:`readgssi.translate`.
     -p int, --plot=int                  Tells :py:func:`readgssi.plot.radargram` to create a radargram plot <int> inches high (defaults to 7).
     -D int, --dpi=int                   Set the plot DPI in :py:func:`readgssi.plot.radargram` (defaults to 150).
-    -T, --titleoff                      Tells :py:func:`readgssi.plot.radargram` to turn the plot title off. 
+    -T, --titleoff                      Tells :py:func:`readgssi.plot.radargram` to turn the plot title off.
     -x m, --xscale=m                    X units for plotting. Will attempt to convert the x-axis to distance, time, or trace units based on header values. See :py:func:`readgssi.plot.radargram` for scale behavior. Combine with the :py:data:`-N` option to enable distance normalization, or :py:data:`-d int` to change the samples per meter.
     -e, --zoom=[L,R,U,D]                Set a zoom to automatically jump to. Takes list as argument, in the order is [left,right,up,down] and units are the same as axis.
     -z m, --zscale=m                    Z units for plotting. Will attempt to convert the x-axis to depth, time, or sample units based on header values. See :py:func:`readgssi.plot.radargram` for scale behavior. Combine with the :py:data:`-E int` option to change the dielectric.
     -n, --noshow                        Suppress matplotlib popup window and simply save a figure (useful for multi-file processing).
     -c str, --colormap=str              Specify the colormap to use in radargram creation function :py:func:`readgssi.plot.radargram`. For a list of values that can be used here, see https://matplotlib.org/users/colormaps.html#grayscale-conversion
     -g int, --gain=int                  Gain constant (higher=greater contrast, default: 1).
-    -A, --absval                        Displays the absolute value of the vertical gradient of the array when plotting. Good for displaying faint array features, e.g. in ice.
+    -A, --absval                        Displays the absolute value of the vertical gradient of the array when plotting. Good for displaying faint array features, e.g. in blue ice.
     -r int, --bgr=int                   Horizontal background removal (useful to remove ringing). Specifying 0 as the argument here sets the window to full-width, whereas a positive integer sets the window size to that many traces after stacking.
     -R, --reverse                       Reverse (flip array horizontally) using :py:func:`readgssi.arrayops.flip`.
     -w, --dewow                         Trinomial dewow algorithm (experimental, use with caution). For details see :py:func:`readgssi.filtering.dewow`.
