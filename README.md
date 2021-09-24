@@ -81,7 +81,7 @@ required flags:
 optional flags:
      OPTION     |      ARGUMENT       |       FUNCTIONALITY
 -o, --output    | file:  /dir/f.ext   |  output file. if not set, will be named similar to input
--f, --format    | string, eg. "csv"   |  output format (csv is the only working format currently)
+-f, --format    | string, eg. "csv"   |  output format (CSV and DZT are the only working formats currently available from the command line)
 -p, --plot      | +integer or "auto"  |  plot size. will be x inches high or "auto". default: 10. see also -D to set DPI
 -D, --dpi       | positive integer    |  set the plot DPI for figure making. defaults to 150
 -T, --titleoff  |                     |  turn the plot title off (useful for figure making)
@@ -89,8 +89,9 @@ optional flags:
 -z, --zscale    | string, eg. "time"  |  z units. attempt to convert the x-axis to depth, time, or sample units based on header values
 -e, --zoom      | list of +int [LRUD] |  set a zoom to automatically jump to. list order is [left,right,up,down] and units are the same as axis
 -n, --noshow    |                     |  suppress matplotlib popup window and simply save a figure (useful for multi-file processing)
--c, --colormap  | string, eg. seismic |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
+-c, --colormap  | string, eg. "Greys" |  specify the colormap (https://matplotlib.org/users/colormaps.html#grayscale-conversion)
 -g, --gain      | positive float      |  gain constant (higher=greater contrast, default: 1)
+-A, --absval    |                     |  Displays the absolute value of the vertical gradient of the array when plotting. Good for displaying faint array features.
 -r, --bgr       | +integer or zero    |  horizontal background removal (useful to remove ringing). zero=full width; positive=window size (after stacking)
 -R, --reverse   |                     |  reverse (flip array horizontally)
 -w, --dewow     |                     |  trinomial dewow algorithm
@@ -99,6 +100,7 @@ optional flags:
 -a, --antfreq   | positive integer    |  set antenna frequency. overrides header value
 -s, --stack     | +integer or "auto"  |  set trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
 -N, --normalize |                     |  distance normalize; reads .DZG NMEA data file if it exists; otherwise tries to read CSV with lat, lon, and time fields
+-P, --pausecorr |                     |  pause correction; fixes decoupling of DZG and DZT trace numbers during survey pauses using low velocity GPS marks
 -d, --spm       | positive float      |  specify the samples per meter (spm). overrides header value
 -m, --histogram |                     |  produce a histogram of data values
 -E, --epsr      | float > 1.0         |  user-defined epsilon sub r (sometimes referred to as "dielectric") if set, ignores value in DZT header
