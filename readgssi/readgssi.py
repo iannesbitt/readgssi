@@ -338,7 +338,7 @@ def main():
             dewow = True
         if opt in ('-R', '--reverse'):
             reverse = True
-        if opt in ('-P', '--pausecorrect'):
+        if opt in ('-P', '--pausecorr'):
             pausecorrect = True
         if opt in ('-N', '--normalize'):
             normalize = True

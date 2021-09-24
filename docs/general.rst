@@ -100,10 +100,12 @@ Optional flags
     -D int, --dpi=int                   Set the plot DPI in :py:func:`readgssi.plot.radargram` (defaults to 150).
     -T, --titleoff                      Tells :py:func:`readgssi.plot.radargram` to turn the plot title off. 
     -x m, --xscale=m                    X units for plotting. Will attempt to convert the x-axis to distance, time, or trace units based on header values. See :py:func:`readgssi.plot.radargram` for scale behavior. Combine with the :py:data:`-N` option to enable distance normalization, or :py:data:`-d int` to change the samples per meter.
+    -e, --zoom=[L,R,U,D]                Set a zoom to automatically jump to. Takes list as argument, in the order is [left,right,up,down] and units are the same as axis.
     -z m, --zscale=m                    Z units for plotting. Will attempt to convert the x-axis to depth, time, or sample units based on header values. See :py:func:`readgssi.plot.radargram` for scale behavior. Combine with the :py:data:`-E int` option to change the dielectric.
     -n, --noshow                        Suppress matplotlib popup window and simply save a figure (useful for multi-file processing).
     -c str, --colormap=str              Specify the colormap to use in radargram creation function :py:func:`readgssi.plot.radargram`. For a list of values that can be used here, see https://matplotlib.org/users/colormaps.html#grayscale-conversion
     -g int, --gain=int                  Gain constant (higher=greater contrast, default: 1).
+    -A, --absval                        Displays the absolute value of the vertical gradient of the array when plotting. Good for displaying faint array features, e.g. in ice.
     -r int, --bgr=int                   Horizontal background removal (useful to remove ringing). Specifying 0 as the argument here sets the window to full-width, whereas a positive integer sets the window size to that many traces after stacking.
     -R, --reverse                       Reverse (flip array horizontally) using :py:func:`readgssi.arrayops.flip`.
     -w, --dewow                         Trinomial dewow algorithm (experimental, use with caution). For details see :py:func:`readgssi.filtering.dewow`.
@@ -112,6 +114,7 @@ Optional flags
     -a, --antfreq=int                   Set the antenna frequency. Overrides header value in favor of the one set here by the user.
     -s, --stack=int                     Set the trace stacking value or "auto" to autostack, which results in a ~2.5:1 x:y axis ratio.
     -N, --normalize                     Distance normalize. :py:func:`readgssi.gps.readdzg` reads the .DZG NMEA data file if it exists, otherwise tries to read CSV with lat, lon, and time fields. Then, the radar array and GPS time series are passed to :py:func:`readgssi.arrayops.distance_normalize` where the array is expanded and contracted proportional to the distance traveled between each GPS distance mark. This is done in chunks to save memory.
+    -P, --pausecorr                     Pause correction;. Fixes decoupling of DZG and DZT trace numbers during survey pauses using low velocity GPS marks
     -d float, --spm=float               Specify the samples per meter (SPM). Overrides header value. Be careful using this option on distance-naive files, and files in which "time" was used as the main trigger for trace shots!
     -m, --histogram                     Produces a histogram of data values for each channel using :py:func:`readgssi.plot.histogram`.
     -E float, --epsr=float              User-defined epsilon_r (sometimes referred to as "dielectric"). If set, ignores value in DZT header in favor of the value set here by the user.

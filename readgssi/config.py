@@ -49,6 +49,7 @@ optional flags:
 -a, --antfreq   | positive integer    |  set antenna frequency. overrides header value
 -s, --stack     | +integer or "auto"  |  set trace stacking value or "auto" to autostack to ~2.5:1 x:y axis ratio
 -N, --normalize |                     |  distance normalize; reads .DZG NMEA data file if it exists; otherwise tries to read CSV with lat, lon, and time fields
+-P, --pausecorr |                     |  pause correction; fixes decoupling of DZG and DZT trace numbers during survey pauses using low velocity GPS marks
 -d, --spm       | positive float      |  specify the samples per meter (spm). overrides header value
 -m, --histogram |                     |  produce a histogram of data values
 -E, --epsr      | float > 1.0         |  user-defined epsilon sub r (sometimes referred to as "dielectric") if set, ignores value in DZT header
