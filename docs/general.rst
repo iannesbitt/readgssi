@@ -118,7 +118,7 @@ Optional flags
     -P, --pausecorr                     Pause correction. Fixes decoupling of DZG and DZT trace numbers during survey pauses using low velocity GPS marks
     -d float, --spm=float               Specify the samples per meter (SPM). Overrides header value. Be careful using this option on distance-naive files, and files in which "time" was used as the main trigger for trace shots!
     -m, --histogram                     Produces a histogram of data values for each channel using :py:func:`readgssi.plot.histogram`.
-    -Z int, --zero int                  Timezero: skip this many samples before the direct wave arrives at the receiver. Samples are removed from the top of the trace. Takes a single integer for single channel files, or a four-integer list format for multi-channel time-zeroing. Example: :py:data:`-Z [40,145,233,21]`.
+    -Z int, --zero=int                  Timezero: skip this many samples before the direct wave arrives at the receiver. Samples are removed from the top of the trace. Takes a single integer for single channel files, or a four-integer list format for multi-channel time-zeroing. Example: :py:data:`-Z [40,145,233,21]`.
 
 Command line functionality is explained further in the following sections.
 
