@@ -181,6 +181,31 @@ The X-axis can be modified to display various distance units. These include: kil
 
 See warning above for caveats about using distance units.
 
+Pause correction
+------------------------
+
+The way SIR-4000 units handle pauses while ingesting NMEA GPS data is broken. Typically while recording with GPS input,
+SIR units write out a DZG file, with :code:`GSSIS` strings that keep track of the corresponding trace numbers for each
+NMEA GPS sentence received. However if the line recording is paused, the DZG file continues to record NMEA strings.
+This results in an offset between the trace number recorded in the DZG and the trace number in the GPS array.
+So for example, if your GPS is sending NMEA strings at 1 Hz, and you pause for 10 seconds, your DZG file will record
+10 more traces than actually exist in the DZT. This causes problems when distance normalizing, since the trace numbers
+in the DZG are misaligned, and distance normalization relies on those trace numbers to adjust the array.
+
+:py:mod:`readgssi.gps.pause_correct` can correct these offsets prior to distance normalization.
+First, the original DZG file is backed up to a .DZG.bak file for data safety. If the function detects that this file
+already exists, then it will use the data from that file for the pause correction. This is to ensure that data always
+remains both backed up and that a corrected working .DZG file is maintained.
+
+The function works by calculating when GPS velocity drops below a certain value (default of 0.25 m/s) for more than 3
+GPS epochs (excluding the start and end of the survey line). Where this occurs, the function will subtract the number
+of "paused" epochs from subsequent :code:`GSSIS` trace numbers in the DZG file.
+
+Additionally, all corrected GPS epochs will be written to a CSV file for easy integration into a GIS environment.
+
+The function can be implemented using the :code:`-P` flag in command line usage alongside distance normalization.
+
+
 `Back to top ↑ <#top>`_
 
 ===========================
