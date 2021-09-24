@@ -205,6 +205,16 @@ Additionally, all corrected GPS epochs will be written to a CSV file for easy in
 
 The function can be implemented using the :code:`-P` flag in command line usage alongside distance normalization.
 
+.. warning:: This function will identify and remove ALL pauses longer than 3 epochs and renumber the traces accordingly.
+    Obviously this can have unintended consequences if the radar controller remains collecting data during these periods.
+    Please be extremely cautious and only use this functionality on files you know have radar control unit pauses that
+    are accompanied by movement pauses. A backup of the original DZG file is made each time this function is run on a file,
+    which means that if you make a mistake, you can simply copy the DZG backup (.DZG.bak) and overwrite the output (.DZG).
+
+.. note:: Any time you are working with original files, it is always good to have a "working" and "raw" copy of your data.
+    Experimental functionality in readgssi cannot be held responsible for its actions in modifying data.
+    You are responsible for keeping a raw backup of your data just in case.
+
 
 `Back to top ↑ <#top>`_
 
