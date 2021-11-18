@@ -5,7 +5,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/readgssi.svg?colorB=limegreen&label=pypi%20package)](https://badge.fury.io/py/readgssi)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.1439119.svg)](https://dx.doi.org/10.5281/zenodo.1439119)
-[![License](https://img.shields.io/badge/license-GNU%20Affero%203.0-lightgrey.svg)](https://github.com/iannesbitt/readgssi/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/iannesbitt/readgssi)](https://github.com/iannesbitt/readgssi/blob/master/LICENSE)
 [![Build Status](https://travis-ci.org/iannesbitt/readgssi.svg?branch=master)](https://travis-ci.org/iannesbitt/readgssi)
 [![Documentation Status](https://readthedocs.org/projects/readgssi/badge/?version=latest)](https://readgssi.readthedocs.io/en/latest/?badge=latest)
 [![Downloads per month](https://img.shields.io/pypi/dm/readgssi.svg)](https://pypi.org/project/readgssi/)
