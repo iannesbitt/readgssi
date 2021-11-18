@@ -8,6 +8,7 @@
 - added support for the "4105NR" antenna name ([#21](https://github.com/iannesbitt/readgssi/issues/21) from [@eyoabz](https://github.com/eyoabz))
 - added limited support for the "300/800D" antenna name ([#33](https://github.com/iannesbitt/readgssi/issues/33) from [@alecomunian](https://github.com/alecomunian)). GSSI bug prevents this combination of antennas from full support, as the second antenna is named `'none'` in this case, but all readgssi functionality should still work
 - fixed a previously unknown bug that did not separate multi-channel outputs into separate files (addresses [#33](https://github.com/iannesbitt/readgssi/issues/33) from [@alecomunian](https://github.com/alecomunian) and [#37](https://github.com/iannesbitt/readgssi/issues/37) from [@h2maa](https://github.com/h2maa))
+- changed license from AGPLv3 to GPLv3 as standard GPLv3 fits the purpose better
 
 ## changes since 0.0.18
 - fixed a problem that led to errors creating a conda skeleton
