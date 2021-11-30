@@ -96,7 +96,11 @@ def naming(outfile=None, infile_basename=None, chans=[1], chan=0, normalize=Fals
     if outfile == None:
         outfile = '%s' % (os.path.join(infile_basename))
     else:
-        return outfile
+        if len(chans) == 1:
+            return outfile
+        else:
+            printmsg('Warning: Input file has multiple channels but output filename was explicitly set. Avoiding clobbering by using incremental naming.')
+            return '%sCh%s' % (outfile, chan)
 
     if len(chans) > 1:
         outfile = '%sCh%s' % (outfile, chan)
