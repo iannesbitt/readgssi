@@ -1,5 +1,8 @@
 # Changelog
 
+## changes since 0.0.20
+- changed file naming convention (outfile parameter is no longer clobbered by the naming function)
+
 ## changes since 0.0.19
 - added support for the "42000S" antenna name ([#34](https://github.com/iannesbitt/readgssi/issues/34) from [@GGDRriedel](https://github.com/GGDRriedel))
 - added support for the "1.5/1.6GHz" antenna name ([#39](https://github.com/iannesbitt/readgssi/issues/39))

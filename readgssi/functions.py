@@ -95,6 +95,8 @@ def naming(outfile=None, infile_basename=None, chans=[1], chan=0, normalize=Fals
     """
     if outfile == None:
         outfile = '%s' % (os.path.join(infile_basename))
+    else:
+        return outfile
 
     if len(chans) > 1:
         outfile = '%sCh%s' % (outfile, chan)
