@@ -1,5 +1,5 @@
 # readgssi
-*Copyleft 🄯 2017-2021*
+*Copyleft 🄯 2017-2022*
 
 ![Example Radargram](https://github.com/iannesbitt/readgssi/raw/master/examples/main.png)
 
