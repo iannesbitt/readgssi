@@ -163,8 +163,8 @@ This example distance normalizes and displays the X-axis in meters. Note the cha
 .. code-block:: python
 
     readgssi.readgssi(infile='DZT__001.DZT', outfile='2c.png', frmt=None,
-                      zero=[233], plot=5, stack='auto', gain=60,
-                      normalize=True, x='m')
+                      zero=[233], plotting=True, figsize=5, stack='auto',
+                      gain=60, normalize=True, x='m')
 
 .. code-block:: bash
 
@@ -203,7 +203,9 @@ of "paused" epochs from subsequent :code:`GSSIS` trace numbers in the DZG file.
 
 Additionally, all corrected GPS epochs will be written to a CSV file for easy integration into a GIS environment.
 
-The function can be implemented using the :code:`-P` flag in command line usage alongside distance normalization.
+The function can be implemented using the :code:`-P` flag in command line usage alongside distance normalization,
+or by specifying :code:`pausecorrect=True` in a :py:mod:`readgssi.readgssi` function call. To change the minimum pause
+detection velocity, specify a positive float value; for example :code:`pausecorrect=0.075`.
 
 .. warning:: This function will identify and remove ALL pauses longer than 3 epochs and renumber the traces accordingly.
     Obviously this can have unintended consequences if the radar controller remains collecting data during these periods.

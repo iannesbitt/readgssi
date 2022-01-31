@@ -76,7 +76,7 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
     :param bool title: Whether to display descriptive titles on plots. Defaults to :py:data:`True`.
     :param list[int,int,int,int] zoom: Zoom extents to set programmatically for matplotlib plots. Must pass a list of four integers: :py:data:`[left, right, up, down]`. Since the z-axis begins at the top, the "up" value is actually the one that displays lower on the page. All four values are axis units, so if you are working in nanoseconds, 10 will set a limit 10 nanoseconds down. If your x-axis is in seconds, 6 will set a limit 6 seconds from the start of the survey. It may be helpful to display the matplotlib interactive window at full extents first, to determine appropriate extents to set for this parameter. If extents are set outside the boundaries of the image, they will be set back to the boundaries. If two extents on the same axis are the same, the program will default to plotting full extents for that axis.
     :rtype: header (:py:class:`dict`), radar array (:py:class:`numpy.ndarray`), gps (False or :py:class:`pandas.DataFrame`)
-    :param bool pausecorrect: If :py:data:`True`, search the DZG file for pauses, where GPS keeps recording but radar unit does not, and correct them if necessary. Defaults to :py:data:`False`.
+    :param bool pausecorrect: If :py:data:`True` or minimum speed given as :py:data:`+float`, search the DZG file for pauses, where GPS keeps recording but radar unit does not, and correct them if necessary. Defaults to :py:data:`False`. Minimum speed defaults to 0.25 m/s.
     :param bool showmarks: If :py:data:`True`, display mark locations in plot. Defaults to :py:data:`False`.
     """
 
@@ -127,8 +127,14 @@ def readgssi(infile, outfile=None, verbose=False, antfreq=None, frmt='python',
     outfiles = {}
 
     if (pausecorrect) and (not gps.empty):
+        kwargs = {}
         fx.printmsg('correcting GPS errors created by user-initiated recording pauses...')
-        gps = pause_correct(header=header, dzg_file=os.path.splitext(infile)[0] + ".DZG", verbose=verbose)
+        if (type(pausecorrect) == float) or (type(pausecorrect) == int):
+            kwargs['threshold'] = pausecorrect
+            fx.printmsg('pause velocity threshold is %s m/s (user-specified)' % (kwargs['threshold']))
+        else:
+            fx.printmsg('pause velocity threshold is 0.25 m/s (default)')
+        gps = pause_correct(header=header, dzg_file=os.path.splitext(infile)[0] + ".DZG", verbose=verbose, **kwargs)
     elif (pausecorrect) and (gps.empty):
         fx.printmsg("can't correct pauses without a valid DZG file to look for. are you sure the DZG has the same name as the DZT file?")
 

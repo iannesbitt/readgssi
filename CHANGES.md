@@ -2,6 +2,7 @@
 
 ## changes since 0.0.20
 - changed file naming convention (outfile parameter is no longer clobbered by the naming function)
+- changed main python function to accept user-specified velocity threshold for pause correction function call
 
 ## changes since 0.0.19
 - added support for the "42000S" antenna name ([#34](https://github.com/iannesbitt/readgssi/issues/34) from [@GGDRriedel](https://github.com/GGDRriedel))

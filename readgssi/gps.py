@@ -248,7 +248,7 @@ def readdzg(fi, frmt, header, verbose=False):
 
 
 
-def pause_correct(header, dzg_file, threshold=0.25, verbose=False):
+def pause_correct(header, dzg_file, verbose=False, **kwargs):
     '''
     This is a streamlined way of removing pauses from DZG files and re-assigning trace values.
     GSSI controllers have a bug in which GPS sentences are collected with increasing trace numbers even though radar trace collection is stopped.
@@ -280,6 +280,14 @@ def pause_correct(header, dzg_file, threshold=0.25, verbose=False):
             if verbose:
                 fx.printmsg('found backed up DZG file %s' % (backup_file))
         dzg_file = backup_file              # we always want to draw from the backup and write to the main DZG file
+
+        # threshold default
+        threshold = 0.25
+        # get threshold value from kwargs if it exists
+        for arg in kwargs:
+            if arg == "threshold":
+                if (type(kwargs[arg]) == float) or (type(kwargs[arg]) == int):
+                    threshold = float(kwargs[arg])
 
         # pandas ninja maneuvers to get a list of pause boundaries
         orig_gps = readdzg(fi=backup_file, frmt='dzg', header=header, verbose=False)    # get original GPS values
