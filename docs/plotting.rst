@@ -148,22 +148,7 @@ Output formats
 readgssi can output to any format supported by the underlying matplotlib base.
 Usually, this means the following file formats:
 
-.. code-block::
-
-    EXTENSION    |    FILE FORMAT
-     eps         |  Encapsulated Postscript
-     jpg         |  Joint Photographic Experts Group
-     jpeg        |  Joint Photographic Experts Group
-     pdf         |  Portable Document Format
-     pgf         |  PGF code for LaTeX
-     png         |  Portable Network Graphics
-     ps          |  Postscript
-     raw         |  Raw RGBA bitmap
-     rgba        |  Raw RGBA bitmap
-     svg         |  Scalable Vector Graphics
-     svgz        |  Scalable Vector Graphics
-     tif         |  Tagged Image File Format
-     tiff        |  Tagged Image File Format
+.. literalinclude:: fileformats.txt
 
 Say you'd like to output to the vector format SVG.
 Many journals prefer this format because the vectors will allow them
