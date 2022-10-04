@@ -59,21 +59,7 @@ def naming(outfile=None, infile_basename=None, chans=[1], chan=0, normalize=Fals
 
     Named for my graduate advisor, whom I love and cherish, who introduced me to this way of naming outputs.
 
-    .. code-block:: None
-
-        naming scheme for exports:
-          CHARACTERS    |      MEANING
-            Ch0         |  Profile from channel 0 (can range from 0 - 3)
-            Dn          |  Distance normalization
-            Tz233       |  Time zero at 233 samples
-            S8          |  Stacked 8 times
-            Rv          |  Profile read in reverse (flipped horizontally)
-            Bgr75       |  Background removal filter with window size of 75
-            Dw          |  Dewow filter
-            Bp70-130    |  triangular FIR filter applied from 70 to 130 MHz
-            G30         |  30x contrast gain
-            Abs         |  Color scale represents absolute value of vertical gradient
-            Z10.20.7.5  |  zoom from 10-20 axis units on the x-axis and 5-7 on the z-axis
+    .. literalinclude:: naming.txt
 
     :param str outfile: The base output filename. If None, a new :code:`outfile` will be generated from the input file basename. If it already exists, subsequent arguments will be appended. Defaults to None.
     :param str infile_basename: The input file basename (without file extension). Defaults to None.
