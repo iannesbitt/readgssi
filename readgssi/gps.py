@@ -63,6 +63,7 @@ def readdzg(fi, frmt, header, verbose=False):
     array = pd.DataFrame(columns=['datetimeutc', 'trace', 'longitude', 'latitude', # our dataframe
                                   'altitude', 'velocity', 'sec_elapsed', 'meters'])
 
+    localized = False
     trace = 0 # the elapsed number of traces iterated through
     tracenum = 0 # the sequential increase in trace number
     rownp = 0 # array row number
@@ -94,20 +95,48 @@ def readdzg(fi, frmt, header, verbose=False):
                     rmc = True
                     if rowrmc == 0:
                         msg = pynmea2.parse(ln.rstrip()) # convert gps sentence to pynmea2 named tuple
-                        ts0 = TZ.localize(datetime.combine(msg.datestamp, msg.timestamp)) # row 0's timestamp (not ideal)
+                        tc = datetime.combine(msg.datestamp, msg.timestamp)
+                        try:
+                            ts0 = TZ.localize(tc) # row 0's timestamp (not ideal)
+                        except ValueError as e:
+                            if not localized:
+                                fx.printmsg('Timezone already localized! Using local time for these GPS records.')
+                                localized = True
+                            ts0 = tc
                     if rowrmc == 1:
                         msg = pynmea2.parse(ln.rstrip())
-                        ts1 = TZ.localize(datetime.combine(msg.datestamp, msg.timestamp)) # row 1's timestamp (not ideal)
+                        tc = datetime.combine(msg.datestamp, msg.timestamp)
+                        try:
+                            ts1 = TZ.localize(tc) # row 1's timestamp (not ideal)
+                        except ValueError as e:
+                            if not localized:
+                                fx.printmsg('Timezone already localized! Using local time for these GPS records.')
+                                localized = True
+                            ts1 = tc
                         td = ts1 - ts0 # timedelta = datetime1 - datetime0
                     rowrmc += 1
                 if 'GGA' in ln:
                     gga = True
                     if rowgga == 0:
                         msg = pynmea2.parse(ln.rstrip()) # convert gps sentence to pynmea2 named tuple
-                        ts0 = TZ.localize(datetime.combine(datetime(1980, 1, 1), msg.timestamp)) # row 0's timestamp (not ideal)
+                        tc = datetime.combine(datetime(1980, 1, 1), msg.timestamp)
+                        try:
+                            ts0 = TZ.localize(tc) # row 0's timestamp (not ideal)
+                        except ValueError as e:
+                            if not localized:
+                                fx.printmsg('Timezone already localized! Using local time for these GPS records.')
+                                localized = True
+                            ts0 = tc
                     if rowgga == 1:
                         msg = pynmea2.parse(ln.rstrip())
-                        ts1 = TZ.localize(datetime.combine(datetime(1980, 1, 1), msg.timestamp)) # row 1's timestamp (not ideal)
+                        tc = datetime.combine(datetime(1980, 1, 1), msg.timestamp)
+                        try:
+                            ts1 = TZ.localize(tc) # row 1's timestamp (not ideal)
+                        except ValueError as e:
+                            if not localized:
+                                fx.printmsg('Timezone already localized! Using local time for these GPS records.')
+                                localized = True
+                            ts1 = tc
                         td = ts1 - ts0 # timedelta = datetime1 - datetime0
                     rowgga += 1
             gpssps = 1 / td.total_seconds() # GPS samples per second
@@ -151,7 +180,14 @@ def readdzg(fi, frmt, header, verbose=False):
                 if rmc == True: # if there is RMC, we can use the full datestamp but there is no altitude
                     if 'RMC' in ln:
                         msg = pynmea2.parse(ln.rstrip())
-                        timestamp = TZ.localize(datetime.combine(msg.datestamp, msg.timestamp)) # set t1 for this loop
+                        tc = datetime.combine(msg.datestamp, msg.timestamp)
+                        try:
+                            timestamp = TZ.localize(tc) # set t1 for this loop
+                        except ValueError as e:
+                            if not localized:
+                                fx.printmsg('Timezone already localized! Using local time for these GPS records.')
+                                localized = True
+                            timestamp = tc
                         u = msg.spd_over_grnd * 0.514444444 # convert from knots to m/s
 
                         sec1 = timestamp.timestamp()
@@ -184,7 +220,14 @@ def readdzg(fi, frmt, header, verbose=False):
                     if 'GGA' in ln:
                         msg = pynmea2.parse(ln.rstrip())
                         if  msg.timestamp:
-                            timestamp = TZ.localize(datetime.combine(header['rhb_cdt'], msg.timestamp)) # set t1 for this loop
+                            tc = datetime.combine(header['rhb_cdt'], msg.timestamp)
+                            try:
+                                timestamp = TZ.localize(tc) # set t1 for this loop
+                            except ValueError as e:
+                                if not localized:
+                                    fx.printmsg('Timezone already localized! Using local time for these GPS records.')
+                                    localized = True
+                                timestamp = tc
     
                             sec1 = timestamp.timestamp()
                             x1, y1 = float(msg.longitude), float(msg.latitude)
