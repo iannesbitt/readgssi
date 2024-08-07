@@ -222,10 +222,10 @@ def readdzg(fi, frmt, header, verbose=False):
                             if rowgga == 0:
                                 init_time = timestamp
                             prevtrace = trace
-                            array = array.append({'datetimeutc':timestamp.strftime('%Y-%m-%d %H:%M:%S.%f %z'),
-                                                  'trace':trace, 'longitude':x1, 'latitude':y1, 'altitude':z1,
-                                                  'velocity':u, 'sec_elapsed':elapsed, 'meters':m}, ignore_index=True)
-                            rowgga += 1
+                            array = pd.concat([array, pd.Series(
+                                                {'datetimeutc':timestamp.strftime('%Y-%m-%d %H:%M:%S.%f %z'),
+                                                'trace':trace, 'longitude':x1, 'latitude':y1, 'altitude':z1,
+                                                'velocity':u, 'sec_elapsed':elapsed, 'meters':m}).to_frame().T], ignore_index=True)
 
             if verbose:
                 if rmc:
