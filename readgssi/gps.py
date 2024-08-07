@@ -226,6 +226,7 @@ def readdzg(fi, frmt, header, verbose=False):
                                                 {'datetimeutc':timestamp.strftime('%Y-%m-%d %H:%M:%S.%f %z'),
                                                 'trace':trace, 'longitude':x1, 'latitude':y1, 'altitude':z1,
                                                 'velocity':u, 'sec_elapsed':elapsed, 'meters':m}).to_frame().T], ignore_index=True)
+                            rowgga += 1
 
             if verbose:
                 if rmc:
