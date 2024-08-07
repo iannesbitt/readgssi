@@ -1,6 +1,9 @@
 # Changelog
 
 ## changes since 0.0.21
+- updated documentation
+- fixed [#42](https://github.com/iannesbitt/readgssi/issues/42)
+- fixed [#43](https://github.com/iannesbitt/readgssi/issues/43)
 - fixed a problem that involved a Pandas method deprecation [#46](https://github.com/iannesbitt/readgssi/issues/46)
 
 ## changes since 0.0.20
