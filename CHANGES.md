@@ -1,5 +1,8 @@
 # Changelog
 
+## changes since 0.0.21
+- fixed a problem that involved a Pandas method deprecation [#46](https://github.com/iannesbitt/readgssi/issues/46)
+
 ## changes since 0.0.20
 - changed file naming convention (outfile parameter is no longer clobbered by the naming function)
 - changed main python function to accept user-specified velocity threshold for pause correction function call
