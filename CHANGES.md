@@ -5,6 +5,7 @@
 - fixed [#42](https://github.com/iannesbitt/readgssi/issues/42)
 - fixed [#43](https://github.com/iannesbitt/readgssi/issues/43)
 - fixed a problem that involved a Pandas method deprecation [#46](https://github.com/iannesbitt/readgssi/issues/46)
+- added support for the "200HS" antenna and system code 18
 
 ## changes since 0.0.20
 - changed file naming convention (outfile parameter is no longer clobbered by the naming function)

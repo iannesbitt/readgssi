@@ -34,6 +34,7 @@ UNIT = {
     12: 'UtilityScan DF',
     13: 'HS',
     14: 'StructureScan Mini XT',
+    18: 'HS'
 }
 
 # a dictionary of standard gssi antenna codes and frequencies
@@ -41,6 +42,7 @@ UNIT = {
 ANT = {
     '100MHz': 100,
     '200MHz': 200,
+    '200HS': 200,
     '270MHz': 270,
     '300/800D': 300,    # technically two separate antennas and therefore, I think, a bug. users of this antenna will have to use `-a 300,800`
     '350MHz': 350,
