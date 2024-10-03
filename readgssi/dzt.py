@@ -274,7 +274,10 @@ def readdzt(infile, gps=DataFrame(), spm=None, start_scan=0, num_scans=-1,
             num_items = -1
     else:
         num_items = -1
-            
+    
+    # seek to the start scan
+    infile.seek(start_offset,1) # relative to current location
+    
     # read in and transpose data
     data = np.fromfile(infile, dtype, count=num_items)
     data = data.reshape(-1,(header['rh_nsamp']*header['rh_nchan'])) # offset=start_offset,
