@@ -86,6 +86,7 @@ ANT = {
     '51600': 1600,
     '51600S': 1600,
     'SS MINI': 1600,
+    'SS MINI #577\n': 1600,        # issue 54 - I love GSSI's horrendous naming scheme <3 honestly very endearing and somewhat troubling
     '4105NR': 2000,
     '42000S': 2000,
     '62000': 2000,
