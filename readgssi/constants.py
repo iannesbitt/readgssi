@@ -43,8 +43,9 @@ ANT = {
     '100MHz': 100,
     '200MHz': 200,
     '200HS': 200,
+    'D200HS': 200,              # issue #52...perhaps goes by this name?
     '270MHz': 270,
-    '300/800D': 300,    # technically two separate antennas and therefore, I think, a bug. users of this antenna will have to use `-a 300,800`
+    '300/800D': 300,            # technically two separate antennas and therefore, I think, a bug. users of this antenna will have to use `-a 300,800`
     '350MHz': 350,
     '400MHz': 400,
     '500MHz': 500,
@@ -65,7 +66,6 @@ ANT = {
     '3207AP': 100,
     '5106': 200,
     '5106A': 200,
-    '200HS': 200,                # issue 52
     '50300': 300,
     '350': 350,
     '350HS': 350,
