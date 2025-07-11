@@ -57,6 +57,7 @@ ANT = {
     '2300MHz': 2300,
     '2600MHz': 2600,
     '2.6GHZ': 2600,             # issue #56
+    '2.6GHz': 2600,             # issue #56
     '3200': 'adjustable',
     '3200MLF': 'adjustable',
     'gprMa': 'adjustable',      # gprMax support
